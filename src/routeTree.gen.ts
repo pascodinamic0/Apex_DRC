@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConsolidationRouteImport } from './routes/_authenticated/consolidation'
 import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports.index'
@@ -32,6 +33,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/consolidation': typeof AuthenticatedConsolidationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/history': typeof AuthenticatedHistoryRoute
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/consolidation': typeof AuthenticatedConsolidationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/history': typeof AuthenticatedHistoryRoute
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authenticated/consolidation': typeof AuthenticatedConsolidationRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/reports/new': typeof AuthenticatedReportsNewRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/consolidation'
     | '/dashboard'
+    | '/history'
     | '/reports/new'
     | '/reports/'
     | '/reports/$reportId/edit'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/consolidation'
     | '/dashboard'
+    | '/history'
     | '/reports/new'
     | '/reports'
     | '/reports/$reportId/edit'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authenticated/consolidation'
     | '/_authenticated/dashboard'
+    | '/_authenticated/history'
     | '/_authenticated/reports/new'
     | '/_authenticated/reports/'
     | '/_authenticated/reports/$reportId/edit'
@@ -162,6 +174,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
@@ -211,6 +230,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedConsolidationRoute: typeof AuthenticatedConsolidationRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedReportsNewRoute: typeof AuthenticatedReportsNewRoute
   AuthenticatedReportsIndexRoute: typeof AuthenticatedReportsIndexRoute
   AuthenticatedReportsReportIdEditRoute: typeof AuthenticatedReportsReportIdEditRoute
@@ -220,6 +240,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedConsolidationRoute: AuthenticatedConsolidationRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedReportsNewRoute: AuthenticatedReportsNewRoute,
   AuthenticatedReportsIndexRoute: AuthenticatedReportsIndexRoute,
   AuthenticatedReportsReportIdEditRoute: AuthenticatedReportsReportIdEditRoute,
