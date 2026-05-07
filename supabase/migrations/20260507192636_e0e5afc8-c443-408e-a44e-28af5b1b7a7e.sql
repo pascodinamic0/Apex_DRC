@@ -1,0 +1,3 @@
+CREATE POLICY "director insert provinces" ON public.provinces FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'technical_director'));
+CREATE POLICY "director update provinces" ON public.provinces FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'technical_director'));
+CREATE POLICY "director delete provinces" ON public.provinces FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'technical_director'));
