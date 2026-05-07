@@ -49,6 +49,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "google", content: "notranslate" },
       { title: "EPIC RDC — Plateforme de Reporting" },
       { name: "description", content: "Plateforme de reporting mensuel pour le programme EPIC en RDC." },
       { property: "og:title", content: "EPIC RDC — Plateforme de Reporting" },
