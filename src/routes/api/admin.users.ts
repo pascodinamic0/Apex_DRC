@@ -33,7 +33,7 @@ export const Route = createFileRoute("/api/admin/users")({
         const [{ data: profiles }, { data: roles }, { data: provinces }] = await Promise.all([
           supabaseAdmin.from("profiles").select("id, email, full_name, province_id"),
           supabaseAdmin.from("user_roles").select("user_id, role"),
-          supabaseAdmin.from("provinces").select("id, name").order("name"),
+          supabaseAdmin.from("provinces").select("id, name, code").order("name"),
         ]);
         return Response.json({
           users: (profiles || []).map((p) => ({ ...p, role: roles?.find((r) => r.user_id === p.id)?.role || null })),
