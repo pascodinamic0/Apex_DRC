@@ -17,6 +17,7 @@ import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConsolidationRouteImport } from './routes/_authenticated/consolidation'
 import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports.index'
+import { Route as ApiAdminUsersRouteImport } from './routes/api/admin.users'
 import { Route as AuthenticatedReportsNewRouteImport } from './routes/_authenticated/reports.new'
 import { Route as AuthenticatedReportsReportIdIndexRouteImport } from './routes/_authenticated/reports.$reportId.index'
 import { Route as AuthenticatedReportsReportIdEditRouteImport } from './routes/_authenticated/reports.$reportId.edit'
@@ -62,6 +63,11 @@ const AuthenticatedReportsIndexRoute =
     path: '/reports/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
+  id: '/api/admin/users',
+  path: '/api/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedReportsNewRoute = AuthenticatedReportsNewRouteImport.update({
   id: '/reports/new',
   path: '/reports/new',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/history': typeof AuthenticatedHistoryRoute
   '/users': typeof AuthenticatedUsersRoute
   '/reports/new': typeof AuthenticatedReportsNewRoute
+  '/api/admin/users': typeof ApiAdminUsersRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
   '/reports/$reportId/': typeof AuthenticatedReportsReportIdIndexRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/history': typeof AuthenticatedHistoryRoute
   '/users': typeof AuthenticatedUsersRoute
   '/reports/new': typeof AuthenticatedReportsNewRoute
+  '/api/admin/users': typeof ApiAdminUsersRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
   '/reports/$reportId': typeof AuthenticatedReportsReportIdIndexRoute
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/reports/new': typeof AuthenticatedReportsNewRoute
+  '/api/admin/users': typeof ApiAdminUsersRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
   '/_authenticated/reports/$reportId/': typeof AuthenticatedReportsReportIdIndexRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/users'
     | '/reports/new'
+    | '/api/admin/users'
     | '/reports/'
     | '/reports/$reportId/edit'
     | '/reports/$reportId/'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/users'
     | '/reports/new'
+    | '/api/admin/users'
     | '/reports'
     | '/reports/$reportId/edit'
     | '/reports/$reportId'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/_authenticated/history'
     | '/_authenticated/users'
     | '/_authenticated/reports/new'
+    | '/api/admin/users'
     | '/_authenticated/reports/'
     | '/_authenticated/reports/$reportId/edit'
     | '/_authenticated/reports/$reportId/'
@@ -162,6 +174,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiAdminUsersRoute: typeof ApiAdminUsersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -222,6 +235,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/admin/users': {
+      id: '/api/admin/users'
+      path: '/api/admin/users'
+      fullPath: '/api/admin/users'
+      preLoaderRoute: typeof ApiAdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/reports/new': {
       id: '/_authenticated/reports/new'
       path: '/reports/new'
@@ -277,6 +297,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiAdminUsersRoute: ApiAdminUsersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
