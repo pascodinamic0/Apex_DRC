@@ -14,16 +14,260 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          achieved: number | null
+          activity_code: string | null
+          created_at: string
+          description: string | null
+          id: string
+          objective: number
+          percentage: number | null
+          planned: number | null
+          position: number | null
+          report_id: string
+        }
+        Insert: {
+          achieved?: number | null
+          activity_code?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          objective: number
+          percentage?: number | null
+          planned?: number | null
+          position?: number | null
+          report_id: string
+        }
+        Update: {
+          achieved?: number | null
+          activity_code?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          objective?: number
+          percentage?: number | null
+          planned?: number | null
+          position?: number | null
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      narratives: {
+        Row: {
+          content: string | null
+          id: string
+          report_id: string
+          section_type: Database["public"]["Enums"]["narrative_section"]
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          id?: string
+          report_id: string
+          section_type: Database["public"]["Enums"]["narrative_section"]
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          id?: string
+          report_id?: string
+          section_type?: Database["public"]["Enums"]["narrative_section"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "narratives_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          province_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          province_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          province_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "provinces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provinces: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      report_drafts: {
+        Row: {
+          id: string
+          payload: Json
+          report_id: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          payload?: Json
+          report_id: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          payload?: Json
+          report_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_drafts_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: true
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          month: number
+          province_id: string
+          status: Database["public"]["Enums"]["report_status"]
+          submitted_at: string | null
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month: number
+          province_id: string
+          status?: Database["public"]["Enums"]["report_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month?: number
+          province_id?: string
+          status?: Database["public"]["Enums"]["report_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "provinces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_province: { Args: { _user_id: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "province_user" | "technical_director" | "read_only"
+      narrative_section:
+        | "stakeholder_coordination"
+        | "success_stories"
+        | "challenges"
+        | "priorities_next_month"
+        | "exec_summary_smni"
+        | "exec_summary_nutrition"
+        | "exec_summary_malaria"
+      report_status: "draft" | "submitted" | "validated"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +394,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["province_user", "technical_director", "read_only"],
+      narrative_section: [
+        "stakeholder_coordination",
+        "success_stories",
+        "challenges",
+        "priorities_next_month",
+        "exec_summary_smni",
+        "exec_summary_nutrition",
+        "exec_summary_malaria",
+      ],
+      report_status: ["draft", "submitted", "validated"],
+    },
   },
 } as const
