@@ -50,17 +50,22 @@ function UsersPage() {
     setProvinces((data || []) as ProvinceRow[]);
   };
 
+  const refreshUsers = async () => {
+    const [{ data: profiles, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
+      supabase.from("profiles").select("id, email, full_name, province_id"),
+      supabase.from("user_roles").select("user_id, role"),
+    ]);
+    if (pErr) return toast.error(pErr.message);
+    if (rErr) return toast.error(rErr.message);
+    const merged: UserRow[] = (profiles || []).map((p: any) => ({
+      ...p,
+      role: roles?.find((r: any) => r.user_id === p.id)?.role || null,
+    }));
+    setUsers(merged);
+  };
+
   const refresh = async () => {
-    refreshProvinces();
-    try {
-      const res = await authedFetch("/api/admin/users");
-      if (!res.ok) throw new Error(await res.text());
-      const json = await res.json();
-      setUsers(Array.isArray(json?.users) ? json.users : []);
-      if (Array.isArray(json?.provinces) && json.provinces.length) setProvinces(json.provinces);
-    } catch (e: any) {
-      toast.error(e.message || "Error");
-    }
+    await Promise.all([refreshProvinces(), refreshUsers()]);
   };
 
   useEffect(() => { if (role === "technical_director") refresh(); }, [role]);
