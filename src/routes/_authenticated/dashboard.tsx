@@ -77,9 +77,9 @@ function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard icon={FileText} label={t.totalProvinces} value={provinces.length} />
-        <KpiCard icon={Clock} label={t.submissionsThisMonth} value={`${submittedThisMonth}/${provinces.length}`} />
-        <KpiCard icon={CheckCircle2} label={t.validationRate} value={`${validationRate}%`} />
+        {!isProvinceUser && <KpiCard icon={FileText} label={t.totalProvinces} value={provinces.length} />}
+        {!isProvinceUser && <KpiCard icon={Clock} label={t.submissionsThisMonth} value={`${submittedThisMonth}/${provinces.length}`} />}
+        {!isProvinceUser && <KpiCard icon={CheckCircle2} label={t.validationRate} value={`${validationRate}%`} />}
         <KpiCard icon={TrendingUp} label={t.monthlyTrend} value={trend[trend.length - 1].count} />
       </div>
 
