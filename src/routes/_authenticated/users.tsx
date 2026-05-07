@@ -44,13 +44,20 @@ function UsersPage() {
     if (role && role !== "technical_director") nav({ to: "/dashboard" });
   }, [role, nav]);
 
+  const refreshProvinces = async () => {
+    const { data, error } = await supabase.from("provinces").select("id, name, code").order("name");
+    if (error) return toast.error(error.message);
+    setProvinces((data || []) as ProvinceRow[]);
+  };
+
   const refresh = async () => {
+    refreshProvinces();
     try {
       const res = await authedFetch("/api/admin/users");
       if (!res.ok) throw new Error(await res.text());
       const json = await res.json();
       setUsers(Array.isArray(json?.users) ? json.users : []);
-      setProvinces(Array.isArray(json?.provinces) ? json.provinces : []);
+      if (Array.isArray(json?.provinces) && json.provinces.length) setProvinces(json.provinces);
     } catch (e: any) {
       toast.error(e.message || "Error");
     }
