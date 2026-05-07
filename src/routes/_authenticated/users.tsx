@@ -156,6 +156,53 @@ function UsersPage() {
           </div>
         </CardContent>
       </Card>
+
+      <ProvincesManager provinces={provinces} onChange={refresh} />
     </div>
+  );
+}
+
+function ProvincesManager({ provinces, onChange }: { provinces: ProvinceRow[]; onChange: () => void }) {
+  const { t } = useT();
+  const [code, setCode] = useState("");
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const add = async () => {
+    if (!code || !name) return;
+    setBusy(true);
+    const { error } = await supabase.from("provinces").insert({ code, name });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    setCode(""); setName(""); onChange();
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm(t.confirmDeleteProvince)) return;
+    const { error } = await supabase.from("provinces").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    onChange();
+  };
+
+  return (
+    <Card>
+      <CardContent className="p-4 space-y-4">
+        <h2 className="text-xl font-semibold">{t.provinces}</h2>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Input placeholder={t.provinceCode} value={code} onChange={(e) => setCode(e.target.value)} className="sm:w-32" />
+          <Input placeholder={t.provinceName} value={name} onChange={(e) => setName(e.target.value)} />
+          <Button onClick={add} disabled={busy || !code || !name}><Plus className="h-4 w-4 mr-1" />{t.addProvince}</Button>
+        </div>
+        <div className="divide-y border rounded-md">
+          {provinces.map((p) => (
+            <div key={p.id} className="flex items-center justify-between p-3">
+              <div className="text-sm"><span className="font-mono text-muted-foreground mr-2">{(p as any).code || ""}</span>{p.name}</div>
+              <Button size="icon" variant="ghost" onClick={() => remove(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+            </div>
+          ))}
+          {provinces.length === 0 && <div className="p-6 text-center text-sm text-muted-foreground">—</div>}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
