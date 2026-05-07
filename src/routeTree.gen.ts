@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConsolidationRouteImport } from './routes/_authenticated/consolidation'
@@ -33,6 +34,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
   id: '/history',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/consolidation': typeof AuthenticatedConsolidationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/history': typeof AuthenticatedHistoryRoute
+  '/users': typeof AuthenticatedUsersRoute
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/consolidation': typeof AuthenticatedConsolidationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/history': typeof AuthenticatedHistoryRoute
+  '/users': typeof AuthenticatedUsersRoute
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/_authenticated/consolidation': typeof AuthenticatedConsolidationRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/reports/new': typeof AuthenticatedReportsNewRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/consolidation'
     | '/dashboard'
     | '/history'
+    | '/users'
     | '/reports/new'
     | '/reports/'
     | '/reports/$reportId/edit'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/consolidation'
     | '/dashboard'
     | '/history'
+    | '/users'
     | '/reports/new'
     | '/reports'
     | '/reports/$reportId/edit'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/_authenticated/consolidation'
     | '/_authenticated/dashboard'
     | '/_authenticated/history'
+    | '/_authenticated/users'
     | '/_authenticated/reports/new'
     | '/_authenticated/reports/'
     | '/_authenticated/reports/$reportId/edit'
@@ -174,6 +186,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/users': {
+      id: '/_authenticated/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AuthenticatedUsersRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/history': {
       id: '/_authenticated/history'
@@ -231,6 +250,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedConsolidationRoute: typeof AuthenticatedConsolidationRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedReportsNewRoute: typeof AuthenticatedReportsNewRoute
   AuthenticatedReportsIndexRoute: typeof AuthenticatedReportsIndexRoute
   AuthenticatedReportsReportIdEditRoute: typeof AuthenticatedReportsReportIdEditRoute
@@ -241,6 +261,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedConsolidationRoute: AuthenticatedConsolidationRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedReportsNewRoute: AuthenticatedReportsNewRoute,
   AuthenticatedReportsIndexRoute: AuthenticatedReportsIndexRoute,
   AuthenticatedReportsReportIdEditRoute: AuthenticatedReportsReportIdEditRoute,
@@ -260,3 +281,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
