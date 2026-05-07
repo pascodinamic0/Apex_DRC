@@ -77,9 +77,9 @@ function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard icon={FileText} label={t.totalProvinces} value={provinces.length} />
-        <KpiCard icon={Clock} label={t.submissionsThisMonth} value={`${submittedThisMonth}/${provinces.length}`} />
-        <KpiCard icon={CheckCircle2} label={t.validationRate} value={`${validationRate}%`} />
+        {!isProvinceUser && <KpiCard icon={FileText} label={t.totalProvinces} value={provinces.length} />}
+        {!isProvinceUser && <KpiCard icon={Clock} label={t.submissionsThisMonth} value={`${submittedThisMonth}/${provinces.length}`} />}
+        {!isProvinceUser && <KpiCard icon={CheckCircle2} label={t.validationRate} value={`${validationRate}%`} />}
         <KpiCard icon={TrendingUp} label={t.monthlyTrend} value={trend[trend.length - 1].count} />
       </div>
 
@@ -98,19 +98,33 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader><CardTitle>{t.provinceStatus}</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {provinces.map((p) => (
-                <div key={p.id} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
-                  <span>{p.name}</span>
-                  {statusBadge(statusFor(p.id))}
+        {!isProvinceUser ? (
+          <Card>
+            <CardHeader><CardTitle>{t.provinceStatus}</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {provinces.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
+                    <span>{p.name}</span>
+                    {statusBadge(statusFor(p.id))}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader><CardTitle>{t.yourProvinceStatus}</CardTitle></CardHeader>
+            <CardContent>
+              {profile?.province_id ? (
+                <div className="flex items-center justify-between text-sm py-1.5">
+                  <span>{provinces.find(p => p.id === profile.province_id)?.name || "—"}</span>
+                  {statusBadge(statusFor(profile.province_id))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              ) : <p className="text-sm text-muted-foreground">—</p>}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {isProvinceUser && (

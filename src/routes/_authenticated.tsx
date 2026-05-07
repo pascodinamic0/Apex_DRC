@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { LangSwitch } from "@/components/lang-switch";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, Layers, Archive, LogOut, Menu } from "lucide-react";
+import { LayoutDashboard, FileText, Layers, Archive, LogOut, Menu, Users } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated")({ component: Layout });
@@ -29,6 +29,7 @@ function Layout() {
     { to: "/reports", icon: FileText, label: t.reports },
     ...(role !== "province_user" ? [{ to: "/consolidation", icon: Layers, label: t.consolidation }] : []),
     { to: "/history", icon: Archive, label: t.history },
+    ...(role === "technical_director" ? [{ to: "/users", icon: Users, label: t.users }] : []),
   ];
 
   const roleLabel = role === "technical_director" ? t.director : role === "province_user" ? t.provinceUser : t.readOnly;

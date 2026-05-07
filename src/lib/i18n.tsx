@@ -93,6 +93,13 @@ const dict = {
     deadline: "Échéance",
     backToReports: "Retour aux rapports",
     noAccess: "Accès refusé",
+    users: "Utilisateurs",
+    addUser: "Ajouter un utilisateur",
+    remove: "Supprimer",
+    invite: "Inviter",
+    inviteSent: "Invitation envoyée",
+    confirmRemove: "Retirer cet utilisateur ?",
+    yourProvinceStatus: "Statut de votre province",
   },
   en: {
     appName: "EPIC DRC",
@@ -186,6 +193,13 @@ const dict = {
     deadline: "Deadline",
     backToReports: "Back to reports",
     noAccess: "Access denied",
+    users: "Users",
+    addUser: "Add user",
+    remove: "Remove",
+    invite: "Invite",
+    inviteSent: "Invitation sent",
+    confirmRemove: "Remove this user?",
+    yourProvinceStatus: "Your province status",
   },
 };
 
