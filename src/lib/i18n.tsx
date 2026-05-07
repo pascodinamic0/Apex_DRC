@@ -193,6 +193,13 @@ const dict = {
     deadline: "Deadline",
     backToReports: "Back to reports",
     noAccess: "Access denied",
+    users: "Users",
+    addUser: "Add user",
+    remove: "Remove",
+    invite: "Invite",
+    inviteSent: "Invitation sent",
+    confirmRemove: "Remove this user?",
+    yourProvinceStatus: "Your province status",
   },
 };
 
