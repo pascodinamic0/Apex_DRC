@@ -100,6 +100,13 @@ const dict = {
     inviteSent: "Invitation envoyée",
     confirmRemove: "Retirer cet utilisateur ?",
     yourProvinceStatus: "Statut de votre province",
+    provinces: "Provinces",
+    addProvince: "Ajouter une province",
+    provinceCode: "Code",
+    provinceName: "Nom",
+    save: "Enregistrer",
+    edit: "Modifier",
+    confirmDeleteProvince: "Supprimer cette province ?",
   },
   en: {
     appName: "EPIC DRC",
