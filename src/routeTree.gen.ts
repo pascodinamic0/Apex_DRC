@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports.index'
 import { Route as AuthenticatedReportsNewRouteImport } from './routes/_authenticated/reports.new'
+import { Route as AuthenticatedReportsReportIdIndexRouteImport } from './routes/_authenticated/reports.$reportId.index'
 import { Route as AuthenticatedReportsReportIdEditRouteImport } from './routes/_authenticated/reports.$reportId.edit'
 
 const LoginRoute = LoginRouteImport.update({
@@ -47,6 +48,12 @@ const AuthenticatedReportsNewRoute = AuthenticatedReportsNewRouteImport.update({
   path: '/reports/new',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedReportsReportIdIndexRoute =
+  AuthenticatedReportsReportIdIndexRouteImport.update({
+    id: '/reports/$reportId/',
+    path: '/reports/$reportId/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedReportsReportIdEditRoute =
   AuthenticatedReportsReportIdEditRouteImport.update({
     id: '/reports/$reportId/edit',
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
+  '/reports/$reportId/': typeof AuthenticatedReportsReportIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -69,6 +77,7 @@ export interface FileRoutesByTo {
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
+  '/reports/$reportId': typeof AuthenticatedReportsReportIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -79,6 +88,7 @@ export interface FileRoutesById {
   '/_authenticated/reports/new': typeof AuthenticatedReportsNewRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
+  '/_authenticated/reports/$reportId/': typeof AuthenticatedReportsReportIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/reports/new'
     | '/reports/'
     | '/reports/$reportId/edit'
+    | '/reports/$reportId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -97,6 +108,7 @@ export interface FileRouteTypes {
     | '/reports/new'
     | '/reports'
     | '/reports/$reportId/edit'
+    | '/reports/$reportId'
   id:
     | '__root__'
     | '/'
@@ -106,6 +118,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reports/new'
     | '/_authenticated/reports/'
     | '/_authenticated/reports/$reportId/edit'
+    | '/_authenticated/reports/$reportId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsNewRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/reports/$reportId/': {
+      id: '/_authenticated/reports/$reportId/'
+      path: '/reports/$reportId'
+      fullPath: '/reports/$reportId/'
+      preLoaderRoute: typeof AuthenticatedReportsReportIdIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/reports/$reportId/edit': {
       id: '/_authenticated/reports/$reportId/edit'
       path: '/reports/$reportId/edit'
@@ -173,6 +193,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedReportsNewRoute: typeof AuthenticatedReportsNewRoute
   AuthenticatedReportsIndexRoute: typeof AuthenticatedReportsIndexRoute
   AuthenticatedReportsReportIdEditRoute: typeof AuthenticatedReportsReportIdEditRoute
+  AuthenticatedReportsReportIdIndexRoute: typeof AuthenticatedReportsReportIdIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -180,6 +201,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedReportsNewRoute: AuthenticatedReportsNewRoute,
   AuthenticatedReportsIndexRoute: AuthenticatedReportsIndexRoute,
   AuthenticatedReportsReportIdEditRoute: AuthenticatedReportsReportIdEditRoute,
+  AuthenticatedReportsReportIdIndexRoute:
+    AuthenticatedReportsReportIdIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
