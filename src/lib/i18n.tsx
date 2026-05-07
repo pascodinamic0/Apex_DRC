@@ -205,6 +205,11 @@ const dict = {
     inviteSent: "Invitation sent",
     confirmRemove: "Remove this user?",
     yourProvinceStatus: "Your province status",
+    provinces: "Provinces",
+    addProvince: "Add province",
+    provinceCode: "Code",
+    provinceName: "Name",
+    confirmDeleteProvince: "Delete this province?",
   },
 };
 
