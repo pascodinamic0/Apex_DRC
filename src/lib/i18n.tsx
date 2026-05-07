@@ -104,8 +104,6 @@ const dict = {
     addProvince: "Ajouter une province",
     provinceCode: "Code",
     provinceName: "Nom",
-    save: "Enregistrer",
-    edit: "Modifier",
     confirmDeleteProvince: "Supprimer cette province ?",
   },
   en: {
