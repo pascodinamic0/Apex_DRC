@@ -1,13 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
-import { listUsers, inviteUser, removeUser } from "@/lib/admin-users.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -16,33 +15,61 @@ import { Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/users")({ component: UsersPage });
 
+interface UserRow { id: string; email: string | null; full_name: string | null; province_id: string | null; role: string | null }
+interface ProvinceRow { id: string; name: string }
+
+async function authedFetch(input: string, init: RequestInit = {}) {
+  const { data: { session } } = await supabase.auth.getSession();
+  return fetch(input, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session?.access_token ?? ""}`,
+      ...(init.headers || {}),
+    },
+  });
+}
+
 function UsersPage() {
   const { t } = useT();
   const { role } = useAuth();
   const nav = useNavigate();
-  const list = useServerFn(listUsers);
-  const invite = useServerFn(inviteUser);
-  const remove = useServerFn(removeUser);
-  const [data, setData] = useState<{ users: any[]; provinces: any[] }>({ users: [], provinces: [] });
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ email: "", fullName: "", provinceId: "", role: "province_user" as const });
+  const [form, setForm] = useState({ email: "", fullName: "", provinceId: "", role: "province_user" as "province_user" | "technical_director" | "read_only" });
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (role && role !== "technical_director") nav({ to: "/dashboard" });
   }, [role, nav]);
 
-  const refresh = () => list().then(setData).catch((e) => toast.error(e.message));
+  const refresh = async () => {
+    try {
+      const res = await authedFetch("/api/admin/users");
+      if (!res.ok) throw new Error(await res.text());
+      const json = await res.json();
+      setUsers(Array.isArray(json?.users) ? json.users : []);
+      setProvinces(Array.isArray(json?.provinces) ? json.provinces : []);
+    } catch (e: any) {
+      toast.error(e.message || "Error");
+    }
+  };
+
   useEffect(() => { if (role === "technical_director") refresh(); }, [role]);
 
   const onInvite = async () => {
     setBusy(true);
     try {
-      await invite({ data: {
-        email: form.email, fullName: form.fullName,
-        provinceId: form.role === "province_user" ? (form.provinceId || null) : null,
-        role: form.role,
-      }});
+      const res = await authedFetch("/api/admin/users", {
+        method: "POST",
+        body: JSON.stringify({
+          email: form.email, fullName: form.fullName,
+          provinceId: form.role === "province_user" ? (form.provinceId || null) : null,
+          role: form.role,
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
       toast.success(t.inviteSent);
       setOpen(false);
       setForm({ email: "", fullName: "", provinceId: "", role: "province_user" });
@@ -52,13 +79,16 @@ function UsersPage() {
 
   const onRemove = async (userId: string) => {
     if (!confirm(t.confirmRemove)) return;
-    try { await remove({ data: { userId } }); refresh(); }
-    catch (e: any) { toast.error(e.message); }
+    try {
+      const res = await authedFetch("/api/admin/users", { method: "DELETE", body: JSON.stringify({ userId }) });
+      if (!res.ok) throw new Error(await res.text());
+      refresh();
+    } catch (e: any) { toast.error(e.message); }
   };
 
   if (role !== "technical_director") return null;
 
-  const provinceName = (id: string | null) => data.provinces.find((p) => p.id === id)?.name || "—";
+  const provinceName = (id: string | null) => provinces.find((p) => p.id === id)?.name || "—";
   const roleLabel = (r: string | null) =>
     r === "technical_director" ? t.director : r === "read_only" ? t.readOnly : r === "province_user" ? t.provinceUser : "—";
 
@@ -92,7 +122,7 @@ function UsersPage() {
                   <Select value={form.provinceId} onValueChange={(v) => setForm({ ...form, provinceId: v })}>
                     <SelectTrigger><SelectValue placeholder={t.selectProvince} /></SelectTrigger>
                     <SelectContent>
-                      {data.provinces.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                      {provinces.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -109,7 +139,7 @@ function UsersPage() {
       <Card>
         <CardContent className="p-0">
           <div className="divide-y">
-            {data.users.map((u) => (
+            {users.map((u) => (
               <div key={u.id} className="flex items-center justify-between p-4">
                 <div className="min-w-0 flex-1">
                   <div className="font-medium truncate">{u.full_name || u.email}</div>
@@ -122,6 +152,7 @@ function UsersPage() {
                 </div>
               </div>
             ))}
+            {users.length === 0 && <div className="p-8 text-center text-sm text-muted-foreground">—</div>}
           </div>
         </CardContent>
       </Card>
