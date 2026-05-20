@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -6,9 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus, Save, Send } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Trash2, Plus, Save, Send, HelpCircle, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { queueDraft } from "@/lib/offline/draft-queue";
+import { helpSectionsFr } from "@/content/help.fr";
+import { helpSectionsEn } from "@/content/help.en";
+import { exportSingleReportDocx } from "@/lib/export/docx-export";
 
 export interface ActivityRow {
   id?: string;
@@ -37,6 +44,8 @@ export function ReportEditor({
   isProvinceUser,
   isDirector,
   onAfterAction,
+  showExport = false,
+  provinceLabel = "",
 }: {
   report: ReportData;
   initialActivities: ActivityRow[];
@@ -45,8 +54,10 @@ export function ReportEditor({
   isProvinceUser: boolean;
   isDirector: boolean;
   onAfterAction?: () => void;
+  showExport?: boolean;
+  provinceLabel?: string;
 }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const [activities, setActivities] = useState<ActivityRow[]>(initialActivities);
   const [narratives, setNarratives] = useState<Narratives>(initialNarratives);
   const [savingState, setSavingState] = useState<"idle" | "saving" | "saved">("idle");
@@ -64,14 +75,19 @@ export function ReportEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activities, narratives]);
 
-  const saveDraft = async (silent = false) => {
-    setSavingState("saving");
-    // Save snapshot
+  const persistDraft = async () => {
+    if (!navigator.onLine) {
+      await queueDraft({
+        reportId: report.id,
+        payload: { activities, narratives },
+        queuedAt: new Date().toISOString(),
+      });
+      return { offline: true };
+    }
     await supabase.from("report_drafts").upsert(
       { report_id: report.id, payload: { activities, narratives } as any, updated_at: new Date().toISOString() },
-      { onConflict: "report_id" }
+      { onConflict: "report_id" },
     );
-    // Sync activities: simple replace
     await supabase.from("activities").delete().eq("report_id", report.id);
     if (activities.length) {
       await supabase.from("activities").insert(activities.map((a, idx) => ({
@@ -88,13 +104,28 @@ export function ReportEditor({
     for (const [section_type, content] of Object.entries(narratives)) {
       await supabase.from("narratives").upsert(
         { report_id: report.id, section_type: section_type as any, content },
-        { onConflict: "report_id,section_type" }
+        { onConflict: "report_id,section_type" },
       );
     }
-    dirtyRef.current = false;
-    setSavingState("saved");
-    if (!silent) toast.success(t.saved);
-    setTimeout(() => setSavingState("idle"), 2000);
+    return {};
+  };
+
+  const saveDraft = async (silent = false) => {
+    setSavingState("saving");
+    try {
+      const result = await persistDraft();
+      dirtyRef.current = false;
+      setSavingState("saved");
+      if (!silent) {
+        if (result?.offline) toast.success(t.offline + " — " + t.pendingSync);
+        else if (report.status === "submitted" && isProvinceUser) toast.success(t.changesSavedAwaiting);
+        else toast.success(t.saved);
+      }
+      setTimeout(() => setSavingState("idle"), 2000);
+    } catch (e: any) {
+      setSavingState("idle");
+      toast.error(e.message || t.error);
+    }
   };
 
   const submit = async () => {
@@ -189,9 +220,9 @@ export function ReportEditor({
     );
   };
 
-  const renderNarrative = (key: string, label: string) => (
+  const renderNarrative = (key: string, label: string, tipId?: string) => (
     <div className="space-y-2">
-      <label className="text-sm font-medium">{label}</label>
+      <SectionLabel label={label} tipId={tipId} />
       <Textarea
         rows={6}
         value={narratives[key] || ""}
@@ -203,13 +234,77 @@ export function ReportEditor({
 
   const statusCls: Record<string, string> = {
     draft: "bg-muted text-muted-foreground",
-    submitted: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
+    submitted: "bg-amber-500/10 text-amber-800 dark:text-amber-200",
     validated: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
   };
-  const statusLbl: Record<string, string> = { draft: t.draft, submitted: t.submitted, validated: t.validated };
+  const statusLbl: Record<string, string> = {
+    draft: t.draft,
+    submitted: isProvinceUser ? t.awaitingValidation : t.submitted,
+    validated: t.validated,
+  };
+
+  const helpTip = (id: string) => {
+    const sections = lang === "en" ? helpSectionsEn : helpSectionsFr;
+    const s = sections.find((x) => x.id === id);
+    return s?.body[0] || "";
+  };
+
+  const SectionLabel = ({ label, tipId }: { label: string; tipId?: string }) => (
+    <div className="flex items-center gap-1">
+      <span className="text-sm font-medium">{label}</span>
+      {tipId && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button type="button" className="text-muted-foreground"><HelpCircle className="h-3.5 w-3.5" /></button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs text-xs">{helpTip(tipId)}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
+  );
+
+  const exportReportDocx = async () => {
+    const rows = activities.map((a) => ({
+      code: a.activity_code || "—",
+      planned: a.planned,
+      achieved: a.achieved,
+    }));
+    const sections = [
+      { label: t.sectionC, content: narratives.stakeholder_coordination || "" },
+      { label: t.sectionD, content: narratives.success_stories || "" },
+      { label: t.sectionE, content: narratives.challenges || "" },
+      { label: t.sectionF, content: narratives.priorities_next_month || "" },
+      { label: t.sectionG, content: [narratives.exec_summary_smni, narratives.exec_summary_nutrition, narratives.exec_summary_malaria].filter(Boolean).join("\n\n") },
+    ];
+    await exportSingleReportDocx({
+      title: `${t.reportFor} ${provinceLabel || ""} — ${t.months[report.month - 1]} ${report.year}`,
+      periodLine: `${t.months[report.month - 1]} ${report.year}`,
+      tableHead: [t.activityCode, t.planned, t.achieved, "%"],
+      rows,
+      sections,
+      filename: `epic-report-${report.year}-${report.month}.docx`,
+    });
+    toast.success(t.docxGenerated);
+  };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
+      {isProvinceUser && report.status === "submitted" && (
+        <Alert>
+          <AlertTitle>{t.awaitingValidation}</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>{t.awaitingValidationDesc}</p>
+            {readOnly && (
+              <Link to="/reports/$reportId/edit" params={{ reportId: report.id }}>
+                <Button size="sm" variant="outline">{t.editReportAgain}</Button>
+              </Link>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex items-center justify-between flex-wrap gap-3 sticky top-0 bg-background/80 backdrop-blur-sm py-3 z-10">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold">
@@ -220,7 +315,12 @@ export function ReportEditor({
             <span className="text-xs text-muted-foreground">{savingState === "saving" ? t.saving : t.autoSaved}</span>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {showExport && (
+            <Button variant="outline" size="sm" onClick={exportReportDocx}>
+              <FileText className="h-4 w-4 mr-1" />{t.exportReport}
+            </Button>
+          )}
           {!readOnly && isProvinceUser && (
             <>
               <Button variant="outline" onClick={() => saveDraft()}>
@@ -267,7 +367,7 @@ export function ReportEditor({
         </TabsContent>
 
         <TabsContent value="C">
-          <Card><CardContent className="p-6">{renderNarrative("stakeholder_coordination", t.sectionC)}</CardContent></Card>
+          <Card><CardContent className="p-6">{renderNarrative("stakeholder_coordination", t.sectionC, "province-report")}</CardContent></Card>
         </TabsContent>
         <TabsContent value="D">
           <Card><CardContent className="p-6">{renderNarrative("success_stories", t.sectionD)}</CardContent></Card>

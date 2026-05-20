@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Eye, Pencil } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/reports/")({ component: ReportsList });
 
@@ -19,6 +20,7 @@ function ReportsList() {
   const nav = useNavigate();
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -28,17 +30,22 @@ function ReportsList() {
       ]);
       setReports((rp as ReportRow[]) || []);
       setProvinces((pv as ProvinceRow[]) || []);
+      setLoading(false);
     })();
   }, []);
 
   const provinceName = (id: string) => provinces.find((p) => p.id === id)?.name || "—";
-  const statusBadge = (s: string) => {
+  const statusBadge = (s: string, mine?: boolean) => {
     const cls: Record<string, string> = {
       draft: "bg-muted text-muted-foreground",
-      submitted: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
+      submitted: "bg-amber-500/10 text-amber-800 dark:text-amber-200",
       validated: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
     };
-    const lbl: Record<string, string> = { draft: t.draft, submitted: t.submitted, validated: t.validated };
+    const lbl: Record<string, string> = {
+      draft: t.draft,
+      submitted: mine && role === "province_user" ? t.awaitingValidation : t.submitted,
+      validated: t.validated,
+    };
     return <Badge variant="outline" className={cls[s]}>{lbl[s]}</Badge>;
   };
 
@@ -58,7 +65,9 @@ function ReportsList() {
 
       <Card>
         <CardContent className="p-0">
-          {reports.length === 0 ? (
+          {loading ? (
+            <div className="p-6 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
+          ) : reports.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground">{t.noReports}</div>
           ) : (
             <div className="divide-y">
@@ -69,7 +78,7 @@ function ReportsList() {
                     <div className="text-sm text-muted-foreground">{t.months[r.month - 1]} {r.year}</div>
                   </div>
                   <div className="flex items-center gap-3">
-                    {statusBadge(r.status)}
+                    {statusBadge(r.status, r.province_id === profile?.province_id)}
                     {canEdit(r) ? (
                       <Link to="/reports/$reportId/edit" params={{ reportId: r.id }}>
                         <Button size="sm" variant="outline"><Pencil className="h-3.5 w-3.5 mr-1" />{t.edit}</Button>

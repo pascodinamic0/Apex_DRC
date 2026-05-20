@@ -1,5 +1,7 @@
 {
-  "name": "tanstack_start_ts",
+  "name": "epic-drc-reporting",
+  "description": "Bilingual provincial health reporting platform for EPIC RDC (TanStack Start + Supabase)",
+  "version": "0.1.0",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -50,6 +52,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "docx": "^9.5.0",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "jspdf": "^4.2.1",
@@ -85,6 +88,7 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vite-plugin-pwa": "^1.0.1"
   }
 }

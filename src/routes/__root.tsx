@@ -10,8 +10,12 @@ import {
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
-import { I18nProvider, useT } from "@/lib/i18n";
+import { I18nProvider } from "@/lib/i18n";
+import { HtmlLang } from "@/components/html-lang";
 import { Toaster } from "@/components/ui/sonner";
+import { registerServiceWorker } from "@/lib/pwa-register";
+
+if (typeof window !== "undefined") registerServiceWorker();
 
 function NotFoundComponent() {
   return (
@@ -61,7 +65,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -83,6 +90,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
+        <HtmlLang />
         <AuthProvider>
           <Outlet />
           <Toaster richColors position="top-right" />

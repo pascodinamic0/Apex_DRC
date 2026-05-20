@@ -5,7 +5,8 @@ import { useT } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, BarChart, Bar } from "recharts";
+import { DashboardCharts } from "@/components/dashboard-charts";
+import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, CheckCircle2, Clock, TrendingUp } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
@@ -18,6 +19,7 @@ function Dashboard() {
   const { role, profile } = useAuth();
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
   const [reports, setReports] = useState<ReportRow[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
   const now = new Date();
   const curMonth = now.getMonth() + 1;
   const curYear = now.getFullYear();
@@ -30,6 +32,7 @@ function Dashboard() {
       ]);
       setProvinces((pv as ProvinceRow[]) || []);
       setReports((rp as ReportRow[]) || []);
+      setDataLoading(false);
     })();
   }, []);
 
@@ -83,25 +86,19 @@ function Dashboard() {
         <KpiCard icon={TrendingUp} label={t.monthlyTrend} value={trend[trend.length - 1].count} />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader><CardTitle>{t.monthlyTrend}</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={trend}>
-                <XAxis dataKey="name" fontSize={11} />
-                <YAxis allowDecimals={false} fontSize={11} />
-                <Tooltip />
-                <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      <div className="grid lg:grid-cols-2 gap-6 items-stretch">
+        {dataLoading ? (
+          <Skeleton className="min-h-64 h-full w-full" />
+        ) : (
+          <div className="h-full min-h-0">
+            <DashboardCharts trend={trend} provinceBars={[]} trendLabel={t.monthlyTrend} provinceLabel={t.provinceStatus} />
+          </div>
+        )}
 
         {!isProvinceUser ? (
-          <Card>
-            <CardHeader><CardTitle>{t.provinceStatus}</CardTitle></CardHeader>
-            <CardContent>
+          <Card className="flex h-full flex-col">
+            <CardHeader className="shrink-0"><CardTitle>{t.provinceStatus}</CardTitle></CardHeader>
+            <CardContent className="flex-1">
               <div className="space-y-2">
                 {provinces.map((p) => (
                   <div key={p.id} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
@@ -113,9 +110,9 @@ function Dashboard() {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader><CardTitle>{t.yourProvinceStatus}</CardTitle></CardHeader>
-            <CardContent>
+          <Card className="flex h-full flex-col">
+            <CardHeader className="shrink-0"><CardTitle>{t.yourProvinceStatus}</CardTitle></CardHeader>
+            <CardContent className="flex-1">
               {profile?.province_id ? (
                 <div className="flex items-center justify-between text-sm py-1.5">
                   <span>{provinces.find(p => p.id === profile.province_id)?.name || "—"}</span>

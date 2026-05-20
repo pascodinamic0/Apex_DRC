@@ -15,7 +15,7 @@ import { Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/users")({ component: UsersPage });
 
-interface UserRow { id: string; email: string | null; full_name: string | null; province_id: string | null; role: string | null }
+interface UserRow { id: string; email: string | null; full_name: string | null; province_id: string | null; job_title: string | null; role: string | null }
 interface ProvinceRow { id: string; name: string }
 
 async function authedFetch(input: string, init: RequestInit = {}) {
@@ -37,7 +37,7 @@ function UsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ email: "", fullName: "", provinceId: "", role: "province_user" as "province_user" | "technical_director" | "read_only" });
+  const [form, setForm] = useState({ email: "", fullName: "", provinceId: "", jobTitle: "", role: "province_user" as "province_user" | "technical_director" | "read_only" });
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -52,7 +52,7 @@ function UsersPage() {
 
   const refreshUsers = async () => {
     const [{ data: profiles, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
-      supabase.from("profiles").select("id, email, full_name, province_id"),
+      supabase.from("profiles").select("id, email, full_name, province_id, job_title"),
       supabase.from("user_roles").select("user_id, role"),
     ]);
     if (pErr) return toast.error(pErr.message);
@@ -79,12 +79,13 @@ function UsersPage() {
           email: form.email, fullName: form.fullName,
           provinceId: form.role === "province_user" ? (form.provinceId || null) : null,
           role: form.role,
+          jobTitle: form.role === "technical_director" ? form.jobTitle || null : null,
         }),
       });
       if (!res.ok) throw new Error(await res.text());
       toast.success(t.inviteSent);
       setOpen(false);
-      setForm({ email: "", fullName: "", provinceId: "", role: "province_user" });
+      setForm({ email: "", fullName: "", provinceId: "", jobTitle: "", role: "province_user" });
       refresh();
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
   };
@@ -94,6 +95,7 @@ function UsersPage() {
     try {
       const res = await authedFetch("/api/admin/users", { method: "DELETE", body: JSON.stringify({ userId }) });
       if (!res.ok) throw new Error(await res.text());
+      toast.success(t.userRemoved);
       refresh();
     } catch (e: any) { toast.error(e.message); }
   };
@@ -128,6 +130,12 @@ function UsersPage() {
                   </SelectContent>
                 </Select>
               </div>
+              {form.role === "technical_director" && (
+                <div>
+                  <Label>{t.jobTitle}</Label>
+                  <Input placeholder={t.jobTitlePlaceholder} value={form.jobTitle} onChange={(e) => setForm({ ...form, jobTitle: e.target.value })} />
+                </div>
+              )}
               {form.role === "province_user" && (
                 <div>
                   <Label>{t.province}</Label>
@@ -156,9 +164,10 @@ function UsersPage() {
                 <div className="min-w-0 flex-1">
                   <div className="font-medium truncate">{u.full_name || u.email}</div>
                   <div className="text-sm text-muted-foreground truncate">{u.email}</div>
+                  {u.job_title && <div className="text-xs text-muted-foreground">{u.job_title}</div>}
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge variant="outline">{roleLabel(u.role)}</Badge>
+                  <Badge variant="outline">{u.job_title || roleLabel(u.role)}</Badge>
                   {u.role === "province_user" && <span className="text-sm text-muted-foreground hidden sm:inline">{provinceName(u.province_id)}</span>}
                   <Button size="icon" variant="ghost" onClick={() => onRemove(u.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>

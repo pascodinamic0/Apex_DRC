@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/history")({ component: History });
 
@@ -18,6 +19,7 @@ function History() {
   const [provinceId, setProvinceId] = useState<string>("all");
   const [provinces, setProvinces] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -26,6 +28,7 @@ function History() {
         supabase.from("reports").select("*").order("year", { ascending: false }).order("month", { ascending: false }),
       ]);
       setProvinces(pv || []); setReports(rp || []);
+      setLoading(false);
     })();
   }, []);
 
@@ -68,8 +71,10 @@ function History() {
 
       <Card>
         <CardContent className="p-0">
-          {filtered.length === 0 ? (
-            <div className="p-12 text-center text-muted-foreground">{t.noReports}</div>
+          {loading ? (
+            <div className="p-6 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
+          ) : filtered.length === 0 ? (
+            <div className="p-12 text-center text-muted-foreground">{t.noData}</div>
           ) : (
             <div className="divide-y">
               {filtered.map((r) => (

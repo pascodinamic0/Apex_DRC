@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/admin/users")({
         const uid = await getDirectorUserId(request);
         if (!uid) return new Response("Forbidden", { status: 403 });
         const [{ data: profiles }, { data: roles }, { data: provinces }] = await Promise.all([
-          supabaseAdmin.from("profiles").select("id, email, full_name, province_id"),
+          supabaseAdmin.from("profiles").select("id, email, full_name, province_id, job_title"),
           supabaseAdmin.from("user_roles").select("user_id, role"),
           supabaseAdmin.from("provinces").select("id, name, code").order("name"),
         ]);
@@ -55,6 +55,7 @@ export const Route = createFileRoute("/api/admin/users")({
           fullName: z.string().min(1),
           provinceId: z.string().uuid().nullable(),
           role: z.enum(["province_user", "technical_director", "read_only"]),
+          jobTitle: z.string().optional().nullable(),
         }).parse(body);
         const { data: created, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(input.email, {
           data: { full_name: input.fullName },
@@ -64,6 +65,7 @@ export const Route = createFileRoute("/api/admin/users")({
         await supabaseAdmin.from("profiles").upsert({
           id: newId, email: input.email, full_name: input.fullName,
           province_id: input.role === "province_user" ? input.provinceId : null,
+          job_title: input.jobTitle || null,
         });
         await supabaseAdmin.from("user_roles").delete().eq("user_id", newId);
         await supabaseAdmin.from("user_roles").insert({ user_id: newId, role: input.role });

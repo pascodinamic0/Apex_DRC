@@ -12,12 +12,14 @@ import { LangSwitch } from "@/components/lang-switch";
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
 function LoginPage() {
-  const { signIn, user, loading } = useAuth();
+  const { signIn, resetPasswordForEmail, user, loading } = useAuth();
   const { t } = useT();
   const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
   useEffect(() => {
     if (!loading && user) nav({ to: "/dashboard" });
@@ -32,6 +34,18 @@ function LoginPage() {
     else nav({ to: "/dashboard" });
   };
 
+  const sendReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await resetPasswordForEmail(resetEmail || email);
+    setBusy(false);
+    if (error) toast.error(error);
+    else {
+      toast.success(t.resetLinkSent);
+      setShowForgot(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-muted px-4">
       <div className="absolute top-4 right-4"><LangSwitch /></div>
@@ -41,21 +55,40 @@ function LoginPage() {
         <p className="text-muted-foreground mt-1">{t.tagline}</p>
       </div>
       <Card className="w-full max-w-md">
-        <CardHeader><CardTitle>{t.login}</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{showForgot ? t.forgotPassword : t.login}</CardTitle></CardHeader>
         <CardContent>
-          <form onSubmit={submit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t.email}</Label>
-              <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>{t.password}</Label>
-              <Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-            </div>
-            <Button type="submit" className="w-full" disabled={busy}>
-              {busy ? "..." : t.signIn}
-            </Button>
-          </form>
+          {showForgot ? (
+            <form onSubmit={sendReset} className="space-y-4">
+              <p className="text-sm text-muted-foreground">{t.forgotPasswordDesc}</p>
+              <div className="space-y-2">
+                <Label>{t.email}</Label>
+                <Input type="email" required value={resetEmail || email} onChange={(e) => setResetEmail(e.target.value)} />
+              </div>
+              <Button type="submit" className="w-full" disabled={busy}>{busy ? "..." : t.sendResetLink}</Button>
+              <button type="button" className="text-sm text-primary underline w-full text-center" onClick={() => setShowForgot(false)}>
+                {t.backToLogin}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={submit} className="space-y-4">
+              <div className="space-y-2">
+                <Label>{t.email}</Label>
+                <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>{t.password}</Label>
+                <Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+              </div>
+              <div className="text-right">
+                <button type="button" className="text-sm text-primary underline" onClick={() => { setShowForgot(true); setResetEmail(email); }}>
+                  {t.forgotPassword}
+                </button>
+              </div>
+              <Button type="submit" className="w-full" disabled={busy}>
+                {busy ? "..." : t.signIn}
+              </Button>
+            </form>
+          )}
           <div className="mt-6 text-xs text-muted-foreground border-t pt-4 space-y-1">
             <div className="font-medium text-foreground">Demo accounts (password: Demo1234!)</div>
             <div>director@epic.cd · kinshasa@epic.cd · viewer@epic.cd</div>
