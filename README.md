@@ -77,6 +77,21 @@ public/             # PWA assets (manifest, service worker)
 
 See [`.env.example`](./.env.example). Never commit `.env` or service-role keys. Use publishable (anon) keys in the browser; keep the service role server-side only.
 
+### Vercel (production / preview)
+
+`.env` is **not** deployed. In [Vercel → Project → Settings → Environment Variables](https://vercel.com/docs/environment-variables), add **all** of these for **Production** and **Preview** (values from Supabase → Settings → API):
+
+| Variable | Notes |
+|----------|--------|
+| `SUPABASE_URL` | Project URL |
+| `SUPABASE_PUBLISHABLE_KEY` | Publishable (anon) key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only; admin API routes |
+| `VITE_SUPABASE_URL` | Same as `SUPABASE_URL` (required for Vite client build) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Same as publishable key |
+| `VITE_SUPABASE_PROJECT_ID` | Project ref (subdomain) |
+
+After saving, **redeploy** (Deployments → … → Redeploy). New variables only apply on the next build.
+
 ## License
 
 Private / organizational use unless otherwise specified by the EPIC RDC program owners.

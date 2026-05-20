@@ -8,8 +8,9 @@ async function getDirectorUserId(request: Request): Promise<string | null> {
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
   console.log("[admin.users] token len", token.length);
   if (!token) return null;
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const key = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const { getSupabasePublishableKey, getSupabaseUrl } = await import("@/integrations/supabase/env");
+  const url = getSupabaseUrl();
+  const key = getSupabasePublishableKey();
   if (!url || !key) {
     console.log("[admin.users] missing env", { url: !!url, key: !!key });
     return null;
