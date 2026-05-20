@@ -90,8 +90,8 @@ function LoginPage() {
             </form>
           )}
           <div className="mt-6 text-xs text-muted-foreground border-t pt-4 space-y-1">
-            <div className="font-medium text-foreground">Demo accounts (password: Demo1234!)</div>
-            <div>director@epic.cd · kinshasa@epic.cd · viewer@epic.cd</div>
+            <div className="font-medium text-foreground">Demo accounts (password: 1234)</div>
+            <div>director@gmail.com · kinshasa@epic.cd · viewer@epic.cd</div>
           </div>
         </CardContent>
       </Card>
