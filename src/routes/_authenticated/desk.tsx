@@ -179,10 +179,7 @@ function DeskPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t.desk}</h1>
-          <p className="text-muted-foreground">{t.deskDesc}</p>
-        </div>
+        <h1 className="text-3xl font-bold tracking-tight">{t.desk}</h1>
         <div className="flex gap-3 flex-wrap">
           <div className="space-y-1">
             <Label className="text-xs">{t.month}</Label>
@@ -317,8 +314,7 @@ function DeskPage() {
       {role === "technical_director" && (
         <Card>
           <CardHeader><CardTitle>{t.generateConsolidated}</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">{t.generateConsolidatedDesc}</p>
+          <CardContent>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" asChild>
                 <Link to="/consolidation">{t.previewConsolidated}</Link>

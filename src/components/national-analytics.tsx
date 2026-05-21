@@ -197,9 +197,6 @@ export function NationalAnalytics({
                 <span className="text-xs tabular-nums w-8 text-right">{s.pct}%</span>
               </div>
             ))}
-            {statusTotals.total_planned === 0 && (
-              <p className="text-sm text-muted-foreground">{t.noTableauIData}</p>
-            )}
           </CardContent>
         </Card>
 

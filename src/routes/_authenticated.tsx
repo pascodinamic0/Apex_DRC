@@ -2,8 +2,8 @@ import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tansta
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
-import { LangSwitch } from "@/components/lang-switch";
-import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/notification-bell";
+import { SidebarLangSwitch } from "@/components/sidebar-lang-switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sidebar,
@@ -21,9 +21,7 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, FileText, Layers, Archive, LogOut, Users, HelpCircle, User, WifiOff, Wifi, Bell, ClipboardList } from "lucide-react";
-import { getUnreadNotificationCount } from "@/lib/notifications";
-import { Badge } from "@/components/ui/badge";
+import { LayoutDashboard, FileText, Layers, Archive, LogOut, Users, HelpCircle, User, WifiOff, Wifi, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getPendingCount, replayDraftQueue, type QueuedDraft } from "@/lib/offline/draft-queue";
 import { toast } from "sonner";
@@ -37,8 +35,6 @@ function Layout() {
   const loc = useLocation();
   const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
   const [pendingSync, setPendingSync] = useState(0);
-  const [unreadNotif, setUnreadNotif] = useState(0);
-
   const syncQueuedDrafts = useCallback(async () => {
     const count = await replayDraftQueue(async (item: QueuedDraft) => {
       const payload = item.payload as {
@@ -87,13 +83,7 @@ function Layout() {
 
   useEffect(() => {
     const refreshPending = () => getPendingCount().then(setPendingSync);
-    const refreshNotif = () => {
-      if (user?.id) getUnreadNotificationCount(user.id).then(setUnreadNotif);
-    };
     refreshPending();
-    refreshNotif();
-    const onNotif = () => refreshNotif();
-    window.addEventListener("epic-notifications-changed", onNotif);
     const onOnline = () => {
       setOnline(true);
       syncQueuedDrafts();
@@ -104,9 +94,8 @@ function Layout() {
     return () => {
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
-      window.removeEventListener("epic-notifications-changed", onNotif);
     };
-  }, [syncQueuedDrafts, user?.id]);
+  }, [syncQueuedDrafts]);
 
   if (loading || !user) {
     return (
@@ -126,9 +115,7 @@ function Layout() {
       ? [{ to: "/desk", icon: ClipboardList, label: t.desk }]
       : []),
     ...(role !== "province_user" ? [{ to: "/consolidation", icon: Layers, label: t.consolidation }] : []),
-    { to: "/notifications", icon: Bell, label: t.notifications, badge: unreadNotif },
     { to: "/history", icon: Archive, label: t.history },
-    { to: "/help", icon: HelpCircle, label: t.help },
     ...(role === "technical_director" ? [{ to: "/users", icon: Users, label: t.users }] : []),
   ];
 
@@ -172,9 +159,6 @@ function Layout() {
                       <Link to={it.to}>
                         <it.icon />
                         <span>{it.label}</span>
-                        {"badge" in it && it.badge > 0 && (
-                          <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1 text-[10px]">{it.badge}</Badge>
-                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -196,6 +180,17 @@ function Layout() {
           </Link>
           <SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
           <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip={t.help} isActive={loc.pathname.startsWith("/help")}>
+                <Link to="/help">
+                  <HelpCircle />
+                  <span>{t.help}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarLangSwitch />
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip={t.profile}>
                 <Link to="/profile">
@@ -231,17 +226,8 @@ function Layout() {
         <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-card px-4">
           <SidebarTrigger />
           <div className="flex-1 truncate font-semibold md:hidden">{t.appName}</div>
-          <div className="ml-auto flex items-center gap-2">
-            <Link to="/help">
-              <Button variant="ghost" size="sm" className="hidden md:inline-flex">
-                <HelpCircle className="h-4 w-4 mr-1" />
-                {t.help}
-              </Button>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <HelpCircle className="h-5 w-5" />
-              </Button>
-            </Link>
-            <LangSwitch />
+          <div className="ml-auto flex items-center gap-1">
+            <NotificationBell role={role} />
           </div>
         </header>
 
