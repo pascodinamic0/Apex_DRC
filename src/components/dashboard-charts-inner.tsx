@@ -1,29 +1,74 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import { useT } from "@/lib/i18n";
+
+const CHART_HEIGHT = 300;
 
 export default function DashboardChartsInner({
   trend,
   trendLabel,
 }: {
   trend: { name: string; count: number }[];
-  provinceBars: { name: string; status: number }[];
   trendLabel: string;
-  provinceLabel: string;
 }) {
+  const { t } = useT();
+
+  const chartConfig = {
+    count: {
+      label: t.submissions,
+      color: "var(--primary)",
+    },
+  } satisfies ChartConfig;
+
   return (
-    <Card className="flex h-full flex-col">
-      <CardHeader className="shrink-0"><CardTitle>{trendLabel}</CardTitle></CardHeader>
-      <CardContent className="flex flex-1 flex-col min-h-0 p-6 pt-0">
-        <div className="min-h-[240px] w-full flex-1">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={trend} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
-            <XAxis dataKey="name" fontSize={11} tickMargin={8} />
-            <YAxis allowDecimals={false} fontSize={11} width={36} tickMargin={4} />
-            <Tooltip />
-            <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+    <Card className="w-full">
+      <CardHeader className="shrink-0">
+        <CardTitle>{trendLabel}</CardTitle>
+      </CardHeader>
+      <CardContent className="p-6 pt-0">
+        <ChartContainer
+          config={chartConfig}
+          className="aspect-auto w-full"
+          style={{ height: CHART_HEIGHT }}
+        >
+          <LineChart
+            data={trend}
+            margin={{ left: 4, right: 12, top: 12, bottom: 4 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/60" />
+            <XAxis
+              dataKey="name"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              fontSize={12}
+            />
+            <YAxis
+              allowDecimals={false}
+              tickLine={false}
+              axisLine={false}
+              width={36}
+              tickMargin={4}
+              fontSize={12}
+              domain={[0, "auto"]}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Line
+              type="monotone"
+              dataKey="count"
+              stroke="var(--color-count)"
+              strokeWidth={2}
+              dot={{ r: 4, fill: "var(--color-count)", strokeWidth: 0 }}
+              activeDot={{ r: 6 }}
+            />
           </LineChart>
-        </ResponsiveContainer>
-        </div>
+        </ChartContainer>
       </CardContent>
     </Card>
   );

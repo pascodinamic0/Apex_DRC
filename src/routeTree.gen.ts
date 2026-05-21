@@ -15,14 +15,18 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
+import { Route as AuthenticatedDeskRouteImport } from './routes/_authenticated/desk'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConsolidationRouteImport } from './routes/_authenticated/consolidation'
 import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports.index'
 import { Route as ApiAdminUsersRouteImport } from './routes/api/admin.users'
 import { Route as AuthenticatedReportsNewRouteImport } from './routes/_authenticated/reports.new'
 import { Route as AuthenticatedReportsReportIdIndexRouteImport } from './routes/_authenticated/reports.$reportId.index'
+import { Route as AuthenticatedReportsReportIdRevisionsRouteImport } from './routes/_authenticated/reports.$reportId.revisions'
+import { Route as AuthenticatedReportsReportIdReviewRouteImport } from './routes/_authenticated/reports.$reportId.review'
 import { Route as AuthenticatedReportsReportIdEditRouteImport } from './routes/_authenticated/reports.$reportId.edit'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -54,6 +58,12 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
   id: '/history',
   path: '/history',
@@ -62,6 +72,11 @@ const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
 const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
   id: '/help',
   path: '/help',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDeskRoute = AuthenticatedDeskRouteImport.update({
+  id: '/desk',
+  path: '/desk',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -97,6 +112,18 @@ const AuthenticatedReportsReportIdIndexRoute =
     path: '/reports/$reportId/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedReportsReportIdRevisionsRoute =
+  AuthenticatedReportsReportIdRevisionsRouteImport.update({
+    id: '/reports/$reportId/revisions',
+    path: '/reports/$reportId/revisions',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedReportsReportIdReviewRoute =
+  AuthenticatedReportsReportIdReviewRouteImport.update({
+    id: '/reports/$reportId/review',
+    path: '/reports/$reportId/review',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedReportsReportIdEditRoute =
   AuthenticatedReportsReportIdEditRouteImport.update({
     id: '/reports/$reportId/edit',
@@ -110,14 +137,18 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/consolidation': typeof AuthenticatedConsolidationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/desk': typeof AuthenticatedDeskRoute
   '/help': typeof AuthenticatedHelpRoute
   '/history': typeof AuthenticatedHistoryRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/users': typeof AuthenticatedUsersRoute
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
+  '/reports/$reportId/review': typeof AuthenticatedReportsReportIdReviewRoute
+  '/reports/$reportId/revisions': typeof AuthenticatedReportsReportIdRevisionsRoute
   '/reports/$reportId/': typeof AuthenticatedReportsReportIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -126,14 +157,18 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/consolidation': typeof AuthenticatedConsolidationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/desk': typeof AuthenticatedDeskRoute
   '/help': typeof AuthenticatedHelpRoute
   '/history': typeof AuthenticatedHistoryRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/users': typeof AuthenticatedUsersRoute
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
+  '/reports/$reportId/review': typeof AuthenticatedReportsReportIdReviewRoute
+  '/reports/$reportId/revisions': typeof AuthenticatedReportsReportIdRevisionsRoute
   '/reports/$reportId': typeof AuthenticatedReportsReportIdIndexRoute
 }
 export interface FileRoutesById {
@@ -144,14 +179,18 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/consolidation': typeof AuthenticatedConsolidationRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/desk': typeof AuthenticatedDeskRoute
   '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/reports/new': typeof AuthenticatedReportsNewRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
+  '/_authenticated/reports/$reportId/review': typeof AuthenticatedReportsReportIdReviewRoute
+  '/_authenticated/reports/$reportId/revisions': typeof AuthenticatedReportsReportIdRevisionsRoute
   '/_authenticated/reports/$reportId/': typeof AuthenticatedReportsReportIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -162,14 +201,18 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/consolidation'
     | '/dashboard'
+    | '/desk'
     | '/help'
     | '/history'
+    | '/notifications'
     | '/profile'
     | '/users'
     | '/reports/new'
     | '/api/admin/users'
     | '/reports/'
     | '/reports/$reportId/edit'
+    | '/reports/$reportId/review'
+    | '/reports/$reportId/revisions'
     | '/reports/$reportId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -178,14 +221,18 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/consolidation'
     | '/dashboard'
+    | '/desk'
     | '/help'
     | '/history'
+    | '/notifications'
     | '/profile'
     | '/users'
     | '/reports/new'
     | '/api/admin/users'
     | '/reports'
     | '/reports/$reportId/edit'
+    | '/reports/$reportId/review'
+    | '/reports/$reportId/revisions'
     | '/reports/$reportId'
   id:
     | '__root__'
@@ -195,14 +242,18 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/consolidation'
     | '/_authenticated/dashboard'
+    | '/_authenticated/desk'
     | '/_authenticated/help'
     | '/_authenticated/history'
+    | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/users'
     | '/_authenticated/reports/new'
     | '/api/admin/users'
     | '/_authenticated/reports/'
     | '/_authenticated/reports/$reportId/edit'
+    | '/_authenticated/reports/$reportId/review'
+    | '/_authenticated/reports/$reportId/revisions'
     | '/_authenticated/reports/$reportId/'
   fileRoutesById: FileRoutesById
 }
@@ -258,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/history': {
       id: '/_authenticated/history'
       path: '/history'
@@ -270,6 +328,13 @@ declare module '@tanstack/react-router' {
       path: '/help'
       fullPath: '/help'
       preLoaderRoute: typeof AuthenticatedHelpRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/desk': {
+      id: '/_authenticated/desk'
+      path: '/desk'
+      fullPath: '/desk'
+      preLoaderRoute: typeof AuthenticatedDeskRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard': {
@@ -314,6 +379,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsReportIdIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/reports/$reportId/revisions': {
+      id: '/_authenticated/reports/$reportId/revisions'
+      path: '/reports/$reportId/revisions'
+      fullPath: '/reports/$reportId/revisions'
+      preLoaderRoute: typeof AuthenticatedReportsReportIdRevisionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports/$reportId/review': {
+      id: '/_authenticated/reports/$reportId/review'
+      path: '/reports/$reportId/review'
+      fullPath: '/reports/$reportId/review'
+      preLoaderRoute: typeof AuthenticatedReportsReportIdReviewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/reports/$reportId/edit': {
       id: '/_authenticated/reports/$reportId/edit'
       path: '/reports/$reportId/edit'
@@ -327,26 +406,36 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedConsolidationRoute: typeof AuthenticatedConsolidationRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDeskRoute: typeof AuthenticatedDeskRoute
   AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedReportsNewRoute: typeof AuthenticatedReportsNewRoute
   AuthenticatedReportsIndexRoute: typeof AuthenticatedReportsIndexRoute
   AuthenticatedReportsReportIdEditRoute: typeof AuthenticatedReportsReportIdEditRoute
+  AuthenticatedReportsReportIdReviewRoute: typeof AuthenticatedReportsReportIdReviewRoute
+  AuthenticatedReportsReportIdRevisionsRoute: typeof AuthenticatedReportsReportIdRevisionsRoute
   AuthenticatedReportsReportIdIndexRoute: typeof AuthenticatedReportsReportIdIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedConsolidationRoute: AuthenticatedConsolidationRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDeskRoute: AuthenticatedDeskRoute,
   AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedReportsNewRoute: AuthenticatedReportsNewRoute,
   AuthenticatedReportsIndexRoute: AuthenticatedReportsIndexRoute,
   AuthenticatedReportsReportIdEditRoute: AuthenticatedReportsReportIdEditRoute,
+  AuthenticatedReportsReportIdReviewRoute:
+    AuthenticatedReportsReportIdReviewRoute,
+  AuthenticatedReportsReportIdRevisionsRoute:
+    AuthenticatedReportsReportIdRevisionsRoute,
   AuthenticatedReportsReportIdIndexRoute:
     AuthenticatedReportsReportIdIndexRoute,
 }

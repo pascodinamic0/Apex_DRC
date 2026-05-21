@@ -15,12 +15,18 @@ function ViewPage() {
   const [activities, setActivities] = useState<ActivityRow[]>([]);
   const [narratives, setNarratives] = useState<Narratives>({});
   const [provinceName, setProvinceName] = useState("");
+  const [achievement, setAchievement] = useState<import("@/lib/activity-catalog").AchievementSummary | undefined>();
+  const [activityResponses, setActivityResponses] = useState<import("@/lib/activity-catalog").ActivityResponseFields[]>([]);
+  const [catalog, setCatalog] = useState<import("@/lib/activity-catalog").CatalogRow[]>([]);
 
   useEffect(() => {
     loadReportData(reportId).then(async (d) => {
       setReport(d.report);
       setActivities(d.activities);
       setNarratives(d.narratives);
+      setAchievement(d.achievement);
+      setActivityResponses(d.activityResponses);
+      setCatalog(d.catalog);
       const { data: pv } = await supabase.from("provinces").select("name").eq("id", d.report.province_id).maybeSingle();
       setProvinceName(pv?.name || "");
     });
@@ -44,6 +50,9 @@ function ViewPage() {
       report={report}
       initialActivities={activities}
       initialNarratives={narratives}
+      initialAchievement={achievement}
+      initialActivityResponses={activityResponses}
+      initialCatalog={catalog}
       readOnly={true}
       isProvinceUser={isMine}
       isDirector={isDirector}

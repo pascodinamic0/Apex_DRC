@@ -39,11 +39,15 @@ function ReportsList() {
     const cls: Record<string, string> = {
       draft: "bg-muted text-muted-foreground",
       submitted: "bg-amber-500/10 text-amber-800 dark:text-amber-200",
+      in_review: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
+      returned: "bg-red-500/10 text-red-700 dark:text-red-300",
       validated: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
     };
     const lbl: Record<string, string> = {
       draft: t.draft,
       submitted: mine && role === "province_user" ? t.awaitingValidation : t.submitted,
+      in_review: t.inReview,
+      returned: t.returned,
       validated: t.validated,
     };
     return <Badge variant="outline" className={cls[s]}>{lbl[s]}</Badge>;
@@ -51,6 +55,8 @@ function ReportsList() {
 
   const canEdit = (r: ReportRow) =>
     role === "province_user" && r.province_id === profile?.province_id && r.status !== "validated";
+  const canRevisions = (r: ReportRow) =>
+    role === "province_user" && r.province_id === profile?.province_id && r.status === "returned";
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -77,8 +83,13 @@ function ReportsList() {
                     <div className="font-medium">{provinceName(r.province_id)}</div>
                     <div className="text-sm text-muted-foreground">{t.months[r.month - 1]} {r.year}</div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap justify-end">
                     {statusBadge(r.status, r.province_id === profile?.province_id)}
+                    {canRevisions(r) && (
+                      <Link to="/reports/$reportId/revisions" params={{ reportId: r.id }}>
+                        <Button size="sm" variant="destructive">{t.revisions}</Button>
+                      </Link>
+                    )}
                     {canEdit(r) ? (
                       <Link to="/reports/$reportId/edit" params={{ reportId: r.id }}>
                         <Button size="sm" variant="outline"><Pencil className="h-3.5 w-3.5 mr-1" />{t.edit}</Button>

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { seedReportExtensions } from "@/lib/report-data";
 
 export const Route = createFileRoute("/_authenticated/reports/new")({ component: NewReport });
 
@@ -43,10 +44,7 @@ function NewReport() {
       return;
     }
     // Seed narratives & one activity per objective
-    await supabase.from("narratives").insert(
-      ["stakeholder_coordination","success_stories","challenges","priorities_next_month","exec_summary_smni","exec_summary_nutrition","exec_summary_malaria"]
-        .map((s) => ({ report_id: data.id, section_type: s as any, content: "" }))
-    );
+    await seedReportExtensions(data.id);
     nav({ to: "/reports/$reportId/edit", params: { reportId: data.id } });
   };
 

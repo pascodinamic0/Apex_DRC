@@ -5,9 +5,11 @@ import { useT } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { DashboardCharts } from "@/components/dashboard-charts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, CheckCircle2, Clock, TrendingUp } from "lucide-react";
+import { calcAchievementRate } from "@/lib/activity-catalog";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
@@ -15,7 +17,7 @@ interface ProvinceRow { id: string; name: string; code: string }
 interface ReportRow { id: string; province_id: string; month: number; year: number; status: string; submitted_at: string | null; validated_at: string | null }
 
 function Dashboard() {
-  const { t, lang } = useT();
+  const { t } = useT();
   const { role, profile } = useAuth();
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
   const [reports, setReports] = useState<ReportRow[]>([]);
@@ -24,17 +26,39 @@ function Dashboard() {
   const curMonth = now.getMonth() + 1;
   const curYear = now.getFullYear();
 
+  const [provinceBars, setProvinceBars] = useState<{ name: string; rate: number }[]>([]);
+
   useEffect(() => {
     (async () => {
-      const [{ data: pv }, { data: rp }] = await Promise.all([
+      const [{ data: pv }, { data: rp }, { data: ach }] = await Promise.all([
         supabase.from("provinces").select("*").order("name"),
         supabase.from("reports").select("*"),
+        supabase.from("achievement_summary").select("report_id, total_planned, finalized_approved"),
       ]);
-      setProvinces((pv as ProvinceRow[]) || []);
-      setReports((rp as ReportRow[]) || []);
+      const provs = (pv as ProvinceRow[]) || [];
+      const reps = (rp as ReportRow[]) || [];
+      setProvinces(provs);
+      setReports(reps);
+      const bars = provs.map((p) => {
+        const r = reps.find((x) => x.province_id === p.id && x.month === curMonth && x.year === curYear);
+        if (!r) return { name: p.name, rate: 0 };
+        const a = (ach || []).find((x: { report_id: string }) => x.report_id === r.id);
+        const rate = a
+          ? calcAchievementRate({
+              total_planned: a.total_planned ?? 0,
+              finalized_approved: a.finalized_approved ?? 0,
+              finalized_no_report: 0,
+              in_progress: 0,
+              trigger_approved: 0,
+              not_realized: 0,
+            })
+          : 0;
+        return { name: p.name, rate };
+      }).filter((b) => b.rate > 0).sort((a, b) => b.rate - a.rate);
+      setProvinceBars(bars);
       setDataLoading(false);
     })();
-  }, []);
+  }, [curMonth, curYear]);
 
   const monthReports = reports.filter((r) => r.month === curMonth && r.year === curYear);
   const submittedThisMonth = monthReports.filter((r) => r.status !== "draft").length;
@@ -65,10 +89,19 @@ function Dashboard() {
     const map: Record<string, string> = {
       draft: "bg-muted text-muted-foreground",
       submitted: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
+      in_review: "bg-blue-500/10 text-blue-700 dark:text-blue-300",
+      returned: "bg-red-500/10 text-red-700 dark:text-red-300",
       validated: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
       missing: "bg-red-500/10 text-red-700 dark:text-red-300",
     };
-    const lbl: Record<string, string> = { draft: t.draft, submitted: t.submitted, validated: t.validated, missing: t.missing };
+    const lbl: Record<string, string> = {
+      draft: t.draft,
+      submitted: t.submitted,
+      in_review: t.inReview,
+      returned: t.returned,
+      validated: t.validated,
+      missing: t.missing,
+    };
     return <Badge variant="outline" className={map[s]}>{lbl[s]}</Badge>;
   };
 
@@ -86,17 +119,36 @@ function Dashboard() {
         <KpiCard icon={TrendingUp} label={t.monthlyTrend} value={trend[trend.length - 1].count} />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6 items-stretch">
+      <div className="w-full">
         {dataLoading ? (
-          <Skeleton className="min-h-64 h-full w-full" />
+          <Skeleton className="min-h-[280px] w-full" />
         ) : (
-          <div className="h-full min-h-0">
-            <DashboardCharts trend={trend} provinceBars={[]} trendLabel={t.monthlyTrend} provinceLabel={t.provinceStatus} />
-          </div>
+          <DashboardCharts trend={trend} trendLabel={t.monthlyTrend} />
         )}
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6 items-stretch">
+        {!isProvinceUser && provinceBars.length > 0 ? (
+          <Card className="flex h-full flex-col">
+            <CardHeader className="shrink-0">
+              <CardTitle>{t.avgRealization}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 space-y-3">
+              {provinceBars.map((p) => (
+                <div key={p.name} className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="truncate pr-2">{p.name}</span>
+                    <span className="tabular-nums text-muted-foreground">{p.rate}%</span>
+                  </div>
+                  <Progress value={p.rate} className="h-2" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ) : null}
 
         {!isProvinceUser ? (
-          <Card className="flex h-full flex-col">
+          <Card className={`flex h-full flex-col ${provinceBars.length === 0 ? "lg:col-span-2" : ""}`}>
             <CardHeader className="shrink-0"><CardTitle>{t.provinceStatus}</CardTitle></CardHeader>
             <CardContent className="flex-1">
               <div className="space-y-2">
@@ -110,7 +162,7 @@ function Dashboard() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="flex h-full flex-col">
+          <Card className="flex h-full flex-col lg:col-span-2">
             <CardHeader className="shrink-0"><CardTitle>{t.yourProvinceStatus}</CardTitle></CardHeader>
             <CardContent className="flex-1">
               {profile?.province_id ? (
