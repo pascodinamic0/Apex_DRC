@@ -8,17 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { FileText, Download, Layers } from "lucide-react";
 import { calcAchievementRate } from "@/lib/activity-catalog";
-import { countOpenComments } from "@/lib/report-data";
+import { countOpenComments, loadExtendedReportData } from "@/lib/report-data";
 import { getProvinceUserIds, notifyUsers } from "@/lib/notifications";
+import { downloadCsv } from "@/lib/export/desk-csv";
+import { ReportReviewPanel, buildReviewSections } from "@/components/report-review-panel";
 
-export const Route = createFileRoute("/_authenticated/desk")({
-  component: DeskPage,
-  beforeLoad: ({ context }) => {
-    void context;
-  },
-});
+export const Route = createFileRoute("/_authenticated/desk")({ component: DeskPage });
 
 interface ProvinceRow { id: string; name: string }
 interface ReportRow {
@@ -31,61 +31,94 @@ interface ReportRow {
 }
 
 function DeskPage() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { role } = useAuth();
   const nav = useNavigate();
   const now = new Date();
-  const curMonth = now.getMonth() + 1;
-  const curYear = now.getFullYear();
+  const [month, setMonth] = useState(String(now.getMonth() + 1));
+  const [year, setYear] = useState(String(now.getFullYear()));
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [achievements, setAchievements] = useState<Record<string, number>>({});
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const [reviewSections, setReviewSections] = useState<ReturnType<typeof buildReviewSections>>([]);
+  const [selectedProvinceName, setSelectedProvinceName] = useState("");
+  const [selectedReport, setSelectedReport] = useState<ReportRow | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+
+  const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
+  const curMonth = Number(month);
+  const curYear = Number(year);
 
   useEffect(() => {
     if (role === "province_user") nav({ to: "/dashboard" });
   }, [role, nav]);
 
-  useEffect(() => {
-    (async () => {
-      const [{ data: pv }, { data: rp }, { data: ach }] = await Promise.all([
-        supabase.from("provinces").select("id,name").order("name"),
-        supabase.from("reports").select("id,province_id,month,year,status,submitted_at").eq("month", curMonth).eq("year", curYear),
-        supabase.from("achievement_summary").select("report_id,total_planned,finalized_approved"),
-      ]);
-      setProvinces((pv as ProvinceRow[]) || []);
-      const monthReports = (rp as ReportRow[]) || [];
-      setReports(monthReports);
-      const rateMap: Record<string, number> = {};
-      const cmMap: Record<string, number> = {};
-      for (const r of monthReports) {
-        const a = (ach || []).find((x: { report_id: string }) => x.report_id === r.id);
-        if (a) {
-          rateMap[r.id] = calcAchievementRate({
-            total_planned: a.total_planned ?? 0,
-            finalized_approved: a.finalized_approved ?? 0,
-            finalized_no_report: 0,
-            in_progress: 0,
-            trigger_approved: 0,
-            not_realized: 0,
-          });
-        }
-        rateMap[r.id] = rateMap[r.id] ?? 0;
-        if (["submitted", "returned", "in_review"].includes(r.status)) {
-          cmMap[r.id] = await countOpenComments(r.id);
-        }
+  const loadDesk = async () => {
+    setLoading(true);
+    const [{ data: pv }, { data: rp }, { data: ach }] = await Promise.all([
+      supabase.from("provinces").select("id,name").order("name"),
+      supabase.from("reports").select("id,province_id,month,year,status,submitted_at").eq("month", curMonth).eq("year", curYear),
+      supabase.from("achievement_summary").select("report_id,total_planned,finalized_approved"),
+    ]);
+    setProvinces((pv as ProvinceRow[]) || []);
+    const monthReports = (rp as ReportRow[]) || [];
+    setReports(monthReports);
+    const rateMap: Record<string, number> = {};
+    const cmMap: Record<string, number> = {};
+    for (const r of monthReports) {
+      const a = (ach || []).find((x: { report_id: string }) => x.report_id === r.id);
+      if (a) {
+        rateMap[r.id] = calcAchievementRate({
+          total_planned: a.total_planned ?? 0,
+          finalized_approved: a.finalized_approved ?? 0,
+          finalized_no_report: 0,
+          in_progress: 0,
+          trigger_approved: 0,
+          not_realized: 0,
+        });
       }
-      setAchievements(rateMap);
-      setCommentCounts(cmMap);
-      setLoading(false);
-    })();
+      rateMap[r.id] = rateMap[r.id] ?? 0;
+      if (["submitted", "returned", "in_review"].includes(r.status)) {
+        cmMap[r.id] = await countOpenComments(r.id);
+      }
+    }
+    setAchievements(rateMap);
+    setCommentCounts(cmMap);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (role !== "technical_director" && role !== "read_only") return;
+    loadDesk();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [curMonth, curYear]);
+  }, [month, year, role]);
+
+  const loadReview = async (reportId: string, provinceName: string) => {
+    setReviewLoading(true);
+    setSelectedReportId(reportId);
+    setSelectedProvinceName(provinceName);
+    const r = reports.find((x) => x.id === reportId);
+    setSelectedReport(r || null);
+    if (r?.status === "submitted") {
+      await supabase.from("reports").update({ status: "in_review" } as never).eq("id", reportId);
+      setSelectedReport({ ...r, status: "in_review" });
+    }
+    const d = await loadExtendedReportData(reportId);
+    const rate = calcAchievementRate(d.achievement);
+    const preview = `${d.achievement.total_planned} · ${rate}%`;
+    setReviewSections(buildReviewSections(d.narratives, preview, lang));
+    setReviewLoading(false);
+  };
 
   const monthReports = reports;
-  const submitted = monthReports.filter((r) => !["draft", "missing"].includes(r.status) && r.status !== undefined).length;
-  const pending = provinces.length - monthReports.filter((r) => r.status !== "draft").length;
+  const submitted = monthReports.filter((r) => !["draft"].includes(r.status)).length;
+  const pending = provinces.filter((p) => {
+    const r = monthReports.find((x) => x.province_id === p.id);
+    return !r || r.status === "draft";
+  }).length;
   const inReview = monthReports.filter((r) => ["submitted", "in_review", "returned"].includes(r.status)).length;
   const validated = monthReports.filter((r) => r.status === "validated").length;
 
@@ -122,12 +155,55 @@ function DeskPage() {
     toast.success(t.reminderSent);
   };
 
+  const exportExcel = () => {
+    const headers = [t.province, t.status, t.submittedOn, t.commentsCol, t.realizationRate];
+    const rows = provinces.map((p) => {
+      const r = monthReports.find((x) => x.province_id === p.id);
+      const st = r?.status || t.missing;
+      const rate = r ? achievements[r.id] : null;
+      const cm = r ? commentCounts[r.id] : 0;
+      return [
+        p.name,
+        st,
+        r?.submitted_at ? new Date(r.submitted_at).toLocaleDateString() : "—",
+        cm > 0 ? String(cm) : "—",
+        rate != null ? `${rate}%` : "—",
+      ];
+    });
+    downloadCsv(`epic-desk-${curYear}-${month}.csv`, headers, rows);
+    toast.success(t.exportExcelDone);
+  };
+
   if (role !== "technical_director" && role !== "read_only") return null;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold tracking-tight">{t.desk}</h1>
-      <p className="text-muted-foreground">{t.months[curMonth - 1]} {curYear}</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t.desk}</h1>
+          <p className="text-muted-foreground">{t.deskDesc}</p>
+        </div>
+        <div className="flex gap-3 flex-wrap">
+          <div className="space-y-1">
+            <Label className="text-xs">{t.month}</Label>
+            <Select value={month} onValueChange={setMonth}>
+              <SelectTrigger className="w-36 h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {t.months.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{t.year}</Label>
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger className="w-28 h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground uppercase">{t.reportsSubmitted}</div><div className="text-2xl font-bold">{submitted}/{provinces.length}</div></CardContent></Card>
@@ -137,7 +213,17 @@ function DeskPage() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle>{t.provinceStatus}</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+          <CardTitle>{t.provinceStatus} — {t.months[curMonth - 1]} {curYear}</CardTitle>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/consolidation"><Layers className="h-4 w-4 mr-1" />{t.consolidatedReport}</Link>
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportExcel}>
+              <Download className="h-4 w-4 mr-1" />{t.exportExcel}
+            </Button>
+          </div>
+        </CardHeader>
         <CardContent>
           {loading ? <Skeleton className="h-48 w-full" /> : (
             <div className="overflow-x-auto">
@@ -158,8 +244,9 @@ function DeskPage() {
                     const st = r?.status;
                     const rate = r ? achievements[r.id] : null;
                     const cm = r ? commentCounts[r.id] : 0;
+                    const isSelected = selectedReportId === r?.id;
                     return (
-                      <tr key={p.id} className="border-b last:border-0">
+                      <tr key={p.id} className={`border-b last:border-0 ${isSelected ? "bg-accent/50" : ""}`}>
                         <td className="p-2 font-medium">{p.name}</td>
                         <td className="p-2">{statusBadge(st || "missing")}</td>
                         <td className="p-2 text-muted-foreground">{r?.submitted_at ? new Date(r.submitted_at).toLocaleDateString() : "—"}</td>
@@ -172,15 +259,19 @@ function DeskPage() {
                             </div>
                           ) : "—"}
                         </td>
-                        <td className="p-2 text-right">
+                        <td className="p-2 text-right space-x-1">
                           {!r && role === "technical_director" && (
                             <Button size="sm" variant="outline" onClick={() => remind(p.id)}>{t.remindProvince}</Button>
                           )}
                           {r?.status === "validated" && (
-                            <Button size="sm" variant="outline" asChild><Link to="/reports/$reportId" params={{ reportId: r.id }}>{t.consult}</Link></Button>
+                            <Button size="sm" variant="outline" asChild>
+                              <Link to="/reports/$reportId" params={{ reportId: r.id }}>{t.consult}</Link>
+                            </Button>
                           )}
                           {r && ["submitted", "in_review", "returned"].includes(r.status) && role === "technical_director" && (
-                            <Button size="sm" asChild><Link to="/reports/$reportId/review" params={{ reportId: r.id }}>{t.review}</Link></Button>
+                            <Button size="sm" variant={isSelected ? "default" : "outline"} onClick={() => loadReview(r.id, p.name)}>
+                              {t.review}
+                            </Button>
                           )}
                           {r?.status === "draft" && role === "technical_director" && (
                             <Button size="sm" variant="outline" onClick={() => remind(p.id, r.id)}>{t.remindProvince}</Button>
@@ -195,6 +286,53 @@ function DeskPage() {
           )}
         </CardContent>
       </Card>
+
+      {selectedReportId && selectedReport && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {t.reviewReport} — {selectedProvinceName} · {t.months[curMonth - 1]} {curYear}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {reviewLoading ? (
+              <Skeleton className="h-64 w-full" />
+            ) : (
+              <ReportReviewPanel
+                reportId={selectedReportId}
+                provinceId={selectedReport.province_id}
+                reportStatus={selectedReport.status}
+                sections={reviewSections}
+                mode="dt"
+                onStatusChange={() => {
+                  loadDesk();
+                  if (selectedReportId) loadReview(selectedReportId, selectedProvinceName);
+                }}
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {role === "technical_director" && (
+        <Card>
+          <CardHeader><CardTitle>{t.generateConsolidated}</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">{t.generateConsolidatedDesc}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" asChild>
+                <Link to="/consolidation">{t.previewConsolidated}</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/consolidation"><FileText className="h-4 w-4 mr-1" />{t.exportWord}</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/consolidation"><Download className="h-4 w-4 mr-1" />{t.export}</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

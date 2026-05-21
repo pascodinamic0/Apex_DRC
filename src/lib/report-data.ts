@@ -64,14 +64,23 @@ export async function loadExtendedReportData(reportId: string) {
     });
   });
 
-  const ach = achievement
+  if (!achievement) {
+    await seedReportExtensions(reportId);
+  }
+  const { data: achievementAfter } = await supabase
+    .from("achievement_summary")
+    .select("*")
+    .eq("report_id", reportId)
+    .maybeSingle();
+  const achRow = achievementAfter || achievement;
+  const ach = achRow
     ? {
-        total_planned: achievement.total_planned ?? 0,
-        finalized_approved: achievement.finalized_approved ?? 0,
-        finalized_no_report: achievement.finalized_no_report ?? 0,
-        in_progress: achievement.in_progress ?? 0,
-        trigger_approved: achievement.trigger_approved ?? 0,
-        not_realized: achievement.not_realized ?? 0,
+        total_planned: achRow.total_planned ?? 0,
+        finalized_approved: achRow.finalized_approved ?? 0,
+        finalized_no_report: achRow.finalized_no_report ?? 0,
+        in_progress: achRow.in_progress ?? 0,
+        trigger_approved: achRow.trigger_approved ?? 0,
+        not_realized: achRow.not_realized ?? 0,
       }
     : emptyAchievementSummary();
 

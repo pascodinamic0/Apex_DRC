@@ -5,69 +5,61 @@ import { useT } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { DashboardCharts } from "@/components/dashboard-charts";
+import { NationalAnalytics } from "@/components/national-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, CheckCircle2, Clock, TrendingUp } from "lucide-react";
-import { calcAchievementRate } from "@/lib/activity-catalog";
+import type { AchievementRow } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
 interface ProvinceRow { id: string; name: string; code: string }
-interface ReportRow { id: string; province_id: string; month: number; year: number; status: string; submitted_at: string | null; validated_at: string | null }
+interface ReportRow {
+  id: string;
+  province_id: string;
+  month: number;
+  year: number;
+  status: string;
+  submitted_at: string | null;
+  validated_at: string | null;
+  submission_deadline: string | null;
+}
 
 function Dashboard() {
   const { t } = useT();
   const { role, profile } = useAuth();
+  const now = new Date();
+  const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
+  const [filterYear, setFilterYear] = useState(now.getFullYear());
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
   const [reports, setReports] = useState<ReportRow[]>([]);
+  const [achievements, setAchievements] = useState<AchievementRow[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const now = new Date();
-  const curMonth = now.getMonth() + 1;
-  const curYear = now.getFullYear();
 
-  const [provinceBars, setProvinceBars] = useState<{ name: string; rate: number }[]>([]);
+  const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
+  const isProvinceUser = role === "province_user";
+  const showNational = role === "technical_director" || role === "read_only";
 
   useEffect(() => {
     (async () => {
       const [{ data: pv }, { data: rp }, { data: ach }] = await Promise.all([
         supabase.from("provinces").select("*").order("name"),
-        supabase.from("reports").select("*"),
-        supabase.from("achievement_summary").select("report_id, total_planned, finalized_approved"),
+        supabase.from("reports").select("id, province_id, month, year, status, submitted_at, validated_at, submission_deadline"),
+        supabase.from("achievement_summary").select("*"),
       ]);
-      const provs = (pv as ProvinceRow[]) || [];
-      const reps = (rp as ReportRow[]) || [];
-      setProvinces(provs);
-      setReports(reps);
-      const bars = provs.map((p) => {
-        const r = reps.find((x) => x.province_id === p.id && x.month === curMonth && x.year === curYear);
-        if (!r) return { name: p.name, rate: 0 };
-        const a = (ach || []).find((x: { report_id: string }) => x.report_id === r.id);
-        const rate = a
-          ? calcAchievementRate({
-              total_planned: a.total_planned ?? 0,
-              finalized_approved: a.finalized_approved ?? 0,
-              finalized_no_report: 0,
-              in_progress: 0,
-              trigger_approved: 0,
-              not_realized: 0,
-            })
-          : 0;
-        return { name: p.name, rate };
-      }).filter((b) => b.rate > 0).sort((a, b) => b.rate - a.rate);
-      setProvinceBars(bars);
+      setProvinces((pv as ProvinceRow[]) || []);
+      setReports((rp as ReportRow[]) || []);
+      setAchievements(
+        ((ach || []) as { report_id: string; total_planned: number; finalized_approved: number; finalized_no_report: number; in_progress: number; trigger_approved: number; not_realized: number }[]).map(
+          (a) => ({ ...a }),
+        ),
+      );
       setDataLoading(false);
     })();
-  }, [curMonth, curYear]);
+  }, []);
 
-  const monthReports = reports.filter((r) => r.month === curMonth && r.year === curYear);
-  const submittedThisMonth = monthReports.filter((r) => r.status !== "draft").length;
-  const validatedCount = monthReports.filter((r) => r.status === "validated").length;
-  const validationRate = monthReports.length ? Math.round((validatedCount / monthReports.length) * 100) : 0;
-
-  // Last 12 months trend
+  const monthReports = reports.filter((r) => r.month === filterMonth && r.year === filterYear);
   const trend = Array.from({ length: 12 }).map((_, i) => {
-    const d = new Date(curYear, curMonth - 1 - (11 - i), 1);
+    const d = new Date(filterYear, filterMonth - 1 - (11 - i), 1);
     const m = d.getMonth() + 1;
     const y = d.getFullYear();
     const label = `${t.months[m - 1].slice(0, 3)} ${String(y).slice(2)}`;
@@ -80,7 +72,6 @@ function Dashboard() {
     return r?.status || "missing";
   };
 
-  const isProvinceUser = role === "province_user";
   const myReports = isProvinceUser
     ? reports.filter((r) => r.province_id === profile?.province_id).sort((a, b) => b.year - a.year || b.month - a.month).slice(0, 6)
     : [];
@@ -105,76 +96,51 @@ function Dashboard() {
     return <Badge variant="outline" className={map[s]}>{lbl[s]}</Badge>;
   };
 
+  if (showNational) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t.dashboard}</h1>
+          <p className="text-muted-foreground">{t.nationalAnalyticsDesc}</p>
+        </div>
+        <NationalAnalytics
+          month={filterMonth}
+          year={filterYear}
+          onMonthChange={setFilterMonth}
+          onYearChange={setFilterYear}
+          years={years}
+          provinces={provinces}
+          reports={reports}
+          achievements={achievements}
+          loading={dataLoading}
+        />
+        <div className="w-full">
+          {dataLoading ? <Skeleton className="h-[280px]" /> : <DashboardCharts trend={trend} trendLabel={t.monthlyTrend} />}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">{t.dashboard}</h1>
-        <p className="text-muted-foreground">{t.months[curMonth - 1]} {curYear}</p>
+        <p className="text-muted-foreground">{t.months[filterMonth - 1]} {filterYear}</p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {!isProvinceUser && <KpiCard icon={FileText} label={t.totalProvinces} value={provinces.length} />}
-        {!isProvinceUser && <KpiCard icon={Clock} label={t.submissionsThisMonth} value={`${submittedThisMonth}/${provinces.length}`} />}
-        {!isProvinceUser && <KpiCard icon={CheckCircle2} label={t.validationRate} value={`${validationRate}%`} />}
-        <KpiCard icon={TrendingUp} label={t.monthlyTrend} value={trend[trend.length - 1].count} />
-      </div>
-
-      <div className="w-full">
-        {dataLoading ? (
-          <Skeleton className="min-h-[280px] w-full" />
-        ) : (
-          <DashboardCharts trend={trend} trendLabel={t.monthlyTrend} />
-        )}
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-6 items-stretch">
-        {!isProvinceUser && provinceBars.length > 0 ? (
-          <Card className="flex h-full flex-col">
-            <CardHeader className="shrink-0">
-              <CardTitle>{t.avgRealization}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 space-y-3">
-              {provinceBars.map((p) => (
-                <div key={p.name} className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="truncate pr-2">{p.name}</span>
-                    <span className="tabular-nums text-muted-foreground">{p.rate}%</span>
-                  </div>
-                  <Progress value={p.rate} className="h-2" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ) : null}
-
-        {!isProvinceUser ? (
-          <Card className={`flex h-full flex-col ${provinceBars.length === 0 ? "lg:col-span-2" : ""}`}>
-            <CardHeader className="shrink-0"><CardTitle>{t.provinceStatus}</CardTitle></CardHeader>
-            <CardContent className="flex-1">
-              <div className="space-y-2">
-                {provinces.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between text-sm py-1.5 border-b last:border-0">
-                    <span>{p.name}</span>
-                    {statusBadge(statusFor(p.id))}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="flex h-full flex-col lg:col-span-2">
-            <CardHeader className="shrink-0"><CardTitle>{t.yourProvinceStatus}</CardTitle></CardHeader>
-            <CardContent className="flex-1">
-              {profile?.province_id ? (
-                <div className="flex items-center justify-between text-sm py-1.5">
-                  <span>{provinces.find(p => p.id === profile.province_id)?.name || "—"}</span>
-                  {statusBadge(statusFor(profile.province_id))}
-                </div>
-              ) : <p className="text-sm text-muted-foreground">—</p>}
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      <Card>
+        <CardHeader><CardTitle>{t.yourProvinceStatus}</CardTitle></CardHeader>
+        <CardContent>
+          {profile?.province_id ? (
+            <div className="flex items-center justify-between text-sm py-1.5">
+              <span>{provinces.find((p) => p.id === profile.province_id)?.name || "—"}</span>
+              {statusBadge(statusFor(profile.province_id))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">—</p>
+          )}
+        </CardContent>
+      </Card>
 
       {isProvinceUser && (
         <Card>
@@ -185,11 +151,13 @@ function Dashboard() {
             ) : (
               <div className="space-y-2">
                 {myReports.map((r) => (
-                  <Link key={r.id} to="/reports/$reportId" params={{ reportId: r.id }}
-                    className="flex items-center justify-between p-3 rounded-md border hover:bg-accent">
-                    <div>
-                      <div className="font-medium">{t.months[r.month - 1]} {r.year}</div>
-                    </div>
+                  <Link
+                    key={r.id}
+                    to="/reports/$reportId"
+                    params={{ reportId: r.id }}
+                    className="flex items-center justify-between p-3 rounded-md border hover:bg-accent"
+                  >
+                    <div className="font-medium">{t.months[r.month - 1]} {r.year}</div>
                     {statusBadge(r.status)}
                   </Link>
                 ))}
@@ -199,21 +167,5 @@ function Dashboard() {
         </Card>
       )}
     </div>
-  );
-}
-
-function KpiCard({ icon: Icon, label, value }: { icon: any; label: string; value: any }) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-            <div className="text-2xl font-bold mt-1">{value}</div>
-          </div>
-          <Icon className="h-5 w-5 text-muted-foreground" />
-        </div>
-      </CardContent>
-    </Card>
   );
 }
