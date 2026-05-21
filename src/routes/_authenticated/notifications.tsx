@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { notificationTitle } from "@/lib/notifications";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -72,7 +73,7 @@ function NotificationsPage() {
             items.map((n) => {
               const content = (
                 <div className={`py-3 ${!n.read_at ? "font-medium" : "text-muted-foreground"}`}>
-                  <div className="text-sm">{n.title}</div>
+                  <div className="text-sm">{notificationTitle(n.type, t)}</div>
                   {n.body && <div className="text-xs mt-1">{n.body}</div>}
                   <div className="text-xs text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString()}</div>
                 </div>

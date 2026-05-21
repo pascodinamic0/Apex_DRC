@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
-import { getUnreadNotificationCount } from "@/lib/notifications";
+import { getUnreadNotificationCount, notificationTitle } from "@/lib/notifications";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/lib/auth";
 
@@ -75,7 +75,7 @@ export function NotificationBell({ role }: Props) {
           setUnread((n) => n + 1);
           setItems((prev) => [row, ...prev].slice(0, 8));
           window.dispatchEvent(new Event("epic-notifications-changed"));
-          toast.info(row.title, {
+          toast.info(notificationTitle(row.type, t), {
             description: row.body ?? undefined,
             duration: 6000,
           });
@@ -93,12 +93,17 @@ export function NotificationBell({ role }: Props) {
       )
       .subscribe();
 
-    const poll = setInterval(refreshCount, 60_000);
+    const poll = setInterval(refreshCount, 15_000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshCount();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       clearInterval(poll);
+      document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(channel);
     };
-  }, [user?.id, refreshCount]);
+  }, [user?.id, refreshCount, t]);
 
   useEffect(() => {
     if (open) loadRecent();
@@ -107,13 +112,13 @@ export function NotificationBell({ role }: Props) {
   const reportLink = (n: NotifRow) => {
     if (!n.report_id) return null;
     const to =
-      n.type === "report_returned"
+      n.type === "report_returned" || role === "province_user"
         ? "/reports/$reportId/revisions"
-        : role === "province_user"
-          ? "/reports/$reportId/revisions"
-          : "/reports/$reportId/review";
+        : "/reports/$reportId/review";
     return { to, params: { reportId: n.report_id } };
   };
+
+  const displayTitle = (n: NotifRow) => notificationTitle(n.type, t);
 
   const markRead = async (id: string) => {
     await supabase.from("notifications").update({ read_at: new Date().toISOString() } as never).eq("id", id);
@@ -153,7 +158,7 @@ export function NotificationBell({ role }: Props) {
               const link = reportLink(n);
               const inner = (
                 <div className={`px-3 py-2.5 text-left ${!n.read_at ? "bg-accent/30" : ""}`}>
-                  <div className="text-sm leading-snug">{n.title}</div>
+                  <div className="text-sm leading-snug">{displayTitle(n)}</div>
                   {n.body && <div className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{n.body}</div>}
                   <div className="mt-1 text-[10px] text-muted-foreground">
                     {new Date(n.created_at).toLocaleString()}

@@ -1,4 +1,4 @@
-const CACHE = "epic-rdc-v1";
+const CACHE = "epic-rdc-v2";
 const PRECACHE = ["/", "/manifest.webmanifest", "/favicon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -15,6 +15,12 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+function isDocumentRequest(request) {
+  if (request.mode === "navigate") return true;
+  const accept = request.headers.get("accept") || "";
+  return accept.includes("text/html");
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
@@ -22,15 +28,24 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
 
+  if (isDocumentRequest(request)) {
+    event.respondWith(
+      fetch(request)
+        .then((res) => res)
+        .catch(() => caches.match("/")),
+    );
+    return;
+  }
+
   event.respondWith(
     fetch(request)
       .then((res) => {
-        if (res.ok) {
+        if (res.ok && url.pathname.match(/\.(js|css|woff2?|svg|png|jpg|webp)$/)) {
           const clone = res.clone();
           caches.open(CACHE).then((c) => c.put(request, clone));
         }
         return res;
       })
-      .catch(() => caches.match(request).then((r) => r || caches.match("/"))),
+      .catch(() => caches.match(request)),
   );
 });

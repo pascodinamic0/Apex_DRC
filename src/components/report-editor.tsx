@@ -23,7 +23,6 @@ import {
   emptyAchievementSummary,
 } from "@/lib/activity-catalog";
 import { persistExtendedReport, type ReportMeta } from "@/lib/report-data";
-import { getDirectorUserIds, notifyUsers } from "@/lib/notifications";
 import { loadExtendedReportData } from "@/lib/report-data";
 
 export interface ActivityRow {
@@ -149,12 +148,6 @@ export function ReportEditor({
       submission_deadline: meta.submission_deadline,
     } as never).eq("id", report.id);
     if (error) return toast.error(error.message);
-    const directors = await getDirectorUserIds();
-    await notifyUsers(directors, {
-      type: "report_submitted",
-      report_id: report.id,
-      title: `${t.submittedToast} — ${provinceLabel}`,
-    });
     toast.success(t.submittedToast);
     onAfterAction?.();
   };

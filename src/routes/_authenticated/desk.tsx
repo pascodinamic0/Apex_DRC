@@ -142,16 +142,18 @@ function DeskPage() {
   };
 
   const remind = async (provinceId: string, reportId?: string) => {
-    const users = await getProvinceUserIds(provinceId);
+    const users = await getProvinceUserIds(provinceId, reportId);
+    if (!users.length) return toast.error(t.noData);
     if (reportId) {
       await supabase.from("reports").update({ last_reminder_at: new Date().toISOString() } as never).eq("id", reportId);
     }
-    await notifyUsers(users, {
+    const { error } = await notifyUsers(users, {
       type: "reminder_sent",
-      report_id: reportId || "",
+      report_id: reportId ?? null,
       title: t.reminderSent,
       body: `${t.months[curMonth - 1]} ${curYear}`,
     });
+    if (error) return toast.error(error);
     toast.success(t.reminderSent);
   };
 

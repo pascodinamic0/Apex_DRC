@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "sonner";
-import { notifyUsers, getProvinceUserIds } from "@/lib/notifications";
 
 export interface ReviewSection {
   key: string;
@@ -75,16 +74,6 @@ export function ReportReviewPanel({ reportId, provinceId, reportStatus, sections
     } as never);
     if (error) return toast.error(error.message);
     setDrafts((d) => ({ ...d, [sectionKey]: "" }));
-    if (mode === "dt") {
-      const users = await getProvinceUserIds(provinceId);
-      await notifyUsers(users, {
-        type: "comment_added",
-        report_id: reportId,
-        section_key: sectionKey,
-        title: t.notifCommentTitle,
-        body,
-      });
-    }
     toast.success(t.commentSent);
     load();
     onStatusChange?.();
@@ -98,13 +87,6 @@ export function ReportReviewPanel({ reportId, provinceId, reportStatus, sections
       approved_by: user.id,
     } as never, { onConflict: "report_id,section_key" });
     if (error) return toast.error(error.message);
-    const users = await getProvinceUserIds(provinceId);
-    await notifyUsers(users, {
-      type: "section_approved",
-      report_id: reportId,
-      section_key: sectionKey,
-      title: t.notifApprovedTitle,
-    });
     toast.success(t.sectionApproved);
     load();
   };
@@ -134,13 +116,6 @@ export function ReportReviewPanel({ reportId, provinceId, reportStatus, sections
       returned_by: user?.id,
     } as never).eq("id", reportId);
     if (error) return toast.error(error.message);
-    const users = await getProvinceUserIds(provinceId);
-    await notifyUsers(users, {
-      type: "report_returned",
-      report_id: reportId,
-      title: t.notifReturnedTitle,
-      body: t.notifReturnedBody,
-    });
     toast.success(t.reportReturned);
     onStatusChange?.();
   };
@@ -153,12 +128,6 @@ export function ReportReviewPanel({ reportId, provinceId, reportStatus, sections
       validated_by: user?.id,
     } as never).eq("id", reportId);
     if (error) return toast.error(error.message);
-    const users = await getProvinceUserIds(provinceId);
-    await notifyUsers(users, {
-      type: "report_validated",
-      report_id: reportId,
-      title: t.notifValidatedTitle,
-    });
     toast.success(t.validatedToast);
     onStatusChange?.();
   };
@@ -170,12 +139,6 @@ export function ReportReviewPanel({ reportId, provinceId, reportStatus, sections
       returned_by: null,
     } as never).eq("id", reportId);
     if (error) return toast.error(error.message);
-    const directors = await import("@/lib/notifications").then((m) => m.getDirectorUserIds());
-    await notifyUsers(directors, {
-      type: "report_submitted",
-      report_id: reportId,
-      title: t.notifResubmittedTitle,
-    });
     toast.success(t.resubmittedToast);
     onStatusChange?.();
   };
