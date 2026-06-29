@@ -49,8 +49,8 @@ function LoginPage() {
   const continueWithGoogle = async () => {
     setBusy(true);
     const { error } = await signInWithGoogle();
+    setBusy(false);
     if (error) {
-      setBusy(false);
       toast.error(error);
     }
   };
