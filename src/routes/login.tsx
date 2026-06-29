@@ -12,7 +12,7 @@ import { LangSwitch } from "@/components/lang-switch";
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
 function LoginPage() {
-  const { signIn, resetPasswordForEmail, user, loading } = useAuth();
+  const { signIn, signInWithGoogle, resetPasswordForEmail, user, loading } = useAuth();
   const { t } = useT();
   const nav = useNavigate();
   const [email, setEmail] = useState("");
@@ -43,6 +43,15 @@ function LoginPage() {
     else {
       toast.success(t.resetLinkSent);
       setShowForgot(false);
+    }
+  };
+
+  const continueWithGoogle = async () => {
+    setBusy(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      setBusy(false);
+      toast.error(error);
     }
   };
 
@@ -89,9 +98,33 @@ function LoginPage() {
               </Button>
             </form>
           )}
+          {!showForgot && (
+            <>
+              <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="h-px flex-1 bg-border" />
+                <span>{t.or}</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled={busy}
+                onClick={continueWithGoogle}
+              >
+                <span className="font-semibold">G</span>
+                {t.signInWithGoogle}
+              </Button>
+            </>
+          )}
           <div className="mt-6 text-xs text-muted-foreground border-t pt-4 space-y-1">
-            <div className="font-medium text-foreground">Demo accounts (password: 1234)</div>
-            <div>director@gmail.com · kinshasa@epic.cd · viewer@epic.cd</div>
+            <div className="font-medium text-foreground">{t.demoAccountsTitle}</div>
+            <div className="space-y-0.5">
+              <div><span className="text-foreground">director@epic.cd</span> · {t.director}</div>
+              <div><span className="text-foreground">kinshasa@epic.cd</span> · {t.provinceUser}</div>
+              <div><span className="text-foreground">viewer@epic.cd</span> · {t.readOnly}</div>
+            </div>
+            <div className="pt-1">{t.demoPasswordHint}</div>
           </div>
         </CardContent>
       </Card>

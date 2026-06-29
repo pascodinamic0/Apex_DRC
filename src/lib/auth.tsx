@@ -21,15 +21,23 @@ interface AuthState {
   role: AppRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signInWithGoogle: () => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<{ error?: string }>;
   refreshProfile: () => Promise<void>;
 }
 
 const Ctx = createContext<AuthState>({
-  user: null, session: null, profile: null, role: null, loading: true,
-  signIn: async () => ({}), signOut: async () => {},
-  resetPasswordForEmail: async () => ({}), refreshProfile: async () => {},
+  user: null,
+  session: null,
+  profile: null,
+  role: null,
+  loading: true,
+  signIn: async () => ({}),
+  signInWithGoogle: async () => ({}),
+  signOut: async () => {},
+  resetPasswordForEmail: async () => ({}),
+  refreshProfile: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -78,6 +86,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {};
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    if (error) return { error: error.message };
+    return {};
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -95,10 +114,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{
-      user, session, profile, role, loading, signIn, signOut,
-      resetPasswordForEmail, refreshProfile,
-    }}>
+    <Ctx.Provider
+      value={{
+        user,
+        session,
+        profile,
+        role,
+        loading,
+        signIn,
+        signInWithGoogle,
+        signOut,
+        resetPasswordForEmail,
+        refreshProfile,
+      }}
+    >
       {children}
     </Ctx.Provider>
   );
