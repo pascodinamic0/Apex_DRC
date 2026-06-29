@@ -117,15 +117,6 @@ function LoginPage() {
               </Button>
             </>
           )}
-          <div className="mt-6 text-xs text-muted-foreground border-t pt-4 space-y-1">
-            <div className="font-medium text-foreground">{t.demoAccountsTitle}</div>
-            <div className="space-y-0.5">
-              <div><span className="text-foreground">director@epic.cd</span> · {t.director}</div>
-              <div><span className="text-foreground">kinshasa@epic.cd</span> · {t.provinceUser}</div>
-              <div><span className="text-foreground">viewer@epic.cd</span> · {t.readOnly}</div>
-            </div>
-            <div className="pt-1">{t.demoPasswordHint}</div>
-          </div>
         </CardContent>
       </Card>
     </div>
