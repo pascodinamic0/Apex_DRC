@@ -34,3 +34,6 @@ dist-ssr
 *.sw?
 .vercel
 .env*.local
+
+# Local-only proposal / RFQ notes (not for repo)
+Todo/

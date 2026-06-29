@@ -96,6 +96,13 @@ function LoginPage() {
               <Button type="submit" className="w-full" disabled={busy}>
                 {busy ? "..." : t.signIn}
               </Button>
+              <div className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
+                <p className="font-medium text-foreground">{t.demoAccountsTitle}</p>
+                <p>{t.demoDirector}</p>
+                <p>{t.demoProvince}</p>
+                <p>{t.demoReadOnly}</p>
+                <p className="pt-1">{t.demoPasswordHint}</p>
+              </div>
             </form>
           )}
           {!showForgot && (

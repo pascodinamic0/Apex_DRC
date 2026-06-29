@@ -94,17 +94,7 @@ export async function notifyUsers(
   });
 
   if (error) {
-    const { error: insertError } = await supabase.from("notifications").insert(
-      unique.map((user_id) => ({
-        user_id,
-        type: payload.type,
-        report_id: payload.report_id,
-        title: payload.title,
-        body: payload.body ?? null,
-        section_key: payload.section_key ?? null,
-      })) as never[],
-    );
-    if (insertError) return { error: insertError.message };
+    return { error: error.message };
   }
   return {};
 }
