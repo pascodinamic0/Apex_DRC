@@ -16,11 +16,21 @@ export type ReportMeta = {
 };
 
 export async function loadCatalog(): Promise<CatalogRow[]> {
-  const { data } = await supabase
-    .from("activity_catalog")
-    .select("code, objective, parent_code, title_fr, title_en, sort_order")
-    .order("sort_order");
-  return (data as CatalogRow[]) || [];
+  const [{ data }, { data: sourceActs }] = await Promise.all([
+    supabase
+      .from("activity_catalog")
+      .select("code, objective, parent_code, title_fr, title_en, sort_order")
+      .order("sort_order"),
+    supabase.from("program_activities" as never).select("code, level"),
+  ]);
+  const rows = (data as CatalogRow[]) || [];
+  const sourceCodes = new Set(
+    ((sourceActs || []) as { code: string; level: string }[])
+      .filter((a) => a.level === "sub_activity")
+      .map((a) => a.code),
+  );
+  if (!sourceCodes.size) return rows;
+  return rows.filter((r) => sourceCodes.has(r.code));
 }
 
 export async function loadExtendedReportData(reportId: string) {

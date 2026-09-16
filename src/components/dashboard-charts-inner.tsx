@@ -56,7 +56,7 @@ export default function DashboardChartsInner({
               width={36}
               tickMargin={4}
               fontSize={12}
-              domain={[0, "auto"]}
+              domain={[0, (max: number) => Math.max(8, max || 0)]}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Line

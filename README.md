@@ -9,7 +9,8 @@ Built for **EPIC RDC** (Expanded Program on Immunization and related health prog
 - **Role-based access** — province users, technical directors, and read-only viewers (Supabase Auth + RLS)
 - **Structured monthly reports** — activities, objectives, narratives, and executive summaries
 - **Workflow** — draft → submitted → validated, with autosave and draft recovery
-- **Dashboards** — KPI cards, 12-month submission trends, per-province status
+- **Source-based program data** — FY2026 H1 indicators, GHS, and activity structure imported from Docs (no fabricated facility/HZ lists)
+- **Dashboards** — program results plus monthly provincial submission tracking
 - **Consolidation & exports** — national views; PDF / DOCX export helpers
 - **Offline-friendly PWA** — service worker, manifest, and draft queue for unreliable connectivity
 - **Profile & preferences** — language, job title, and account settings
@@ -48,7 +49,13 @@ Open `http://localhost:5173`. For password-reset flows, configure redirect URLs 
 
 ### Database
 
-Apply SQL migrations under `supabase/migrations/`. Use the Supabase CLI or dashboard SQL editor. Seed provinces and demo users per your environment policy (do not commit real credentials).
+Apply SQL migrations under `supabase/migrations/`. Then seed the Docs-backed dataset (idempotent):
+
+```bash
+bun run seed:epic-source
+```
+
+This upserts objectives, activities, FY2026 H1 indicators, GHS results, named geography, and provenance. It does not invent missing health-zone or facility lists. Seed provinces and demo users per your environment policy (do not commit real credentials).
 
 ### Scripts
 
@@ -59,6 +66,7 @@ Apply SQL migrations under `supabase/migrations/`. Use the Supabase CLI or dashb
 | `bun run preview` | Preview production build |
 | `bun run lint` | ESLint |
 | `bun run format` | Prettier |
+| `bun run seed:epic-source` | Idempotent import of Docs-backed EpiC FY2026 H1 data |
 
 ## Project layout
 

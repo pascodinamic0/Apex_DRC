@@ -9,13 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { reportingYears, SOURCE_YEAR } from "@/lib/export/epic-official";
 
 export const Route = createFileRoute("/_authenticated/history")({ component: History });
 
 function History() {
   const { t } = useT();
-  const now = new Date();
-  const [year, setYear] = useState<string>(String(now.getFullYear()));
+  const [year, setYear] = useState<string>(String(SOURCE_YEAR));
   const [provinceId, setProvinceId] = useState<string>("all");
   const [provinces, setProvinces] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
@@ -42,7 +42,7 @@ function History() {
     validated: "bg-emerald-500/10 text-emerald-700",
   };
   const lbl: Record<string, string> = { draft: t.draft, submitted: t.submitted, validated: t.validated };
-  const years = [now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear()];
+  const years = reportingYears();
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">

@@ -9,6 +9,7 @@ import { DashboardCharts } from "@/components/dashboard-charts";
 import { NationalAnalytics } from "@/components/national-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AchievementRow } from "@/lib/analytics";
+import { reportingYears, SOURCE_MONTH, SOURCE_YEAR } from "@/lib/export/epic-official";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
@@ -27,15 +28,14 @@ interface ReportRow {
 function Dashboard() {
   const { t } = useT();
   const { role, profile } = useAuth();
-  const now = new Date();
-  const [filterMonth, setFilterMonth] = useState(now.getMonth() + 1);
-  const [filterYear, setFilterYear] = useState(now.getFullYear());
+  const [filterMonth, setFilterMonth] = useState(SOURCE_MONTH);
+  const [filterYear, setFilterYear] = useState(SOURCE_YEAR);
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [achievements, setAchievements] = useState<AchievementRow[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
-  const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
+  const years = reportingYears();
   const isProvinceUser = role === "province_user";
   const showNational = role === "technical_director" || role === "read_only";
 
@@ -100,6 +100,7 @@ function Dashboard() {
     return (
       <div className="space-y-6 max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold tracking-tight">{t.dashboard}</h1>
+        <h2 className="text-xl font-semibold">{t.monthlyWorkflow}</h2>
         <NationalAnalytics
           month={filterMonth}
           year={filterYear}

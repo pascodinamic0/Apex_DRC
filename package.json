@@ -12,7 +12,10 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "seed:demo": "bun run scripts/seed-demo-users.ts"
+    "seed:demo": "bun run scripts/seed-demo-users.ts",
+    "seed:epic-source": "bun run scripts/seed-epic-source-data.ts",
+    "seed:monthly": "bun run scripts/seed-monthly-reports.ts",
+    "seed:docs": "bun run scripts/seed-epic-source-data.ts && bun run scripts/seed-monthly-reports.ts"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",

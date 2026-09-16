@@ -10,6 +10,8 @@ export interface ProvinceRate {
   name: string;
   rate: number;
   hasReport: boolean;
+  planned: number;
+  approved: number;
 }
 
 export interface ActivityStatusTotals {
@@ -37,18 +39,21 @@ export function provinceRates(
     .map((p) => {
       const r = reports.find((x) => x.province_id === p.id);
       const a = r ? achievements.find((x) => x.report_id === r.id) : undefined;
+      const planned = a?.total_planned ?? 0;
+      const approved = a?.finalized_approved ?? 0;
       const rate = a
         ? calcAchievementRate({
-            total_planned: a.total_planned ?? 0,
-            finalized_approved: a.finalized_approved ?? 0,
+            total_planned: planned,
+            finalized_approved: approved,
             finalized_no_report: a.finalized_no_report ?? 0,
             in_progress: a.in_progress ?? 0,
             trigger_approved: a.trigger_approved ?? 0,
             not_realized: a.not_realized ?? 0,
           })
         : 0;
-      return { provinceId: p.id, name: p.name, rate, hasReport: !!r };
+      return { provinceId: p.id, name: p.name, rate, hasReport: !!r, planned, approved };
     })
+    .filter((p) => p.hasReport && p.planned > 0)
     .sort((a, b) => b.rate - a.rate);
 }
 
@@ -71,6 +76,15 @@ export function aggregateActivityStatus(achievements: AchievementRow[]): Activit
       not_realized: 0,
     },
   );
+}
+
+export function pooledRealization(achievements: AchievementRow[]) {
+  const totals = aggregateActivityStatus(achievements.filter((a) => (a.total_planned || 0) > 0));
+  return {
+    planned: totals.total_planned,
+    approved: totals.finalized_approved,
+    rate: totals.total_planned > 0 ? Math.round((totals.finalized_approved / totals.total_planned) * 100) : 0,
+  };
 }
 
 export function activityStatusPercentages(totals: ActivityStatusTotals) {

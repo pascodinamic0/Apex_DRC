@@ -7,11 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Save, Send, FileText, AlertTriangle } from "lucide-react";
+import { Save, Send, FileText, Download, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { queueDraft } from "@/lib/offline/draft-queue";
-import { exportSingleReportDocx } from "@/lib/export/docx-export";
+import { exportOfficialDocx } from "@/lib/export/docx-export";
+import { exportOfficialPdf } from "@/lib/export/epic-pdf";
+import { buildOfficialMonthlyPayload } from "@/lib/export/epic-official";
 import { AchievementTable } from "@/components/achievement-table";
 import { ObjectiveActivities } from "@/components/objective-activities";
 import { ReportMetaRow } from "@/components/report-meta-row";
@@ -19,7 +21,6 @@ import {
   type AchievementSummary,
   type ActivityResponseFields,
   type CatalogRow,
-  calcAchievementRate,
   emptyAchievementSummary,
 } from "@/lib/activity-catalog";
 import { persistExtendedReport, type ReportMeta } from "@/lib/report-data";
@@ -185,22 +186,27 @@ export function ReportEditor({
     validated: t.validated,
   };
 
-  const exportReportDocx = async () => {
-    const rate = calcAchievementRate(achievement);
-    const sections = [
-      { label: t.tabAchievement, content: `${t.achRateLabel}: ${rate}%` },
-      { label: t.sectionG, content: [narratives.exec_summary_smni, narratives.exec_summary_nutrition, narratives.exec_summary_malaria].filter(Boolean).join("\n\n") },
-      { label: t.tabCoordination, content: [narratives.coordination_smne, narratives.coordination_nutrition, narratives.coordination_malaria].filter(Boolean).join("\n\n") },
-    ];
-    await exportSingleReportDocx({
-      title: `${t.reportFor} ${provinceLabel} — ${t.months[report.month - 1]} ${report.year}`,
-      periodLine: `${t.months[report.month - 1]} ${report.year}`,
-      tableHead: [t.activityCode, t.achCount, "%"],
-      rows: [{ code: t.achFinalizedApproved, planned: achievement.total_planned, achieved: achievement.finalized_approved }],
-      sections,
-      filename: `epic-report-${report.year}-${report.month}.docx`,
+  const officialPayload = () =>
+    buildOfficialMonthlyPayload({
+      lang,
+      provinceName: provinceLabel || t.reportFor,
+      monthLabel: t.months[report.month - 1],
+      year: report.year,
+      submittedBy: [meta.submitted_by_name, meta.submitter_function].filter(Boolean).join(" — ") || null,
+      achievement,
+      catalog,
+      responses: activityResponses,
+      narratives,
     });
+
+  const exportReportDocx = async () => {
+    await exportOfficialDocx(officialPayload(), lang, `epic-report-${provinceLabel || "province"}-${report.year}-${String(report.month).padStart(2, "0")}.docx`);
     toast.success(t.docxGenerated);
+  };
+
+  const exportReportPdf = async () => {
+    await exportOfficialPdf(officialPayload(), lang, `epic-report-${provinceLabel || "province"}-${report.year}-${String(report.month).padStart(2, "0")}.pdf`);
+    toast.success(t.pdfGenerated);
   };
 
   const canSubmit = isProvinceUser && !readOnly && report.status === "draft";
@@ -238,9 +244,14 @@ export function ReportEditor({
         </div>
         <div className="flex gap-2 flex-wrap">
           {showExport && (
-            <Button variant="outline" size="sm" onClick={exportReportDocx}>
-              <FileText className="h-4 w-4 mr-1" />{t.exportReport}
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={exportReportDocx}>
+                <FileText className="h-4 w-4 mr-1" />{t.exportWord}
+              </Button>
+              <Button variant="outline" size="sm" onClick={exportReportPdf}>
+                <Download className="h-4 w-4 mr-1" />{t.export}
+              </Button>
+            </>
           )}
           {isDirector && (report.status === "submitted" || report.status === "in_review") && (
             <Button size="sm" asChild>

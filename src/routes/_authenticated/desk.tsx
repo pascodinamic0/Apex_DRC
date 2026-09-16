@@ -13,9 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { FileText, Download, Layers } from "lucide-react";
 import { calcAchievementRate } from "@/lib/activity-catalog";
-import { countOpenComments, loadExtendedReportData } from "@/lib/report-data";
+import { loadExtendedReportData } from "@/lib/report-data";
 import { getProvinceUserIds, notifyUsers } from "@/lib/notifications";
 import { downloadCsv } from "@/lib/export/desk-csv";
+import { reportingYears, SOURCE_MONTH, SOURCE_YEAR } from "@/lib/export/epic-official";
 import { ReportReviewPanel, buildReviewSections } from "@/components/report-review-panel";
 
 export const Route = createFileRoute("/_authenticated/desk")({ component: DeskPage });
@@ -34,12 +35,11 @@ function DeskPage() {
   const { t, lang } = useT();
   const { role } = useAuth();
   const nav = useNavigate();
-  const now = new Date();
-  const [month, setMonth] = useState(String(now.getMonth() + 1));
-  const [year, setYear] = useState(String(now.getFullYear()));
+  const [month, setMonth] = useState(String(SOURCE_MONTH));
+  const [year, setYear] = useState(String(SOURCE_YEAR));
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
   const [reports, setReports] = useState<ReportRow[]>([]);
-  const [achievements, setAchievements] = useState<Record<string, number>>({});
+  const [achievements, setAchievements] = useState<Record<string, number | undefined>>({});
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -48,7 +48,7 @@ function DeskPage() {
   const [selectedReport, setSelectedReport] = useState<ReportRow | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
 
-  const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
+  const years = reportingYears();
   const curMonth = Number(month);
   const curYear = Number(year);
 
@@ -58,32 +58,40 @@ function DeskPage() {
 
   const loadDesk = async () => {
     setLoading(true);
-    const [{ data: pv }, { data: rp }, { data: ach }] = await Promise.all([
+    const [{ data: pv }, { data: rp }] = await Promise.all([
       supabase.from("provinces").select("id,name").order("name"),
       supabase.from("reports").select("id,province_id,month,year,status,submitted_at").eq("month", curMonth).eq("year", curYear),
-      supabase.from("achievement_summary").select("report_id,total_planned,finalized_approved"),
     ]);
     setProvinces((pv as ProvinceRow[]) || []);
     const monthReports = (rp as ReportRow[]) || [];
     setReports(monthReports);
-    const rateMap: Record<string, number> = {};
+    const ids = monthReports.map((r) => r.id);
+    const reviewIds = monthReports.filter((r) => ["submitted", "returned", "in_review"].includes(r.status)).map((r) => r.id);
+    const [{ data: ach }, { data: comments }] = await Promise.all([
+      ids.length
+        ? supabase.from("achievement_summary").select("report_id,total_planned,finalized_approved").in("report_id", ids)
+        : Promise.resolve({ data: [] as { report_id: string; total_planned: number; finalized_approved: number }[] }),
+      reviewIds.length
+        ? supabase.from("report_comments").select("report_id").in("report_id", reviewIds).is("resolved_at", null)
+        : Promise.resolve({ data: [] as { report_id: string }[] }),
+    ]);
+    const rateMap: Record<string, number | undefined> = {};
     const cmMap: Record<string, number> = {};
     for (const r of monthReports) {
       const a = (ach || []).find((x: { report_id: string }) => x.report_id === r.id);
-      if (a) {
-        rateMap[r.id] = calcAchievementRate({
-          total_planned: a.total_planned ?? 0,
-          finalized_approved: a.finalized_approved ?? 0,
-          finalized_no_report: 0,
-          in_progress: 0,
-          trigger_approved: 0,
-          not_realized: 0,
-        });
-      }
-      rateMap[r.id] = rateMap[r.id] ?? 0;
-      if (["submitted", "returned", "in_review"].includes(r.status)) {
-        cmMap[r.id] = await countOpenComments(r.id);
-      }
+      rateMap[r.id] = a && (a.total_planned ?? 0) > 0
+        ? calcAchievementRate({
+            total_planned: a.total_planned ?? 0,
+            finalized_approved: a.finalized_approved ?? 0,
+            finalized_no_report: 0,
+            in_progress: 0,
+            trigger_approved: 0,
+            not_realized: 0,
+          })
+        : undefined;
+    }
+    for (const c of comments || []) {
+      cmMap[c.report_id] = (cmMap[c.report_id] || 0) + 1;
     }
     setAchievements(rateMap);
     setCommentCounts(cmMap);
@@ -114,13 +122,16 @@ function DeskPage() {
   };
 
   const monthReports = reports;
-  const submitted = monthReports.filter((r) => !["draft"].includes(r.status)).length;
-  const pending = provinces.filter((p) => {
+  const reportingProvinces = provinces.filter((p) => {
     const r = monthReports.find((x) => x.province_id === p.id);
-    return !r || r.status === "draft";
-  }).length;
-  const inReview = monthReports.filter((r) => ["submitted", "in_review", "returned"].includes(r.status)).length;
-  const validated = monthReports.filter((r) => r.status === "validated").length;
+    return !!r && achievements[r.id] != null;
+  });
+  const reportingIds = new Set(reportingProvinces.map((p) => p.id));
+  const dataReports = monthReports.filter((r) => reportingIds.has(r.province_id));
+  const submitted = dataReports.filter((r) => r.status !== "draft").length;
+  const pending = dataReports.filter((r) => r.status === "draft").length;
+  const inReview = dataReports.filter((r) => ["submitted", "in_review", "returned"].includes(r.status)).length;
+  const validated = dataReports.filter((r) => r.status === "validated").length;
 
   const statusBadge = (s: string | undefined) => {
     if (!s || s === "missing") return <Badge variant="outline">{t.missing}</Badge>;
@@ -159,7 +170,7 @@ function DeskPage() {
 
   const exportExcel = () => {
     const headers = [t.province, t.status, t.submittedOn, t.commentsCol, t.realizationRate];
-    const rows = provinces.map((p) => {
+    const rows = reportingProvinces.map((p) => {
       const r = monthReports.find((x) => x.province_id === p.id);
       const st = r?.status || t.missing;
       const rate = r ? achievements[r.id] : null;
@@ -205,7 +216,7 @@ function DeskPage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground uppercase">{t.reportsSubmitted}</div><div className="text-2xl font-bold">{submitted}/{provinces.length}</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground uppercase">{t.reportsSubmitted}</div><div className="text-2xl font-bold">{submitted}/{reportingProvinces.length || 0}</div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground uppercase">{t.reportsPending}</div><div className="text-2xl font-bold">{pending}</div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground uppercase">{t.reportsInReview}</div><div className="text-2xl font-bold">{inReview}</div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground uppercase">{t.reportsValidated}</div><div className="text-2xl font-bold">{validated}</div></CardContent></Card>
@@ -238,7 +249,9 @@ function DeskPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {provinces.map((p) => {
+                  {reportingProvinces.length === 0 ? (
+                    <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{t.noData}</td></tr>
+                  ) : reportingProvinces.map((p) => {
                     const r = monthReports.find((x) => x.province_id === p.id);
                     const st = r?.status;
                     const rate = r ? achievements[r.id] : null;

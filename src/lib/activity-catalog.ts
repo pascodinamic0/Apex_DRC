@@ -1,21 +1,22 @@
 /** Reference grouping for objective tabs (matches donor logframe). */
+/** Parent activity titles from the EpiC DRC source structure document. */
 export const OBJECTIVE_PARENTS: Record<number, { code: string; titleFr: string; titleEn: string }[]> = {
   1: [
-    { code: "1.1", titleFr: "Activité 1.1 — Sensibilisation et adoption de pratiques vitales", titleEn: "Activity 1.1 — Community sensitization and adoption" },
-    { code: "1.2", titleFr: "Activité 1.2 — Plateformes GICC (paludisme, pneumonie, diarrhée)", titleEn: "Activity 1.2 — iCCM platforms" },
-    { code: "1.3", titleFr: "Activité 1.3 — Liens communauté — établissements", titleEn: "Activity 1.3 — Community–facility linkages" },
+    { code: "1.1", titleFr: "Activité 1.1 — Accroître la sensibilisation et l'adoption, par les soignants et la communauté, des pratiques essentielles en matière de santé maternelle, néonatale et infantile, de paludisme, de vaccination et de nutrition", titleEn: "Activity 1.1 — Accroître la sensibilisation et l'adoption, par les soignants et la communauté, des pratiques essentielles en matière de santé maternelle, néonatale et infantile, de paludisme, de vaccination et de nutrition" },
+    { code: "1.2", titleFr: "Activité 1.2 — Développer les plateformes de gestion intégrée des cas communautaires (GICC) pour le paludisme, la pneumonie et la diarrhée dans les 9 provinces", titleEn: "Activity 1.2 — Développer les plateformes de gestion intégrée des cas communautaires (GICC) pour le paludisme, la pneumonie et la diarrhée dans les 9 provinces" },
+    { code: "1.3", titleFr: "Activité 1.3 — Renforcer les liens entre la communauté et les installations", titleEn: "Activity 1.3 — Renforcer les liens entre la communauté et les installations" },
   ],
   2: [
-    { code: "2.1", titleFr: "Activité 2.1 — Évaluation capacité SONU, MAS, paludisme", titleEn: "Activity 2.1 — Capacity assessment" },
-    { code: "2.2", titleFr: "Activité 2.2 — Renforcement capacités prestataires SMNE", titleEn: "Activity 2.2 — Provider capacity strengthening" },
-    { code: "2.3", titleFr: "Activité 2.3 — Supervision intégrée", titleEn: "Activity 2.3 — Integrated supervision" },
+    { code: "2.1", titleFr: "Activité 2.1 — Evaluer la capacité des établissements à fournir des services de soins obstétricaux et néonatals d'urgence (SONU) en établissement, à traiter la malnutrition aiguë sévère (MAS) et le paludisme.", titleEn: "Activity 2.1 — Evaluer la capacité des établissements à fournir des services de soins obstétricaux et néonatals d'urgence (SONU) en établissement, à traiter la malnutrition aiguë sévère (MAS) et le paludisme." },
+    { code: "2.2", titleFr: "Activité 2.2 — Renforcer les capacités du personnel de santé en matière de services vitaux de santé maternelle, néonatale et infantile", titleEn: "Activity 2.2 — Renforcer les capacités du personnel de santé en matière de services vitaux de santé maternelle, néonatale et infantile" },
+    { code: "2.3", titleFr: "Activité 2.3 — Soutien à la supervision intégrée", titleEn: "Activity 2.3 — Soutien à la supervision intégrée" },
   ],
   3: [
-    { code: "3.1", titleFr: "Activité 3.1 — Systèmes de données", titleEn: "Activity 3.1 — Data systems" },
-    { code: "3.2", titleFr: "Activité 3.2 — Surveillance", titleEn: "Activity 3.2 — Surveillance" },
-    { code: "3.3", titleFr: "Activité 3.3 — Chaîne d'approvisionnement", titleEn: "Activity 3.3 — Supply chain" },
+    { code: "3.1", titleFr: "Activité 3.1 — Renforcer les systèmes de données sur la santé maternelle, néonatale et infantile, la nutrition et le paludisme afin d’améliorer la prise de décision programmatique", titleEn: "Activity 3.1 — Renforcer les systèmes de données sur la santé maternelle, néonatale et infantile, la nutrition et le paludisme afin d’améliorer la prise de décision programmatique" },
+    { code: "3.2", titleFr: "Activité 3.2 — Évaluer et renforcer les systèmes de surveillance de la santé maternelle, néonatale et infantile, de la nutrition et du paludisme", titleEn: "Activity 3.2 — Évaluer et renforcer les systèmes de surveillance de la santé maternelle, néonatale et infantile, de la nutrition et du paludisme" },
+    { code: "3.3", titleFr: "Activité 3.3 — Améliorer la chaîne d'approvisionnement des produits essentiels de santé maternelle, néonatale et infantile, de lutte contre le paludisme et de nutrition", titleEn: "Activity 3.3 — Améliorer la chaîne d'approvisionnement des produits essentiels de santé maternelle, néonatale et infantile, de lutte contre le paludisme et de nutrition" },
     { code: "3.4", titleFr: "Activité 3.4 — Coordination", titleEn: "Activity 3.4 — Coordination" },
-    { code: "3.5", titleFr: "Activité 3.5 — Préparation aux urgences", titleEn: "Activity 3.5 — Emergency preparedness" },
+    { code: "3.5", titleFr: "Activité 3.5 — Renforcer les capacités et les systèmes de préparation aux situations d'urgence", titleEn: "Activity 3.5 — Renforcer les capacités et les systèmes de préparation aux situations d'urgence" },
   ],
 };
 
