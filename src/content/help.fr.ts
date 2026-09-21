@@ -63,6 +63,7 @@ export const helpSectionsFr: HelpSection[] = [
     roles: ["read_only"],
     body: [
       "Vous pouvez consulter tous les rapports et le tableau de bord sans modifier ni valider.",
+      "Le compte Assistant Technique (AT) utilise ce rôle : commentaires sur la consolidation, sans validation DT.",
     ],
   },
   {

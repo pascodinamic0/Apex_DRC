@@ -105,6 +105,7 @@ function LoginPage() {
                 <p className="font-medium text-foreground">{t.demoAccountsTitle}</p>
                 <p>{t.demoDirector}</p>
                 <p>{t.demoProvince}</p>
+                <p>{t.demoAT}</p>
                 <p>{t.demoReadOnly}</p>
                 <p className="pt-1">{t.demoPasswordHint}</p>
               </div>

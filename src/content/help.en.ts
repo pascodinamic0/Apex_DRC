@@ -57,6 +57,7 @@ export const helpSectionsEn: HelpSection[] = [
     roles: ["read_only"],
     body: [
       "You can view all reports and the dashboard without editing or validating.",
+      "The Technical Assistant (AT) account uses this role: consolidation comments, without DT validation.",
     ],
   },
   {

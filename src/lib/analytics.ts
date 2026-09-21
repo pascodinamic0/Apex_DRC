@@ -1,8 +1,148 @@
 import type { AchievementSummary } from "@/lib/activity-catalog";
 import { calcAchievementRate } from "@/lib/activity-catalog";
 
+export type PeriodGrain = "month" | "trimester" | "year" | "custom";
+
+export interface PeriodBounds {
+  fromMonth: number;
+  fromYear: number;
+  toMonth: number;
+  toYear: number;
+}
+
+export interface PeriodSelection {
+  grain: PeriodGrain;
+  month: number;
+  year: number;
+  trimester: number;
+  fromMonth: number;
+  fromYear: number;
+  toMonth: number;
+  toYear: number;
+}
+
 export interface AchievementRow extends AchievementSummary {
   report_id: string;
+}
+
+export function yearMonth(month: number, year: number): number {
+  return year * 12 + (month - 1);
+}
+
+export function trimesterOf(month: number): number {
+  return Math.ceil(month / 3);
+}
+
+export function trimesterMonthRange(trimester: number, year: number): PeriodBounds {
+  const fromMonth = (trimester - 1) * 3 + 1;
+  const toMonth = trimester * 3;
+  return { fromMonth, fromYear: year, toMonth, toYear: year };
+}
+
+export function normalizeCustomBounds(
+  fromMonth: number,
+  fromYear: number,
+  toMonth: number,
+  toYear: number,
+): PeriodBounds {
+  if (yearMonth(fromMonth, fromYear) > yearMonth(toMonth, toYear)) {
+    return { fromMonth: toMonth, fromYear: toYear, toMonth: fromMonth, toYear: fromYear };
+  }
+  return { fromMonth, fromYear, toMonth, toYear };
+}
+
+export function periodBounds(selection: PeriodSelection): PeriodBounds {
+  switch (selection.grain) {
+    case "month":
+      return {
+        fromMonth: selection.month,
+        fromYear: selection.year,
+        toMonth: selection.month,
+        toYear: selection.year,
+      };
+    case "trimester":
+      return trimesterMonthRange(selection.trimester, selection.year);
+    case "year":
+      return { fromMonth: 1, fromYear: selection.year, toMonth: 12, toYear: selection.year };
+    case "custom":
+      return normalizeCustomBounds(
+        selection.fromMonth,
+        selection.fromYear,
+        selection.toMonth,
+        selection.toYear,
+      );
+  }
+}
+
+export function reportInRange(month: number, year: number, bounds: PeriodBounds): boolean {
+  const ym = yearMonth(month, year);
+  const from = yearMonth(bounds.fromMonth, bounds.fromYear);
+  const to = yearMonth(bounds.toMonth, bounds.toYear);
+  return ym >= from && ym <= to;
+}
+
+export function filterReportsInPeriod<T extends { month: number; year: number }>(
+  reports: T[],
+  bounds: PeriodBounds,
+): T[] {
+  return reports.filter((r) => reportInRange(r.month, r.year, bounds));
+}
+
+export function createDefaultPeriodSelection(month: number, year: number): PeriodSelection {
+  return {
+    grain: "month",
+    month,
+    year,
+    trimester: trimesterOf(month),
+    fromMonth: month,
+    fromYear: year,
+    toMonth: month,
+    toYear: year,
+  };
+}
+
+export function mapPeriodToGrain(selection: PeriodSelection, grain: PeriodGrain): PeriodSelection {
+  const { month, year } = selection;
+  switch (grain) {
+    case "month":
+      return { ...selection, grain, month, year, trimester: trimesterOf(month) };
+    case "trimester":
+      return { ...selection, grain, trimester: trimesterOf(month), year };
+    case "year":
+      return { ...selection, grain, year };
+    case "custom":
+      return {
+        ...selection,
+        grain,
+        fromMonth: month,
+        fromYear: year,
+        toMonth: month,
+        toYear: year,
+      };
+  }
+}
+
+export function formatPeriodLabel(
+  selection: PeriodSelection,
+  months: string[],
+  trimesterLabels?: string[],
+): string {
+  const bounds = periodBounds(selection);
+  switch (selection.grain) {
+    case "month":
+      return `${months[selection.month - 1]} ${selection.year}`;
+    case "trimester": {
+      const tLabel = trimesterLabels?.[selection.trimester - 1] ?? `T${selection.trimester}`;
+      return `${tLabel} ${selection.year}`;
+    }
+    case "year":
+      return String(selection.year);
+    case "custom":
+      if (bounds.fromMonth === bounds.toMonth && bounds.fromYear === bounds.toYear) {
+        return `${months[bounds.fromMonth - 1]} ${bounds.fromYear}`;
+      }
+      return periodLabel(months, bounds.fromMonth, bounds.fromYear, bounds.toMonth, bounds.toYear);
+  }
 }
 
 export interface ProvinceRate {
@@ -35,23 +175,53 @@ export function provinceRates(
   reports: { id: string; province_id: string }[],
   achievements: AchievementRow[],
 ): ProvinceRate[] {
+  const achievementByReport = new Map(achievements.map((a) => [a.report_id, a]));
+
   return provinces
     .map((p) => {
-      const r = reports.find((x) => x.province_id === p.id);
-      const a = r ? achievements.find((x) => x.report_id === r.id) : undefined;
-      const planned = a?.total_planned ?? 0;
-      const approved = a?.finalized_approved ?? 0;
-      const rate = a
-        ? calcAchievementRate({
-            total_planned: planned,
-            finalized_approved: approved,
-            finalized_no_report: a.finalized_no_report ?? 0,
-            in_progress: a.in_progress ?? 0,
-            trigger_approved: a.trigger_approved ?? 0,
-            not_realized: a.not_realized ?? 0,
-          })
-        : 0;
-      return { provinceId: p.id, name: p.name, rate, hasReport: !!r, planned, approved };
+      const provinceReports = reports.filter((x) => x.province_id === p.id);
+      if (!provinceReports.length) {
+        return { provinceId: p.id, name: p.name, rate: 0, hasReport: false, planned: 0, approved: 0 };
+      }
+
+      const totals = provinceReports.reduce(
+        (acc, r) => {
+          const a = achievementByReport.get(r.id);
+          if (!a) return acc;
+          return {
+            total_planned: acc.total_planned + (a.total_planned || 0),
+            finalized_approved: acc.finalized_approved + (a.finalized_approved || 0),
+            finalized_no_report: acc.finalized_no_report + (a.finalized_no_report || 0),
+            in_progress: acc.in_progress + (a.in_progress || 0),
+            trigger_approved: acc.trigger_approved + (a.trigger_approved || 0),
+            not_realized: acc.not_realized + (a.not_realized || 0),
+          };
+        },
+        {
+          total_planned: 0,
+          finalized_approved: 0,
+          finalized_no_report: 0,
+          in_progress: 0,
+          trigger_approved: 0,
+          not_realized: 0,
+        },
+      );
+
+      const planned = totals.total_planned;
+      const approved = totals.finalized_approved;
+      const rate =
+        planned > 0
+          ? calcAchievementRate({
+              total_planned: planned,
+              finalized_approved: approved,
+              finalized_no_report: totals.finalized_no_report,
+              in_progress: totals.in_progress,
+              trigger_approved: totals.trigger_approved,
+              not_realized: totals.not_realized,
+            })
+          : 0;
+
+      return { provinceId: p.id, name: p.name, rate, hasReport: true, planned, approved };
     })
     .filter((p) => p.hasReport && p.planned > 0)
     .sort((a, b) => b.rate - a.rate);

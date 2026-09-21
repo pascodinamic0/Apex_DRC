@@ -8,7 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { DashboardCharts } from "@/components/dashboard-charts";
 import { NationalAnalytics } from "@/components/national-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { AchievementRow } from "@/lib/analytics";
+import {
+  createDefaultPeriodSelection,
+  filterReportsInPeriod,
+  periodBounds,
+  type AchievementRow,
+  type PeriodSelection,
+} from "@/lib/analytics";
 import { reportingYears, SOURCE_MONTH, SOURCE_YEAR } from "@/lib/export/epic-official";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
@@ -28,8 +34,9 @@ interface ReportRow {
 function Dashboard() {
   const { t } = useT();
   const { role, profile } = useAuth();
-  const [filterMonth, setFilterMonth] = useState(SOURCE_MONTH);
-  const [filterYear, setFilterYear] = useState(SOURCE_YEAR);
+  const [period, setPeriod] = useState<PeriodSelection>(() =>
+    createDefaultPeriodSelection(SOURCE_MONTH, SOURCE_YEAR),
+  );
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [achievements, setAchievements] = useState<AchievementRow[]>([]);
@@ -57,9 +64,10 @@ function Dashboard() {
     })();
   }, []);
 
-  const monthReports = reports.filter((r) => r.month === filterMonth && r.year === filterYear);
+  const bounds = periodBounds(period);
+  const periodReports = filterReportsInPeriod(reports, bounds);
   const trend = Array.from({ length: 12 }).map((_, i) => {
-    const d = new Date(filterYear, filterMonth - 1 - (11 - i), 1);
+    const d = new Date(bounds.toYear, bounds.toMonth - 1 - (11 - i), 1);
     const m = d.getMonth() + 1;
     const y = d.getFullYear();
     const label = `${t.months[m - 1].slice(0, 3)} ${String(y).slice(2)}`;
@@ -68,7 +76,7 @@ function Dashboard() {
   });
 
   const statusFor = (provinceId: string) => {
-    const r = monthReports.find((x) => x.province_id === provinceId);
+    const r = periodReports.find((x) => x.province_id === provinceId);
     return r?.status || "missing";
   };
 
@@ -105,10 +113,8 @@ function Dashboard() {
           <p className="text-muted-foreground">{t.monthlyWorkflow}</p>
         </div>
         <NationalAnalytics
-          month={filterMonth}
-          year={filterYear}
-          onMonthChange={setFilterMonth}
-          onYearChange={setFilterYear}
+          period={period}
+          onPeriodChange={setPeriod}
           years={years}
           provinces={provinces}
           reports={reports}
@@ -127,7 +133,7 @@ function Dashboard() {
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">FHI 360</p>
         <h1 className="text-3xl font-extrabold tracking-tight">{t.dashboard}</h1>
-        <p className="text-muted-foreground">{t.months[filterMonth - 1]} {filterYear}</p>
+        <p className="text-muted-foreground">{t.months[period.month - 1]} {period.year}</p>
       </div>
 
       <Card>

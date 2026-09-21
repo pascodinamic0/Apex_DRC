@@ -12,6 +12,7 @@ const DEMO_USERS = [
   { email: "kinshasa@epic.cd", fullName: "CP Kinshasa", role: "province_user" as const, provinceCode: "kin" },
   { email: "lualaba@epic.cd", fullName: "CP Lualaba", role: "province_user" as const, provinceCode: "lualaba" },
   { email: "viewer@epic.cd", fullName: "Lecteur", role: "read_only" as const },
+  { email: "at@epic.cd", fullName: "Assistant Technique", role: "read_only" as const, jobTitle: "Assistant Technique" },
 ];
 
 async function main() {

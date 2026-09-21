@@ -4,9 +4,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/lib/i18n";
 import {
+  filterReportsInPeriod,
+  formatPeriodLabel,
+  mapPeriodToGrain,
+  periodBounds,
   pooledRealization,
   provinceRates,
   type AchievementRow,
+  type PeriodGrain,
+  type PeriodSelection,
 } from "@/lib/analytics";
 import { CheckCircle2, ClipboardList, MapPin, Target } from "lucide-react";
 
@@ -18,10 +24,8 @@ function rateTone(rate: number) {
 }
 
 type Props = {
-  month: number;
-  year: number;
-  onMonthChange: (m: number) => void;
-  onYearChange: (y: number) => void;
+  period: PeriodSelection;
+  onPeriodChange: (period: PeriodSelection) => void;
   years: number[];
   provinces: { id: string; name: string }[];
   reports: { id: string; province_id: string; month: number; year: number; status: string; submitted_at: string | null; submission_deadline: string | null }[];
@@ -29,7 +33,7 @@ type Props = {
   loading?: boolean;
 };
 
-function PeriodFilters({
+function MonthYearSelect({
   month,
   year,
   years,
@@ -49,7 +53,7 @@ function PeriodFilters({
   onYearChange: (y: number) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-3">
+    <>
       <div className="space-y-1.5">
         <Label className="text-xs">{monthLabel}</Label>
         <Select value={String(month)} onValueChange={(v) => onMonthChange(Number(v))}>
@@ -72,15 +76,151 @@ function PeriodFilters({
           </SelectContent>
         </Select>
       </div>
+    </>
+  );
+}
+
+function PeriodFilters({
+  period,
+  years,
+  months,
+  trimesters,
+  labels,
+  onPeriodChange,
+}: {
+  period: PeriodSelection;
+  years: number[];
+  months: string[];
+  trimesters: string[];
+  labels: {
+    periodType: string;
+    month: string;
+    year: string;
+    trimester: string;
+    from: string;
+    to: string;
+    grains: { month: string; trimester: string; year: string; custom: string };
+  };
+  onPeriodChange: (period: PeriodSelection) => void;
+}) {
+  const grainOptions: { value: PeriodGrain; label: string }[] = [
+    { value: "month", label: labels.grains.month },
+    { value: "trimester", label: labels.grains.trimester },
+    { value: "year", label: labels.grains.year },
+    { value: "custom", label: labels.grains.custom },
+  ];
+
+  return (
+    <div className="flex flex-wrap items-end gap-3">
+      <div className="space-y-1.5">
+        <Label className="text-xs">{labels.periodType}</Label>
+        <Select
+          value={period.grain}
+          onValueChange={(v) => onPeriodChange(mapPeriodToGrain(period, v as PeriodGrain))}
+        >
+          <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {grainOptions.map((g) => (
+              <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {period.grain === "month" && (
+        <MonthYearSelect
+          month={period.month}
+          year={period.year}
+          years={years}
+          months={months}
+          monthLabel={labels.month}
+          yearLabel={labels.year}
+          onMonthChange={(month) => onPeriodChange({ ...period, month })}
+          onYearChange={(year) => onPeriodChange({ ...period, year })}
+        />
+      )}
+
+      {period.grain === "trimester" && (
+        <>
+          <div className="space-y-1.5">
+            <Label className="text-xs">{labels.trimester}</Label>
+            <Select
+              value={String(period.trimester)}
+              onValueChange={(v) => onPeriodChange({ ...period, trimester: Number(v) })}
+            >
+              <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {trimesters.map((t, i) => (
+                  <SelectItem key={i} value={String(i + 1)}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">{labels.year}</Label>
+            <Select
+              value={String(period.year)}
+              onValueChange={(v) => onPeriodChange({ ...period, year: Number(v) })}
+            >
+              <SelectTrigger className="h-9 w-28"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {years.map((y) => (
+                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      )}
+
+      {period.grain === "year" && (
+        <div className="space-y-1.5">
+          <Label className="text-xs">{labels.year}</Label>
+          <Select
+            value={String(period.year)}
+            onValueChange={(v) => onPeriodChange({ ...period, year: Number(v) })}
+          >
+            <SelectTrigger className="h-9 w-28"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {years.map((y) => (
+                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {period.grain === "custom" && (
+        <>
+          <MonthYearSelect
+            month={period.fromMonth}
+            year={period.fromYear}
+            years={years}
+            months={months}
+            monthLabel={labels.from}
+            yearLabel={labels.year}
+            onMonthChange={(fromMonth) => onPeriodChange({ ...period, fromMonth })}
+            onYearChange={(fromYear) => onPeriodChange({ ...period, fromYear })}
+          />
+          <MonthYearSelect
+            month={period.toMonth}
+            year={period.toYear}
+            years={years}
+            months={months}
+            monthLabel={labels.to}
+            yearLabel={labels.year}
+            onMonthChange={(toMonth) => onPeriodChange({ ...period, toMonth })}
+            onYearChange={(toYear) => onPeriodChange({ ...period, toYear })}
+          />
+        </>
+      )}
     </div>
   );
 }
 
 export function NationalAnalytics({
-  month,
-  year,
-  onMonthChange,
-  onYearChange,
+  period,
+  onPeriodChange,
   years,
   provinces,
   reports,
@@ -88,14 +228,15 @@ export function NationalAnalytics({
   loading,
 }: Props) {
   const { t } = useT();
-  const monthReports = reports.filter((r) => r.month === month && r.year === year);
-  const monthAchievements = achievements.filter((a) => monthReports.some((r) => r.id === a.report_id));
-  const pooled = pooledRealization(monthAchievements);
-  const bars = provinceRates(provinces, monthReports, monthAchievements);
+  const bounds = periodBounds(period);
+  const periodReports = filterReportsInPeriod(reports, bounds);
+  const periodAchievements = achievements.filter((a) => periodReports.some((r) => r.id === a.report_id));
+  const pooled = pooledRealization(periodAchievements);
+  const bars = provinceRates(provinces, periodReports, periodAchievements);
   const reportingCount = bars.length;
-  const submittedCount = monthReports.filter((r) => r.status !== "draft").length;
-  const validatedCount = monthReports.filter((r) => r.status === "validated").length;
-  const period = `${t.months[month - 1]} ${year}`;
+  const submittedCount = periodReports.filter((r) => r.status !== "draft").length;
+  const validatedCount = periodReports.filter((r) => r.status === "validated").length;
+  const periodLabel = formatPeriodLabel(period, t.months, t.trimesters);
   const tone = rateTone(pooled.rate);
 
   if (loading) {
@@ -115,17 +256,28 @@ export function NationalAnalytics({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">{t.nationalAnalytics}</h2>
-          <p className="text-sm text-muted-foreground">{t.reportingPeriod} · {period}</p>
+          <p className="text-sm text-muted-foreground">{t.reportingPeriod} · {periodLabel}</p>
         </div>
         <PeriodFilters
-          month={month}
-          year={year}
+          period={period}
           years={years}
           months={t.months}
-          monthLabel={t.month}
-          yearLabel={t.year}
-          onMonthChange={onMonthChange}
-          onYearChange={onYearChange}
+          trimesters={t.trimesters}
+          labels={{
+            periodType: t.periodType,
+            month: t.month,
+            year: t.year,
+            trimester: t.trimester,
+            from: t.from,
+            to: t.to,
+            grains: {
+              month: t.periodGrainMonth,
+              trimester: t.periodGrainTrimester,
+              year: t.periodGrainYear,
+              custom: t.periodGrainCustom,
+            },
+          }}
+          onPeriodChange={onPeriodChange}
         />
       </div>
 
@@ -167,7 +319,7 @@ export function NationalAnalytics({
               {t.planned}
             </p>
             <p className="mt-2 text-2xl font-semibold tabular-nums">{pooled.planned}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{period}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{periodLabel}</p>
           </CardContent>
         </Card>
 
@@ -187,7 +339,7 @@ export function NationalAnalytics({
         <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="text-base font-semibold">{t.realizationByProvince}</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">{period}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{periodLabel}</p>
           </div>
         </CardHeader>
         <CardContent className="space-y-0.5">
