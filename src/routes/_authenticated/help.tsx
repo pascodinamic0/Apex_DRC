@@ -53,34 +53,11 @@ function HelpPage() {
     toast.success(t.guideGenerated);
   };
 
-  const downloadDocxGuide = async () => {
-    const { Document, Packer, Paragraph, HeadingLevel } = await import("docx");
-    const children = sections.flatMap((s) => [
-      new Paragraph({ text: s.title, heading: HeadingLevel.HEADING_2 }),
-      ...s.body.map((p) => new Paragraph(p)),
-      new Paragraph(""),
-    ]);
-    const doc = new Document({
-      sections: [{ children: [new Paragraph({ text: t.helpTitle, heading: HeadingLevel.HEADING_1 }), ...children] }],
-    });
-    const blob = await Packer.toBlob(doc);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `epic-rdc-guide-${lang}.docx`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success(t.guideGenerated);
-  };
-
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">{t.helpTitle}</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={downloadPdfGuide}><Download className="h-4 w-4 mr-1" />{t.downloadGuide}</Button>
-          <Button variant="outline" size="sm" onClick={downloadDocxGuide}><Download className="h-4 w-4 mr-1" />{t.downloadGuideDocx}</Button>
-        </div>
+        <Button variant="outline" size="sm" onClick={downloadPdfGuide}><Download className="h-4 w-4 mr-1" />{t.downloadGuide}</Button>
       </div>
 
       <Input placeholder={t.searchHelp} value={query} onChange={(e) => setQuery(e.target.value)} />

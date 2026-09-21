@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { FileText, Download, Layers } from "lucide-react";
+import { Download, Layers } from "lucide-react";
 import { calcAchievementRate } from "@/lib/activity-catalog";
 import { loadExtendedReportData } from "@/lib/report-data";
 import { getProvinceUserIds, notifyUsers } from "@/lib/notifications";
@@ -335,9 +335,6 @@ function DeskPage() {
                 <Link to="/consolidation">{t.previewConsolidated}</Link>
               </Button>
               <Button asChild>
-                <Link to="/consolidation"><FileText className="h-4 w-4 mr-1" />{t.exportWord}</Link>
-              </Button>
-              <Button variant="outline" asChild>
                 <Link to="/consolidation"><Download className="h-4 w-4 mr-1" />{t.export}</Link>
               </Button>
             </div>

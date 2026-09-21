@@ -1,11 +1,11 @@
 {
-  "name": "EPIC RDC — Reporting",
+  "name": "FHI 360 · EPIC RDC",
   "short_name": "EPIC RDC",
-  "description": "Plateforme de reporting mensuel EPIC RDC",
+  "description": "Plateforme de reporting mensuel EPIC RDC, FHI 360",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0f172a",
+  "theme_color": "#FF4719",
   "lang": "fr",
   "icons": [
     {

@@ -1,35 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { createClient } from "@supabase/supabase-js";
+import { getDirectorUserId } from "@/lib/auth/director-server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-
-async function getDirectorUserId(request: Request): Promise<string | null> {
-  const auth = request.headers.get("authorization") || "";
-  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  console.log("[admin.users] token len", token.length);
-  if (!token) return null;
-  const { getSupabasePublishableKey, getSupabaseUrl } = await import("@/integrations/supabase/env");
-  const url = getSupabaseUrl();
-  const key = getSupabasePublishableKey();
-  if (!url || !key) {
-    console.log("[admin.users] missing env", { url: !!url, key: !!key });
-    return null;
-  }
-  const sb = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data, error } = await sb.auth.getUser(token);
-  if (error || !data?.user) {
-    console.log("[admin.users] getUser failed", error?.message);
-    return null;
-  }
-  const { data: r, error: rErr } = await supabaseAdmin
-    .from("user_roles").select("role").eq("user_id", data.user.id).eq("role", "technical_director").maybeSingle();
-  if (rErr) console.log("[admin.users] role err", rErr.message);
-  if (!r) {
-    console.log("[admin.users] not director", data.user.id);
-    return null;
-  }
-  return data.user.id;
-}
 
 export const Route = createFileRoute("/api/admin/users")({
   server: {

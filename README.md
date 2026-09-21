@@ -11,7 +11,7 @@ Built for **EPIC RDC** (Expanded Program on Immunization and related health prog
 - **Workflow** — draft → submitted → validated, with autosave and draft recovery
 - **Source-based program data** — FY2026 H1 indicators, GHS, and activity structure imported from Docs (no fabricated facility/HZ lists)
 - **Dashboards** — program results plus monthly provincial submission tracking
-- **Consolidation & exports** — national views; PDF / DOCX export helpers
+- **Consolidation & exports** — national views; official PDF export following the provincial monthly report template
 - **Offline-friendly PWA** — service worker, manifest, and draft queue for unreliable connectivity
 - **Profile & preferences** — language, job title, and account settings
 
@@ -97,6 +97,10 @@ See [`.env.example`](./.env.example). Never commit `.env` or service-role keys. 
 | `VITE_SUPABASE_URL` | Same as `SUPABASE_URL` (required for Vite client build) |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Same as publishable key |
 | `VITE_SUPABASE_PROJECT_ID` | Project ref (subdomain) |
+| `OPENAI_API_KEY` | Server-only; DT AI summary on Consolidation ([OpenAI](https://platform.openai.com/api-keys)) |
+| `OPENAI_MODEL` | Optional; default `gpt-4o-mini` |
+| `AI_GATEWAY_API_KEY` | Optional alternative to OpenAI direct ([Vercel AI Gateway](https://vercel.com/docs/ai-gateway)) |
+| `AI_GATEWAY_MODEL` | Optional when using Gateway; default `openai/gpt-4o-mini` |
 
 After saving, **redeploy** (Deployments → … → Redeploy). New variables only apply on the next build.
 

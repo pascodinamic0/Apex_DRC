@@ -44,11 +44,11 @@ export const helpSectionsEn: HelpSection[] = [
   },
   {
     id: "export",
-    title: "PDF and Word export",
+    title: "PDF export",
     roles: ["technical_director", "read_only"],
     body: [
-      "On Consolidation, select month and year then export PDF or Word.",
-      "The national report includes the consolidated table and narratives by province.",
+      "On Consolidation, select month and year then export the official PDF.",
+      "The national report follows the provincial monthly activity report structure: cover, contents, acronyms, executive summary, results table, and annexes.",
     ],
   },
   {
@@ -61,11 +61,11 @@ export const helpSectionsEn: HelpSection[] = [
   },
   {
     id: "profile",
-    title: "Profile and password",
+    title: "Settings and password",
     roles: "all",
     body: [
-      "Profile: update your name, language, and password.",
-      "Forgot password: use the link on the login page.",
+      "Settings (user menu at the bottom of the sidebar): name, job title, language, role, province, and password.",
+      "Language is also available from the user menu. Forgotten passwords are reset from the login page.",
     ],
   },
 ];

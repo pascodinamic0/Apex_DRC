@@ -4,6 +4,78 @@ import { emptyAchievementSummary } from "@/lib/activity-catalog";
 export const EPIC_AGREEMENT = "7200AA19CA00002";
 export const EPIC_PROJECT = "Meeting Targets and Maintaining Epidemic Control (EpiC)";
 
+/** Standard acronyms from the provincial monthly report template. */
+export function officialAcronyms(lang: "fr" | "en"): [string, string][] {
+  if (lang === "en") {
+    return [
+      ["AC", "Community animator"],
+      ["AME", "Exclusive breastfeeding"],
+      ["ANJE", "Infant and young child feeding"],
+      ["AS", "Health area"],
+      ["ASC", "Community health worker"],
+      ["BCZS", "Health zone central office"],
+      ["CPN", "Antenatal consultation"],
+      ["CPON", "Postnatal consultation"],
+      ["CPS", "Preschool consultation"],
+      ["CS", "Health centre"],
+      ["DoS", "U.S. Department of State"],
+      ["EPIC", "Meeting Targets and Maintaining Epidemic Control"],
+      ["ESS", "Health care facilities"],
+      ["FHI", "Family Health International"],
+      ["GSA", "IYCF support group"],
+      ["HCD", "Human-centered design"],
+      ["HGR", "General referral hospital"],
+      ["HKI", "Helen Keller International"],
+      ["MII", "Insecticide-treated net"],
+      ["MMS", "Multiple micronutrient supplementation"],
+      ["PEV", "Expanded Programme on Immunization"],
+      ["PFE", "Essential family practices"],
+      ["PNLP", "National Malaria Control Programme"],
+      ["PNSR", "National Reproductive Health Programme"],
+      ["PRONANUT", "National Nutrition Programme"],
+      ["RDC", "Democratic Republic of the Congo"],
+      ["SMNE", "Maternal, newborn and child health"],
+      ["SNIS", "National Health Information System"],
+      ["TDR", "Rapid diagnostic test"],
+      ["TPI", "Intermittent preventive treatment"],
+      ["ZS", "Health zone"],
+    ];
+  }
+  return [
+    ["AC", "Animateur communautaire"],
+    ["AME", "Allaitement maternel exclusif"],
+    ["ANJE", "Alimentation du nourrisson et du jeune enfant"],
+    ["AS", "Aire de sante"],
+    ["ASC", "Agent de sante communautaire"],
+    ["BCZS", "Bureau central de zone de sante"],
+    ["CPN", "Consultation prenatale"],
+    ["CPON", "Consultation postnatale"],
+    ["CPS", "Consultation prescolaire"],
+    ["CS", "Centre de sante"],
+    ["DoS", "U.S. Department of State"],
+    ["EPIC", "Meeting Targets and Maintaining Epidemic Control"],
+    ["ESS", "Etablissements de soins de sante"],
+    ["FHI", "Family Health International"],
+    ["GSA", "Groupe de soutien a l'ANJE"],
+    ["HCD", "Human-centered design"],
+    ["HGR", "Hopital general de reference"],
+    ["HKI", "Helen Keller International"],
+    ["MII", "Moustiquaire impregnee d'insecticide"],
+    ["MMS", "Multiple micronutrient supplementation"],
+    ["PEV", "Programme elargi de vaccination"],
+    ["PFE", "Pratiques familiales essentielles"],
+    ["PNLP", "Programme national de lutte contre le paludisme"],
+    ["PNSR", "Programme national de sante de la reproduction"],
+    ["PRONANUT", "Programme national de nutrition"],
+    ["RDC", "Republique democratique du Congo"],
+    ["SMNE", "Sante de la mere, du nouveau-ne et de l'enfant"],
+    ["SNIS", "Systeme national d'information sanitaire"],
+    ["TDR", "Test de diagnostic rapide"],
+    ["TPI", "Traitement preventif intermittent"],
+    ["ZS", "Zone de sante"],
+  ];
+}
+
 export const SOURCE_MONTH = 6;
 export const SOURCE_YEAR = 2026;
 
@@ -39,6 +111,8 @@ export type OfficialLabels = {
   challengesSection: string;
   nextMonth: string;
   annexA: string;
+  annexB: string;
+  acronyms: string;
   sourceNote: string;
   generatedOn: string;
   province: string;
@@ -52,6 +126,7 @@ export type OfficialLabels = {
   achInProgress: string;
   achTrigger: string;
   achNotDone: string;
+  aiNationalSummary: string;
 };
 
 export function officialLabels(lang: "fr" | "en"): OfficialLabels {
@@ -83,7 +158,9 @@ export function officialLabels(lang: "fr" | "en"): OfficialLabels {
       challengesSection: "IV. Challenges",
       nextMonth: "V. Priority activities for next month",
       annexA: "Annex A: Performance monitoring and evaluation matrix",
-      sourceNote: "Document generated from official EpiC DRC source reports imported into the platform. Layout follows the provincial monthly report template used in Docs.",
+      annexB: "Annex B: Implementation photos",
+      acronyms: "Acronyms",
+      sourceNote: "Document generated from official EpiC DRC source reports. Structure follows the provincial monthly activity report template.",
       generatedOn: "Generated on",
       province: "Province",
       smni: "MNCH",
@@ -96,6 +173,7 @@ export function officialLabels(lang: "fr" | "en"): OfficialLabels {
       achInProgress: "In progress",
       achTrigger: "Trigger already approved",
       achNotDone: "Not completed",
+      aiNationalSummary: "National AI summary (reviewed by Technical Director)",
     };
   }
   return {
@@ -125,7 +203,9 @@ export function officialLabels(lang: "fr" | "en"): OfficialLabels {
     challengesSection: "IV. Défis",
     nextMonth: "V. Activités prioritaires pour le prochain mois",
     annexA: "Annexe A : Matrice de suivi et d'évaluation des performances",
-    sourceNote: "Document généré à partir des rapports officiels EpiC RDC importés dans la plateforme. La structure suit le modèle de rapport mensuel provincial fourni dans Docs.",
+    annexB: "Annexe B : Photos de mise en oeuvre",
+    acronyms: "Sigles et acronymes",
+    sourceNote: "Document généré à partir des rapports officiels EpiC RDC. La structure suit le modèle de rapport mensuel provincial.",
     generatedOn: "Généré le",
     province: "Province",
     smni: "SMNE",
@@ -138,6 +218,7 @@ export function officialLabels(lang: "fr" | "en"): OfficialLabels {
     achInProgress: "Activité en cours",
     achTrigger: "Activité dont le déclencheur déjà approuvé",
     achNotDone: "Activité non réalisée",
+    aiNationalSummary: "Résumé national IA (revu par le Directeur Technique)",
   };
 }
 
@@ -171,6 +252,8 @@ export type OfficialReportPayload = {
   priorities: string;
   annexRows?: { code: string; name: string; numerator: string; denominator: string; value: string; comment: string }[];
   provinceRates?: { name: string; rate: number; total: number; approved: number }[];
+  /** DT-reviewed national AI summary (does not replace source tables). */
+  aiNationalSummary?: string;
 };
 
 function pct(n: number, total: number) {
@@ -190,18 +273,37 @@ export function achievementExportRows(a: AchievementSummary, L: OfficialLabels) 
   ];
 }
 
+export function activityRowHasContent(row: Pick<ActivityExportRow, "realized" | "progress" | "challenges" | "solutions" | "priorities" | "partners">) {
+  return [row.realized, row.progress, row.challenges, row.solutions, row.priorities, row.partners].some(
+    (v) => v && v.trim() && v.trim().toUpperCase() !== "NA",
+  );
+}
+
+function catalogTitle(catalog: CatalogRow[], code: string, lang: "fr" | "en") {
+  const c = catalog.find((x) => x.code === code);
+  if (!c) return code;
+  return lang === "en" ? c.title_en : c.title_fr;
+}
+
 export function buildActivityExportRows(
   catalog: CatalogRow[],
   responses: ActivityResponseFields[],
   lang: "fr" | "en",
 ): ActivityExportRow[] {
-  const byCode = new Map(responses.map((r) => [r.catalog_code, r]));
-  return catalog
-    .map((c) => {
-      const r = byCode.get(c.code);
+  const byCode = new Map<string, ActivityResponseFields>();
+  for (const r of responses) {
+    if (r.catalog_code) byCode.set(r.catalog_code, r);
+  }
+  const codes = [
+    ...catalog.map((c) => c.code),
+    ...[...byCode.keys()].filter((code) => !catalog.some((c) => c.code === code)),
+  ];
+  return codes
+    .map((code) => {
+      const r = byCode.get(code);
       return {
-        code: c.code,
-        title: lang === "en" ? c.title_en : c.title_fr,
+        code,
+        title: catalogTitle(catalog, code, lang),
         realized: r?.realized || "",
         progress: r?.progress || "",
         challenges: r?.challenges || "",
@@ -210,7 +312,100 @@ export function buildActivityExportRows(
         partners: r?.partners || "",
       };
     })
-    .filter((row) => [row.realized, row.progress, row.challenges, row.solutions, row.priorities, row.partners].some((v) => v && v.trim() && v.trim().toUpperCase() !== "NA"));
+    .filter(activityRowHasContent);
+}
+
+export type ProvinceActivityContribution = ActivityExportRow & {
+  provinceName: string;
+  reportId: string;
+};
+
+export type NationalActivityView = {
+  code: string;
+  title: string;
+  objective: number | null;
+  parentCode: string | null;
+  sortOrder: number;
+  contributions: ProvinceActivityContribution[];
+  merged: ActivityExportRow;
+};
+
+export function applyAcceptedActivitySummaries(
+  activities: ActivityExportRow[],
+  accepted: { activity_code: string; ai_content: string; selected: string }[],
+): ActivityExportRow[] {
+  const map = new Map(accepted.filter((s) => s.selected === "ai" && s.ai_content.trim()).map((s) => [s.activity_code, s.ai_content]));
+  if (!map.size) return activities;
+  return activities.map((a) => (map.has(a.code) ? { ...a, realized: map.get(a.code)! } : a));
+}
+
+export function buildNationalActivityViews(opts: {
+  lang: "fr" | "en";
+  catalog: CatalogRow[];
+  provinces: { id: string; name: string }[];
+  reports: { id: string; province_id: string }[];
+  responses: (ActivityResponseFields & { report_id: string })[];
+}): NationalActivityView[] {
+  const nameOf = (id: string) => opts.provinces.find((p) => p.id === id)?.name || "—";
+  const catalogByCode = new Map(opts.catalog.map((c) => [c.code, c]));
+  const extraCodes = [...new Set(opts.responses.map((r) => r.catalog_code).filter(Boolean))].filter(
+    (code) => !catalogByCode.has(code),
+  );
+  const codes = [
+    ...opts.catalog.map((c) => c.code),
+    ...extraCodes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
+  ];
+
+  const views: NationalActivityView[] = [];
+  for (const code of codes) {
+    const cat = catalogByCode.get(code);
+    const contributions: ProvinceActivityContribution[] = [];
+    for (const report of opts.reports) {
+      const r = opts.responses.find((x) => x.report_id === report.id && x.catalog_code === code);
+      if (!r) continue;
+      const row: ProvinceActivityContribution = {
+        code,
+        title: catalogTitle(opts.catalog, code, opts.lang),
+        provinceName: nameOf(report.province_id),
+        reportId: report.id,
+        realized: r.realized || "",
+        progress: r.progress || "",
+        challenges: r.challenges || "",
+        solutions: r.solutions || "",
+        priorities: r.priorities || "",
+        partners: r.partners || "",
+      };
+      if (activityRowHasContent(row)) contributions.push(row);
+    }
+    if (!contributions.length) continue;
+    const add = (field: keyof ActivityExportRow) =>
+      contributions
+        .map((c) => {
+          const text = String(c[field] || "").trim();
+          return text ? `[${c.provinceName}]\n${text}` : "";
+        })
+        .filter(Boolean)
+        .join("\n\n");
+    views.push({
+      code,
+      title: catalogTitle(opts.catalog, code, opts.lang),
+      objective: cat?.objective ?? (Number.parseInt(code, 10) || null),
+      parentCode: cat?.parent_code ?? (code.includes(".") ? code.split(".").slice(0, 2).join(".") : null),
+      sortOrder: cat?.sort_order ?? 9999,
+      contributions,
+      merged: {
+        code,
+        title: catalogTitle(opts.catalog, code, opts.lang),
+        realized: add("realized"),
+        progress: add("progress"),
+        challenges: add("challenges"),
+        solutions: add("solutions"),
+        priorities: add("priorities"),
+        partners: add("partners"),
+      },
+    });
+  }
+  return views;
 }
 
 export function joinNarratives(values: (string | undefined | null)[]) {
@@ -310,7 +505,6 @@ export function buildOfficialNationalPayload(opts: {
 }): OfficialReportPayload {
   const L = officialLabels(opts.lang);
   const nameOf = (id: string) => opts.provinces.find((p) => p.id === id)?.name || "—";
-  const merged = new Map<string, ActivityExportRow>();
   const exec: Record<"smni" | "nutrition" | "malaria", string[]> = { smni: [], nutrition: [], malaria: [] };
   const coordination: string[] = [];
   const stories: string[] = [];
@@ -335,28 +529,6 @@ export function buildOfficialNationalPayload(opts: {
       responses: opts.responses.filter((r) => r.report_id === report.id),
       narratives: n,
     });
-    for (const row of monthly.activities) {
-      const cur = merged.get(row.code) || {
-        code: row.code,
-        title: row.title,
-        realized: "",
-        progress: "",
-        challenges: "",
-        solutions: "",
-        priorities: "",
-        partners: "",
-      };
-      const add = (prev: string, next: string) => (next ? (prev ? `${prev}\n\n${prefixed(pname, next)}` : prefixed(pname, next)) : prev);
-      merged.set(row.code, {
-        ...cur,
-        realized: add(cur.realized, row.realized),
-        progress: add(cur.progress, row.progress),
-        challenges: add(cur.challenges, row.challenges),
-        solutions: add(cur.solutions, row.solutions),
-        priorities: add(cur.priorities, row.priorities),
-        partners: add(cur.partners, row.partners),
-      });
-    }
     if (monthly.execSmni) exec.smni.push(prefixed(pname, monthly.execSmni));
     if (monthly.execNutrition) exec.nutrition.push(prefixed(pname, monthly.execNutrition));
     if (monthly.execMalaria) exec.malaria.push(prefixed(pname, monthly.execMalaria));
@@ -367,6 +539,13 @@ export function buildOfficialNationalPayload(opts: {
   }
 
   const achievement = sumAchievements(opts.achievements);
+  const activityViews = buildNationalActivityViews({
+    lang: opts.lang,
+    catalog: opts.catalog,
+    provinces: opts.provinces,
+    reports: opts.reports,
+    responses: opts.responses,
+  });
   return {
     kind: "national",
     provinceName: opts.lang === "en" ? "National (all provinces with a report)" : "National (toutes les provinces avec rapport)",
@@ -376,7 +555,7 @@ export function buildOfficialNationalPayload(opts: {
     domains: `${L.smni}, ${L.nutrition}, ${L.malaria}`,
     achievement,
     achievementRows: achievementExportRows(achievement, L),
-    activities: Array.from(merged.values()),
+    activities: activityViews.map((v) => v.merged),
     execSmni: exec.smni.join("\n\n"),
     execNutrition: exec.nutrition.join("\n\n"),
     execMalaria: exec.malaria.join("\n\n"),

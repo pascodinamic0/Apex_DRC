@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { NotificationBell } from "@/components/notification-bell";
-import { SidebarLangSwitch } from "@/components/sidebar-lang-switch";
+import { SidebarUserMenu } from "@/components/sidebar-user-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sidebar,
@@ -18,10 +18,10 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarRail,
-  SidebarSeparator,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, FileText, Layers, Archive, LogOut, Users, HelpCircle, User, WifiOff, Wifi, ClipboardList } from "lucide-react";
+import { BrandLogo, BrandMark } from "@/components/brand-logo";
+import { LayoutDashboard, FileText, Layers, Archive, Users, WifiOff, Wifi, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getPendingCount, replayDraftQueue, type QueuedDraft } from "@/lib/offline/draft-queue";
 import { toast } from "sonner";
@@ -29,7 +29,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated")({ component: Layout });
 
 function Layout() {
-  const { user, loading, signOut, profile, role } = useAuth();
+  const { user, loading, profile, role } = useAuth();
   const { t } = useT();
   const nav = useNavigate();
   const loc = useLocation();
@@ -130,19 +130,14 @@ function Layout() {
     <SidebarProvider defaultOpen>
       <Sidebar collapsible="icon">
         <SidebarHeader className="border-b border-sidebar-border">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton size="lg" className="cursor-default hover:bg-transparent active:bg-transparent" tooltip={t.appName}>
-                <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
-                  E
-                </div>
-                <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{t.appName}</span>
-                  <span className="truncate text-xs text-muted-foreground">{t.tagline}</span>
-                </div>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <div className="flex items-center gap-2 px-2 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+            <BrandMark className="hidden h-7 w-5 group-data-[collapsible=icon]:block" />
+            <BrandLogo className="h-8 w-auto shrink-0 group-data-[collapsible=icon]:hidden" />
+            <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+              <span className="truncate font-semibold">{t.appName}</span>
+              <span className="truncate text-xs text-muted-foreground">{t.tagline}</span>
+            </div>
+          </div>
         </SidebarHeader>
 
         <SidebarContent>
@@ -155,6 +150,7 @@ function Layout() {
                       asChild
                       isActive={loc.pathname.startsWith(it.to)}
                       tooltip={it.label}
+                      className="data-[active=true]:bg-primary/10 data-[active=true]:text-primary"
                     >
                       <Link to={it.to}>
                         <it.icon />
@@ -169,51 +165,12 @@ function Layout() {
         </SidebarContent>
 
         <SidebarFooter className="border-t border-sidebar-border">
-          <div className="px-2 py-1 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-            {roleLabel}
-          </div>
-          <Link
-            to="/profile"
-            className="block truncate px-2 text-sm font-medium hover:underline group-data-[collapsible=icon]:hidden"
-          >
-            {profile?.full_name || profile?.email}
-          </Link>
-          <SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={t.help} isActive={loc.pathname.startsWith("/help")}>
-                <Link to="/help">
-                  <HelpCircle />
-                  <span>{t.help}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarLangSwitch />
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={t.profile}>
-                <Link to="/profile">
-                  <User />
-                  <span>{t.profile}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                tooltip={t.logout}
-                onClick={() => signOut().then(() => nav({ to: "/login" }))}
-              >
-                <LogOut />
-                <span>{t.logout}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <SidebarUserMenu roleLabel={roleLabel} />
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
 
-      <SidebarInset className="bg-muted/30">
+      <SidebarInset className="bg-muted/40">
         {(!online || pendingSync > 0) && (
           <div
             className={`flex items-center justify-center gap-2 px-3 py-1.5 text-xs ${online ? "bg-amber-500/10 text-amber-900 dark:text-amber-100" : "bg-destructive/10 text-destructive"}`}
@@ -223,8 +180,9 @@ function Layout() {
           </div>
         )}
 
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-card px-4">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-t-4 border-t-primary bg-card px-4">
           <SidebarTrigger />
+          <BrandLogo className="h-7 md:hidden" />
           <div className="flex-1 truncate font-semibold md:hidden">{t.appName}</div>
           <div className="ml-auto flex items-center gap-1">
             <NotificationBell role={role} />

@@ -1,13 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Bell,
+  ClipboardList,
+  FileText,
+  HelpCircle,
+  Languages,
+  LayoutDashboard,
+  Layers,
+  ShieldCheck,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { LangSwitch } from "@/components/lang-switch";
+import { BrandArcs, BrandLogo, BrandMark } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/")({
   component: Index,
 });
+
+const moduleIcons = [LayoutDashboard, FileText, ClipboardList, Layers, Bell, HelpCircle];
 
 function Index() {
   const { user, loading } = useAuth();
@@ -17,214 +29,183 @@ function Index() {
   const primaryLabel = user ? t.dashboard : t.signIn;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-background via-background to-muted px-4 py-6">
-      <div className="pointer-events-none absolute -left-28 top-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-      <div className="pointer-events-none absolute right-0 top-1/3 h-96 w-96 rounded-full bg-muted-foreground/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
-
-      <div className="relative mx-auto w-full max-w-6xl">
-        <header className="flex items-center justify-between rounded-3xl border bg-card/55 px-4 py-3 shadow-sm backdrop-blur-xl">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground shadow-lg">
-              E
-            </div>
-            <div>
-              <p className="font-semibold leading-none">{t.appName}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{t.tagline}</p>
+    <main className="relative min-h-screen overflow-x-hidden bg-background">
+      <header className="sticky top-0 z-30 border-b border-primary/15 bg-background/95 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3">
+          <Link to="/" className="flex min-w-0 items-center gap-3">
+            <BrandLogo className="h-9 shrink-0" />
+            <div className="hidden min-w-0 border-l border-border pl-3 sm:block">
+              <p className="truncate text-sm font-semibold leading-none">{t.appName}</p>
+              <p className="mt-1 truncate text-xs text-muted-foreground">{t.tagline}</p>
             </div>
           </Link>
-
-          <div className="flex items-center gap-3">
-            <nav className="hidden items-center gap-5 text-sm text-muted-foreground md:flex">
+          <div className="flex items-center gap-2">
+            <nav className="hidden items-center gap-6 text-sm font-medium text-foreground/70 lg:flex">
               {copy.nav.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className="transition-colors hover:text-foreground"
-                >
+                <a key={item.href} href={item.href} className="transition-colors hover:text-foreground">
                   {item.label}
                 </a>
               ))}
             </nav>
-            <LangSwitch />
-          </div>
-        </header>
-
-        <section className="grid min-h-[calc(100vh-7rem)] items-center gap-10 py-14 lg:grid-cols-[1.02fr_0.98fr] lg:py-20">
-          <div>
-            <div className="mb-6 inline-flex rounded-full border bg-card/65 px-4 py-2 text-sm text-muted-foreground shadow-sm backdrop-blur">
-              {copy.hero.kicker}
-            </div>
-            <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              {copy.hero.title}
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-              {copy.hero.description}
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg">
-                <Link to={primaryHref}>{loading ? t.loading : primaryLabel}</Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="bg-background/60 backdrop-blur"
-              >
-                <a href="#overview">{copy.hero.secondaryCta}</a>
-              </Button>
-            </div>
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              {copy.hero.stats.map((stat) => (
-                <div key={stat.label} className="rounded-2xl border bg-card/55 p-4 backdrop-blur">
-                  <p className="text-2xl font-semibold">{stat.value}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <Card className="overflow-hidden border-white/40 bg-card/70 shadow-2xl backdrop-blur-xl">
-            <CardContent className="p-0">
-              <div className="border-b bg-primary p-6 text-primary-foreground">
-                <p className="text-sm opacity-80">{copy.snapshot.eyebrow}</p>
-                <h2 className="mt-2 text-2xl font-semibold">{copy.snapshot.title}</h2>
-              </div>
-              <div className="space-y-4 p-6">
-                {copy.snapshot.items.map((item) => (
-                  <div key={item.label}>
-                    <div className="mb-2 flex items-center justify-between text-sm">
-                      <span className="font-medium">{item.label}</span>
-                      <span className="text-muted-foreground">{item.value}</span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-primary"
-                        style={{ width: item.width }}
-                      />
-                    </div>
-                  </div>
-                ))}
-                <div className="grid gap-3 pt-2 sm:grid-cols-2">
-                  {copy.snapshot.cards.map((card) => (
-                    <div key={card.title} className="rounded-2xl border bg-background/55 p-4">
-                      <p className="text-sm font-medium">{card.title}</p>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">{card.text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        <section id="overview" className="py-12">
-          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-            <SectionIntro align="left" {...copy.overview} />
-            <div className="grid gap-4 md:grid-cols-2">
-              {copy.outcomes.map((item) => (
-                <Card key={item.title} className="border-white/40 bg-card/65 backdrop-blur-xl">
-                  <CardContent className="p-6">
-                    <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-sm font-semibold text-primary">
-                      {item.code}
-                    </div>
-                    <h3 className="text-xl font-semibold">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.text}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="workflow" className="py-12">
-          <SectionIntro {...copy.workflowIntro} />
-          <div className="mt-10 rounded-3xl border bg-card/65 p-5 shadow-xl backdrop-blur-xl">
-            <div className="grid gap-4 lg:grid-cols-4">
-              {copy.workflow.map((step, index) => (
-                <div key={step.title} className="relative rounded-2xl bg-background/55 p-5">
-                  <div className="mb-5 flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                      {index + 1}
-                    </span>
-                    <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                      {step.stage}
-                    </span>
-                  </div>
-                  <h3 className="font-semibold">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="modules" className="py-12">
-          <div className="rounded-3xl border bg-card/70 p-6 shadow-xl backdrop-blur-xl sm:p-8">
-            <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-              <SectionIntro align="left" {...copy.modulesIntro} />
-              <div className="grid gap-3 sm:grid-cols-2">
-                {copy.modules.map((module) => (
-                  <div key={module.title} className="rounded-2xl border bg-background/55 p-4">
-                    <p className="font-semibold">{module.title}</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{module.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="terms" className="grid gap-4 py-12 lg:grid-cols-[1fr_1fr]">
-          {copy.policy.map((item) => (
-            <Card key={item.title} className="border-white/40 bg-card/65 backdrop-blur-xl">
-              <CardContent className="p-6 sm:p-8">
-                <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                  {item.eyebrow}
-                </p>
-                <h2 className="mt-3 text-2xl font-bold tracking-tight">{item.title}</h2>
-                <p className="mt-4 text-sm leading-7 text-muted-foreground">{item.text}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </section>
-
-        <section className="py-12">
-          <div className="flex flex-col items-start justify-between gap-6 rounded-3xl bg-primary p-6 text-primary-foreground shadow-2xl sm:p-8 lg:flex-row lg:items-center">
-            <div>
-              <p className="text-sm font-medium opacity-80">{copy.cta.eyebrow}</p>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight">{copy.cta.title}</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 opacity-80">{copy.cta.text}</p>
-            </div>
-            <Button asChild size="lg" variant="secondary" className="shrink-0">
+            <LangSwitch tone="utility" />
+            <Button asChild size="sm" variant="brand" className="hidden sm:inline-flex">
               <Link to={primaryHref}>{loading ? t.loading : primaryLabel}</Link>
             </Button>
           </div>
-        </section>
+        </div>
+      </header>
 
-        <footer className="border-t py-8">
+      <section className="relative overflow-hidden">
+        <BrandArcs />
+        <div className="relative mx-auto w-full max-w-6xl px-4 pb-8 pt-16 sm:pt-20 lg:pb-10 lg:pt-24">
+          <p className="mb-5 text-sm font-semibold text-primary">{copy.hero.kicker}</p>
+          <h1 className="max-w-4xl text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-[4.25rem] lg:leading-[1.05]">
+            {copy.hero.title}
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">{copy.hero.description}</p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Button asChild size="lg" variant="brand">
+              <Link to={primaryHref}>{loading ? t.loading : primaryLabel}</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <a href="#overview">{copy.hero.secondaryCta}</a>
+            </Button>
+          </div>
+          <div className="mt-12 grid gap-6 border-t border-border/80 pt-8 sm:grid-cols-3">
+            {copy.hero.stats.map((stat) => (
+              <div key={stat.label}>
+                <p className="text-2xl font-extrabold tracking-tight">{stat.value}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-primary text-primary-foreground">
+        <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">{copy.snapshot.eyebrow}</p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">{copy.snapshot.title}</h2>
+            <p className="mt-4 max-w-md text-sm leading-7 text-white/85">{copy.snapshot.lead}</p>
+            <Button asChild size="lg" variant="secondary" className="mt-8 bg-white text-foreground hover:bg-white/90">
+              <Link to={primaryHref}>{copy.snapshot.cta}</Link>
+            </Button>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {copy.snapshot.stories.map((story, i) => (
+              <article key={story.tag} className="overflow-hidden rounded-2xl bg-white text-foreground shadow-lg">
+                <div className={`flex h-28 items-end p-4 ${i === 1 ? "bg-foreground text-background" : "bg-primary/15"}`}>
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                    {story.tag}
+                  </span>
+                </div>
+                <div className="p-4">
+                  <h3 className="text-base font-semibold leading-snug">{story.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{story.text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="overview" className="mx-auto w-full max-w-6xl px-4 py-20">
+        <SectionIntro {...copy.overview} />
+        <div className="mt-12 grid gap-5 sm:grid-cols-2">
+          {copy.outcomes.map((item) => (
+            <article key={item.code} className="rounded-3xl border bg-card p-6 shadow-sm sm:p-8">
+              <p className="text-sm font-semibold text-primary">{item.code}</p>
+              <h3 className="mt-3 text-2xl font-bold tracking-tight">{item.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="workflow" className="border-y bg-muted/40">
+        <div className="mx-auto w-full max-w-6xl px-4 py-20">
+          <SectionIntro align="left" {...copy.workflowIntro} />
+          <ol className="mt-12 grid gap-0 md:grid-cols-4">
+            {copy.workflow.map((step, index) => (
+              <li key={step.title} className="relative border-l border-primary/30 pl-6 md:border-l-0 md:border-t-2 md:border-primary md:pl-0 md:pt-8">
+                <span className="absolute -left-3 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground md:left-0 md:top-0 md:-translate-y-1/2">
+                  {index + 1}
+                </span>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{step.stage}</p>
+                <h3 className="mt-2 text-xl font-bold">{step.title}</h3>
+                <p className="mt-2 max-w-xs text-sm leading-6 text-muted-foreground">{step.text}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section id="modules" className="mx-auto w-full max-w-6xl px-4 py-20">
+        <SectionIntro {...copy.modulesIntro} />
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {copy.modules.map((module, i) => {
+            const Icon = moduleIcons[i] ?? FileText;
+            return (
+              <article key={module.title} className="flex h-full flex-col rounded-3xl border bg-card p-6 shadow-sm">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-semibold">{module.title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">{module.text}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section id="terms" className="bg-foreground text-background">
+        <div className="mx-auto w-full max-w-6xl px-4 py-20">
+          <div className="grid gap-10 lg:grid-cols-2">
+            {copy.policy.map((item) => (
+              <article key={item.title}>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{item.eyebrow}</p>
+                <h2 className="mt-3 text-3xl font-extrabold tracking-tight">{item.title}</h2>
+                <p className="mt-4 text-sm leading-7 text-white/75">{item.text}</p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-14 flex flex-col gap-6 rounded-3xl bg-primary p-6 text-primary-foreground sm:p-8 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-medium text-white/90">
+                <ShieldCheck className="h-4 w-4" />
+                {copy.cta.eyebrow}
+              </p>
+              <h2 className="mt-2 text-3xl font-extrabold tracking-tight">{copy.cta.title}</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/85">{copy.cta.text}</p>
+            </div>
+            <Button asChild size="lg" variant="secondary" className="shrink-0 bg-white text-foreground hover:bg-white/90">
+              <Link to={primaryHref}>{loading ? t.loading : primaryLabel}</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <footer className="bg-foreground text-background">
+        <div className="mx-auto w-full max-w-6xl border-t border-white/10 px-4 py-10">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary font-bold text-primary-foreground">
-                  E
-                </div>
+                <BrandMark className="h-10 w-7 text-primary" />
                 <div>
                   <p className="font-semibold">{t.appName}</p>
-                  <p className="text-sm text-muted-foreground">{t.tagline}</p>
+                  <p className="text-sm text-white/65">{t.tagline}</p>
                 </div>
               </div>
-              <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-                {copy.footer.text}
-              </p>
+              <p className="mt-4 max-w-md text-sm leading-6 text-white/65">{copy.footer.text}</p>
             </div>
             <div className="grid gap-6 text-sm sm:grid-cols-3">
               {copy.footer.groups.map((group) => (
                 <div key={group.title}>
                   <p className="font-semibold">{group.title}</p>
-                  <div className="mt-3 grid gap-2 text-muted-foreground">
+                  <div className="mt-3 grid gap-2 text-white/65">
                     {group.links.map((link) => (
-                      <a key={link.href} href={link.href} className="hover:text-foreground">
+                      <a key={link.href} href={link.href} className="hover:text-white">
                         {link.label}
                       </a>
                     ))}
@@ -233,12 +214,15 @@ function Index() {
               ))}
             </div>
           </div>
-          <div className="mt-8 flex flex-col gap-2 border-t pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
             <p>{copy.footer.copyright}</p>
-            <p>{copy.footer.note}</p>
+            <p className="inline-flex items-center gap-1">
+              <Languages className="h-3.5 w-3.5" />
+              {copy.footer.note}
+            </p>
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </main>
   );
 }
@@ -255,11 +239,9 @@ function SectionIntro({
   align?: "left" | "center";
 }) {
   return (
-    <div className={align === "left" ? "max-w-xl" : "mx-auto max-w-3xl text-center"}>
-      <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
-        {eyebrow}
-      </p>
-      <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h2>
+    <div className={align === "left" ? "max-w-2xl" : "mx-auto max-w-3xl text-center"}>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{eyebrow}</p>
+      <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">{title}</h2>
       <p className="mt-4 leading-7 text-muted-foreground">{text}</p>
     </div>
   );
@@ -274,118 +256,98 @@ const landingCopy = {
       { label: "Conditions", href: "#terms" },
     ],
     hero: {
-      kicker: "Reporting mensuel EPIC RDC",
-      title: "Une page d'accueil claire pour entrer dans le cycle de reporting.",
+      kicker: "FHI 360 · Programme EPIC RDC",
+      title: "Mettre le reporting mensuel à portée de l'équipe.",
       description:
-        "Accédez aux rapports provinciaux, à la revue technique et aux exports nationaux depuis une interface unique, bilingue et pensée pour le suivi mensuel.",
-      secondaryCta: "Voir les capacités",
+        "Les provinces saisissent, la direction technique révise, le niveau national consolide. Un espace bilingue pour suivre les activités, les commentaires et les exports officiels.",
+      secondaryCta: "Découvrir le parcours",
       stats: [
-        { value: "FR/EN", label: "interface bilingue" },
-        { value: "PDF", label: "exports prêts" },
-        { value: "RLS", label: "accès contrôlé" },
+        { value: "FR / EN", label: "interface bilingue" },
+        { value: "PDF", label: "exports nationaux" },
+        { value: "Rôles", label: "province, AT et DT" },
       ],
     },
     snapshot: {
-      eyebrow: "Aperçu opérationnel",
-      title: "Cycle mensuel en cours",
-      items: [
-        { label: "Rapports soumis", value: "Province -> DT", width: "72%" },
-        { label: "Revue technique", value: "Commentaires ciblés", width: "56%" },
-        { label: "Consolidation", value: "Vue nationale", width: "84%" },
-      ],
-      cards: [
-        { title: "Provinces", text: "Préparent et soumettent les rapports mensuels." },
-        { title: "Direction technique", text: "Valide, retourne ou commente les sections." },
+      eyebrow: "Ce qui se passe ce mois-ci",
+      title: "Le cycle mensuel, d'une province au national.",
+      lead: "Chaque rapport suit le même chemin : saisie guidée, revue commentée, puis consolidation des données validées.",
+      cta: "Entrer dans le cycle",
+      stories: [
+        { tag: "Province", title: "Préparer et soumettre", text: "Les équipes provinciales complètent les activités du catalogue et envoient le rapport au DT." },
+        { tag: "Revue", title: "Commenter et valider", text: "Les AT et le DT ouvrent chaque section, laissent des commentaires et approuvent le contenu." },
+        { tag: "National", title: "Consolider et exporter", text: "Les rapports validés alimentent la vue nationale, les résumés IA et l'export PDF officiel." },
       ],
     },
     overview: {
       eyebrow: "Vue d'ensemble",
       title: "Une plateforme, quatre résultats concrets.",
-      text: "La landing page ne répète pas les modules internes. Elle explique simplement pourquoi la plateforme existe et comment elle aide les équipes à avancer.",
+      text: "EPIC RDC aligne la saisie de terrain, la revue technique et le reporting bailleur sans multiplier les fichiers.",
     },
     outcomes: [
       {
         code: "01",
         title: "Saisie guidée",
-        text: "Les rapports mensuels suivent une structure commune pour limiter les oublis et faciliter la comparaison.",
+        text: "Les rapports mensuels suivent le catalogue d'activités EPIC. Moins d'oublis, des codes comparables d'une province à l'autre.",
       },
       {
         code: "02",
         title: "Revue ciblée",
-        text: "Les commentaires sont rattachés aux sections concernées, ce qui rend les corrections plus rapides.",
+        text: "Les commentaires restent collés à la section ou à l'activité concernée. Les corrections reviennent plus vite au CP.",
       },
       {
         code: "03",
         title: "Suivi national",
-        text: "Les rapports validés alimentent les tableaux de bord, statistiques et exports de consolidation.",
+        text: "Les rapports validés alimentent tableaux de bord, taux de réalisation et exports de consolidation.",
       },
       {
         code: "04",
         title: "Travail bilingue",
-        text: "Les utilisateurs peuvent passer du français à l'anglais sans changer d'espace de travail.",
+        text: "Français et anglais dans le même espace. Les équipes changent de langue sans quitter leur dossier.",
       },
     ],
     workflowIntro: {
       eyebrow: "Processus",
       title: "Un parcours lisible pour chaque rapport.",
-      text: "Le cycle est présenté comme une progression, pas comme une liste répétée de fonctionnalités.",
+      text: "Quatre étapes, un statut clair à chaque fois : brouillon, soumis, en revue, validé.",
     },
     workflow: [
-      {
-        stage: "Province",
-        title: "Préparer",
-        text: "Compléter les sections et sauvegarder le brouillon.",
-      },
-      {
-        stage: "Province",
-        title: "Soumettre",
-        text: "Envoyer le rapport mensuel à la revue technique.",
-      },
-      { stage: "DT", title: "Revoir", text: "Commenter, retourner ou approuver les sections." },
-      {
-        stage: "National",
-        title: "Consolider",
-        text: "Exploiter les données validées dans les exports.",
-      },
+      { stage: "Province", title: "Préparer", text: "Compléter les activités, récits et résumé, puis enregistrer le brouillon." },
+      { stage: "Province", title: "Soumettre", text: "Envoyer le rapport mensuel à la direction technique." },
+      { stage: "DT / AT", title: "Revoir", text: "Ouvrir chaque activité, commenter, retourner ou approuver." },
+      { stage: "National", title: "Consolider", text: "Comparer les provinces, synthétiser et exporter le rapport national." },
     ],
     modulesIntro: {
-      eyebrow: "Modules inclus",
-      title: "Ce que l'utilisateur trouve après connexion.",
-      text: "Cette section clarifie les zones principales de l'application sans doubler les explications du workflow.",
+      eyebrow: "Modules",
+      title: "Tout ce que l'équipe utilise après connexion.",
+      text: "Les mêmes outils pour le terrain, les conseillers et le directeur technique — avec un accès selon le rôle.",
     },
     modules: [
-      {
-        title: "Tableau de bord",
-        text: "Indicateurs, statuts provinciaux et tendances mensuelles.",
-      },
-      { title: "Rapports", text: "Création, édition, soumission et historique des rapports." },
-      { title: "Bureau DT", text: "File de revue, commentaires, retours et validations." },
-      { title: "Consolidation", text: "Prévisualisation et exports nationaux Word, PDF ou Excel." },
-      {
-        title: "Notifications",
-        text: "Alertes liées aux soumissions, corrections et validations.",
-      },
-      { title: "Aide", text: "Guide utilisateur intégré pour accompagner les équipes." },
+      { title: "Tableau de bord", text: "Indicateurs, statuts provinciaux et tendances du mois en cours." },
+      { title: "Rapports", text: "Création, édition, soumission et historique des rapports mensuels." },
+      { title: "Bureau DT", text: "File de revue, relances, commentaires et validations." },
+      { title: "Consolidation", text: "Vue nationale par code d'activité, résumé IA et export PDF officiel." },
+      { title: "Notifications", text: "Alertes de soumission, de retour et de validation." },
+      { title: "Aide", text: "Guide utilisateur intégré, en français et en anglais." },
     ],
     policy: [
       {
         eyebrow: "Accès",
-        title: "Usage réservé aux utilisateurs autorisés.",
-        text: "Les espaces de travail de reporting nécessitent une connexion. Chaque utilisateur doit protéger ses identifiants et accéder uniquement aux informations nécessaires à son rôle.",
+        title: "Réservé aux utilisateurs autorisés.",
+        text: "La connexion est obligatoire. Chaque compte n'accède qu'aux provinces et fonctions liées à son rôle : province, AT ou DT.",
       },
       {
         eyebrow: "Conditions",
-        title: "Données exactes et usage responsable.",
-        text: "En utilisant la plateforme, vous acceptez de saisir des informations professionnelles, exactes et conformes aux règles internes EPIC RDC. Les demandes d'accès ou de correction doivent passer par l'administrateur.",
+        title: "Données exactes, usage responsable.",
+        text: "Les informations saisies sont professionnelles et destinées au reporting EPIC RDC / FHI 360. Les demandes d'accès passent par l'administrateur.",
       },
     ],
     cta: {
-      eyebrow: "Continuer",
-      title: "Accédez à l'espace de reporting.",
-      text: "Connectez-vous pour gérer les rapports mensuels, suivre les commentaires et exporter les données validées.",
+      eyebrow: "Espace sécurisé",
+      title: "Poursuivre vers le reporting.",
+      text: "Connectez-vous pour saisir un rapport, commenter une activité ou exporter la consolidation du mois.",
     },
     footer: {
-      text: "Plateforme de reporting mensuel pour soutenir le suivi provincial et national du programme EPIC RDC.",
+      text: "Plateforme interne de reporting mensuel du programme EPIC RDC, mise en œuvre avec FHI 360.",
       groups: [
         {
           title: "Produit",
@@ -412,7 +374,7 @@ const landingCopy = {
           ],
         },
       ],
-      copyright: "© 2026 EPIC RDC. Tous droits réservés.",
+      copyright: "© 2026 FHI 360 · EPIC RDC. Tous droits réservés.",
       note: "Usage interne autorisé uniquement.",
     },
   },
@@ -424,100 +386,98 @@ const landingCopy = {
       { label: "Terms", href: "#terms" },
     ],
     hero: {
-      kicker: "EPIC DRC monthly reporting",
-      title: "A clearer front door for the reporting cycle.",
+      kicker: "FHI 360 · EPIC DRC program",
+      title: "Putting monthly reporting within the team's reach.",
       description:
-        "Access provincial reports, technical review, and national exports from one bilingual workspace designed for monthly program monitoring.",
-      secondaryCta: "See capabilities",
+        "Provinces enter data, technical direction reviews it, national teams consolidate. One bilingual workspace for activities, comments, and official exports.",
+      secondaryCta: "See the cycle",
       stats: [
-        { value: "FR/EN", label: "bilingual interface" },
-        { value: "PDF", label: "ready exports" },
-        { value: "RLS", label: "controlled access" },
+        { value: "FR / EN", label: "bilingual interface" },
+        { value: "PDF", label: "national exports" },
+        { value: "Roles", label: "province, TA and TD" },
       ],
     },
     snapshot: {
-      eyebrow: "Operational snapshot",
-      title: "Current monthly cycle",
-      items: [
-        { label: "Reports submitted", value: "Province -> TD", width: "72%" },
-        { label: "Technical review", value: "Targeted comments", width: "56%" },
-        { label: "Consolidation", value: "National view", width: "84%" },
-      ],
-      cards: [
-        { title: "Provinces", text: "Prepare and submit monthly reports." },
-        { title: "Technical direction", text: "Validates, returns, or comments on sections." },
+      eyebrow: "What's happening this month",
+      title: "The monthly cycle, from province to national.",
+      lead: "Every report follows the same path: guided entry, commented review, then consolidation of validated data.",
+      cta: "Enter the cycle",
+      stories: [
+        { tag: "Province", title: "Prepare and submit", text: "Provincial teams complete catalog activities and send the report to the TD." },
+        { tag: "Review", title: "Comment and validate", text: "TAs and the TD open each section, leave comments, and approve the content." },
+        { tag: "National", title: "Consolidate and export", text: "Validated reports feed the national view, AI summaries, and the official PDF export." },
       ],
     },
     overview: {
       eyebrow: "Overview",
       title: "One platform, four clear outcomes.",
-      text: "The landing page now explains why the platform exists without repeating the same feature claims in every section.",
+      text: "EPIC DRC aligns field entry, technical review, and donor reporting without spreading work across files.",
     },
     outcomes: [
       {
         code: "01",
         title: "Guided entry",
-        text: "Monthly reports follow a shared structure to reduce omissions and simplify comparison.",
+        text: "Monthly reports follow the EPIC activity catalog. Fewer omissions, comparable codes across provinces.",
       },
       {
         code: "02",
         title: "Focused review",
-        text: "Comments stay tied to the relevant sections, making corrections easier to resolve.",
+        text: "Comments stay attached to the relevant section or activity, so corrections return to the province faster.",
       },
       {
         code: "03",
         title: "National tracking",
-        text: "Validated reports feed dashboards, statistics, and consolidation exports.",
+        text: "Validated reports feed dashboards, achievement rates, and consolidation exports.",
       },
       {
         code: "04",
         title: "Bilingual work",
-        text: "Users can switch between French and English without changing workspace.",
+        text: "French and English in the same workspace. Teams switch language without leaving the file.",
       },
     ],
     workflowIntro: {
       eyebrow: "Workflow",
       title: "A visible path for every report.",
-      text: "The cycle is shown as a progression, not another repeated feature grid.",
+      text: "Four steps, with a clear status at each one: draft, submitted, in review, validated.",
     },
     workflow: [
-      { stage: "Province", title: "Prepare", text: "Complete sections and save the draft." },
-      { stage: "Province", title: "Submit", text: "Send the monthly report for technical review." },
-      { stage: "TD", title: "Review", text: "Comment, return, or approve report sections." },
-      { stage: "National", title: "Consolidate", text: "Use validated data in national exports." },
+      { stage: "Province", title: "Prepare", text: "Complete activities, narratives, and the summary, then save the draft." },
+      { stage: "Province", title: "Submit", text: "Send the monthly report to technical direction." },
+      { stage: "TD / TA", title: "Review", text: "Open each activity, comment, return, or approve." },
+      { stage: "National", title: "Consolidate", text: "Compare provinces, synthesize, and export the national report." },
     ],
     modulesIntro: {
-      eyebrow: "Included modules",
-      title: "What users find after signing in.",
-      text: "This section clarifies the main application areas without duplicating the workflow explanation.",
+      eyebrow: "Modules",
+      title: "Everything the team uses after signing in.",
+      text: "The same tools for field teams, advisors, and the technical director — scoped by role.",
     },
     modules: [
-      { title: "Dashboard", text: "Indicators, province statuses, and monthly trends." },
-      { title: "Reports", text: "Create, edit, submit, and review report history." },
-      { title: "TD desk", text: "Review queue, comments, returns, and validations." },
-      { title: "Consolidation", text: "National preview and Word, PDF, or Excel exports." },
-      { title: "Notifications", text: "Alerts for submissions, corrections, and approvals." },
-      { title: "Help", text: "Integrated user guide for field and national teams." },
+      { title: "Dashboard", text: "Indicators, province statuses, and trends for the current month." },
+      { title: "Reports", text: "Create, edit, submit, and review monthly report history." },
+      { title: "TD desk", text: "Review queue, reminders, comments, and validations." },
+      { title: "Consolidation", text: "National view by activity code, AI summary, and official PDF export." },
+      { title: "Notifications", text: "Alerts for submissions, returns, and approvals." },
+      { title: "Help", text: "Built-in user guide, in French and English." },
     ],
     policy: [
       {
         eyebrow: "Access",
         title: "Reserved for authorized users.",
-        text: "Reporting workspaces require sign-in. Each user must protect credentials and access only the information required for their role.",
+        text: "Sign-in is required. Each account reaches only the provinces and functions tied to its role: province, TA, or TD.",
       },
       {
         eyebrow: "Terms",
-        title: "Accurate data and responsible use.",
-        text: "By using the platform, you agree to enter professional, accurate information and follow EPIC DRC internal data rules. Access or correction requests should go through the administrator.",
+        title: "Accurate data, responsible use.",
+        text: "Entries are professional and meant for EPIC DRC / FHI 360 reporting. Access requests go through the administrator.",
       },
     ],
     cta: {
-      eyebrow: "Continue",
-      title: "Enter the reporting workspace.",
-      text: "Sign in to manage monthly reports, follow comments, and export validated data.",
+      eyebrow: "Secure workspace",
+      title: "Continue to reporting.",
+      text: "Sign in to enter a report, comment on an activity, or export this month's consolidation.",
     },
     footer: {
-      text: "Monthly reporting platform supporting provincial and national monitoring for the EPIC DRC program.",
+      text: "Internal monthly reporting platform for the EPIC DRC program, implemented with FHI 360.",
       groups: [
         {
           title: "Product",
@@ -544,7 +504,7 @@ const landingCopy = {
           ],
         },
       ],
-      copyright: "© 2026 EPIC DRC. All rights reserved.",
+      copyright: "© 2026 FHI 360 · EPIC DRC. All rights reserved.",
       note: "Authorized internal use only.",
     },
   },

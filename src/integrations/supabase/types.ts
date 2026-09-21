@@ -231,6 +231,129 @@ export type Database = {
           },
         ]
       }
+      consolidation_summaries: {
+        Row: {
+          id: string
+          month: number
+          year: number
+          lang: string
+          content: string
+          model: string | null
+          source_report_ids: string[]
+          generated_by: string | null
+          updated_by: string | null
+          generated_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          month: number
+          year: number
+          lang: string
+          content?: string
+          model?: string | null
+          source_report_ids?: string[]
+          generated_by?: string | null
+          updated_by?: string | null
+          generated_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          month?: number
+          year?: number
+          lang?: string
+          content?: string
+          model?: string | null
+          source_report_ids?: string[]
+          generated_by?: string | null
+          updated_by?: string | null
+          generated_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      consolidation_activity_summaries: {
+        Row: {
+          id: string
+          month: number
+          year: number
+          lang: string
+          activity_code: string
+          ai_content: string
+          selected: string
+          model: string | null
+          generated_by: string | null
+          updated_by: string | null
+          generated_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          month: number
+          year: number
+          lang: string
+          activity_code: string
+          ai_content?: string
+          selected?: string
+          model?: string | null
+          generated_by?: string | null
+          updated_by?: string | null
+          generated_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          month?: number
+          year?: number
+          lang?: string
+          activity_code?: string
+          ai_content?: string
+          selected?: string
+          model?: string | null
+          generated_by?: string | null
+          updated_by?: string | null
+          generated_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      consolidation_activity_comments: {
+        Row: {
+          id: string
+          month: number
+          year: number
+          activity_code: string
+          author_id: string
+          body: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          month: number
+          year: number
+          activity_code: string
+          author_id: string
+          body: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          month?: number
+          year?: number
+          activity_code?: string
+          author_id?: string
+          body?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

@@ -8,12 +8,14 @@ import {
   provinceRates,
   type AchievementRow,
 } from "@/lib/analytics";
+import { CheckCircle2, ClipboardList, MapPin, Target } from "lucide-react";
 
-const BAR_COLORS = {
-  high: "bg-emerald-500",
-  mid: "bg-amber-500",
-  low: "bg-red-500",
-};
+function rateTone(rate: number) {
+  if (rate >= 80) return { bar: "bg-emerald-500", badge: "border-emerald-500/20 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300" };
+  if (rate >= 60) return { bar: "bg-amber-500", badge: "border-amber-500/20 bg-amber-500/10 text-amber-800 dark:text-amber-200" };
+  if (rate > 0) return { bar: "bg-red-500", badge: "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-300" };
+  return { bar: "bg-muted-foreground/25", badge: "border-transparent bg-muted text-muted-foreground" };
+}
 
 type Props = {
   month: number;
@@ -26,6 +28,53 @@ type Props = {
   achievements: AchievementRow[];
   loading?: boolean;
 };
+
+function PeriodFilters({
+  month,
+  year,
+  years,
+  months,
+  monthLabel,
+  yearLabel,
+  onMonthChange,
+  onYearChange,
+}: {
+  month: number;
+  year: number;
+  years: number[];
+  months: string[];
+  monthLabel: string;
+  yearLabel: string;
+  onMonthChange: (m: number) => void;
+  onYearChange: (y: number) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-3">
+      <div className="space-y-1.5">
+        <Label className="text-xs">{monthLabel}</Label>
+        <Select value={String(month)} onValueChange={(v) => onMonthChange(Number(v))}>
+          <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {months.map((m, i) => (
+              <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">{yearLabel}</Label>
+        <Select value={String(year)} onValueChange={(v) => onYearChange(Number(v))}>
+          <SelectTrigger className="h-9 w-28"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {years.map((y) => (
+              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
 
 export function NationalAnalytics({
   month,
@@ -46,103 +95,125 @@ export function NationalAnalytics({
   const reportingCount = bars.length;
   const submittedCount = monthReports.filter((r) => r.status !== "draft").length;
   const validatedCount = monthReports.filter((r) => r.status === "validated").length;
+  const period = `${t.months[month - 1]} ${year}`;
+  const tone = rateTone(pooled.rate);
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
+        <Skeleton className="h-28 w-full rounded-2xl" />
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}
         </div>
-        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full rounded-2xl" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end gap-4 justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">{t.nationalAnalytics}</h2>
-          <p className="text-sm text-muted-foreground">{t.months[month - 1]} {year}</p>
+          <p className="text-sm text-muted-foreground">{t.reportingPeriod} · {period}</p>
         </div>
-        <div className="flex gap-3 flex-wrap">
-          <div className="space-y-1">
-            <Label className="text-xs">{t.month}</Label>
-            <Select value={String(month)} onValueChange={(v) => onMonthChange(Number(v))}>
-              <SelectTrigger className="w-36 h-9"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {t.months.map((m, i) => (
-                  <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">{t.year}</Label>
-            <Select value={String(year)} onValueChange={(v) => onYearChange(Number(v))}>
-              <SelectTrigger className="w-28 h-9"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {years.map((y) => (
-                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <PeriodFilters
+          month={month}
+          year={year}
+          years={years}
+          months={t.months}
+          monthLabel={t.month}
+          yearLabel={t.year}
+          onMonthChange={onMonthChange}
+          onYearChange={onYearChange}
+        />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card>
           <CardContent className="p-4">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">{t.provinces}</div>
-            <div className="text-2xl font-bold mt-1">{reportingCount}</div>
-            <div className="text-xs text-muted-foreground mt-1">{t.reports}: {submittedCount}</div>
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5" />
+              {t.provinces}
+            </p>
+            <p className="mt-2 text-2xl font-semibold tabular-nums">{reportingCount}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t.reports}: {submittedCount}</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="p-4">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">{t.avgRealization}</div>
-            <div className="text-2xl font-bold mt-1 text-emerald-600">{pooled.rate}%</div>
-            <div className="text-xs text-muted-foreground mt-1">{pooled.approved} / {pooled.planned} {t.activities.toLowerCase()}</div>
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Target className="h-3.5 w-3.5" />
+              {t.avgRealization}
+            </p>
+            <p className="mt-2 text-2xl font-semibold tabular-nums">{pooled.rate}%</p>
+            <div className="mt-2.5 h-1.5 overflow-hidden rounded bg-muted">
+              <div
+                className={`h-full ${tone.bar}`}
+                style={{ width: `${Math.min(100, Math.max(pooled.rate, 0))}%` }}
+              />
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {pooled.approved} / {pooled.planned} {t.activities.toLowerCase()}
+            </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="p-4">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">{t.planned}</div>
-            <div className="text-2xl font-bold mt-1">{pooled.planned}</div>
-            <div className="text-xs text-muted-foreground mt-1">{t.months[month - 1]} {year}</div>
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <ClipboardList className="h-3.5 w-3.5" />
+              {t.planned}
+            </p>
+            <p className="mt-2 text-2xl font-semibold tabular-nums">{pooled.planned}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{period}</p>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="p-4">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground">{t.achieved}</div>
-            <div className="text-2xl font-bold mt-1">{pooled.approved}</div>
-            <div className="text-xs text-muted-foreground mt-1">{t.reportsValidated}: {validatedCount}</div>
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {t.achieved}
+            </p>
+            <p className="mt-2 text-2xl font-semibold tabular-nums">{pooled.approved}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t.reportsValidated}: {validatedCount}</p>
           </CardContent>
         </Card>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>{t.realizationByProvince} — {t.months[month - 1]} {year}</CardTitle>
+        <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle className="text-base font-semibold">{t.realizationByProvince}</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">{period}</p>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-0.5">
           {bars.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t.noData}</p>
-          ) : bars.map((p) => (
-            <div key={p.provinceId} className="flex items-center gap-3">
-              <span className="text-sm w-32 shrink-0 truncate text-muted-foreground">{p.name}</span>
-              <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className={`h-full rounded-full ${p.rate >= 80 ? BAR_COLORS.high : p.rate >= 60 ? BAR_COLORS.mid : p.rate > 0 ? BAR_COLORS.low : "bg-muted-foreground/20"}`}
-                  style={{ width: `${Math.max(p.rate, 2)}%` }}
-                />
+            <p className="py-10 text-center text-sm text-muted-foreground">{t.noData}</p>
+          ) : bars.map((p) => {
+            const rowTone = rateTone(p.rate);
+            return (
+              <div key={p.provinceId} className="flex items-center gap-3 py-2">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <span className="truncate text-sm">{p.name}</span>
+                    <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                      {p.approved}/{p.planned} · {p.rate}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded bg-muted">
+                    <div
+                      className={`h-full ${rowTone.bar}`}
+                      style={{ width: `${Math.min(100, Math.max(p.rate, 0))}%` }}
+                    />
+                  </div>
+                </div>
               </div>
-              <span className="text-sm tabular-nums w-16 text-right">{p.approved}/{p.planned}</span>
-              <span className="text-sm tabular-nums w-10 text-right">{p.rate}%</span>
-            </div>
-          ))}
+            );
+          })}
         </CardContent>
       </Card>
     </div>

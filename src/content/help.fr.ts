@@ -50,11 +50,11 @@ export const helpSectionsFr: HelpSection[] = [
   },
   {
     id: "export",
-    title: "Export PDF et Word",
+    title: "Export PDF",
     roles: ["technical_director", "read_only"],
     body: [
-      "Sur Consolidation, choisissez le mois et l'année puis exportez en PDF ou Word.",
-      "Le rapport national inclut le tableau consolidé et les récits par province.",
+      "Sur Consolidation, choisissez le mois et l'année puis exportez le PDF officiel.",
+      "Le rapport national suit le modèle de rapport mensuel provincial : couverture, table des matières, sigles, résumé exécutif, tableau des résultats et annexes.",
     ],
   },
   {
@@ -67,11 +67,11 @@ export const helpSectionsFr: HelpSection[] = [
   },
   {
     id: "profile",
-    title: "Profil et mot de passe",
+    title: "Paramètres et mot de passe",
     roles: "all",
     body: [
-      "Profil : modifiez votre nom, la langue et votre mot de passe.",
-      "Mot de passe oublié : utilisez le lien sur la page de connexion.",
+      "Paramètres (menu utilisateur en bas de la barre latérale) : nom, fonction, langue, rôle, province et mot de passe.",
+      "La langue est aussi accessible depuis le menu utilisateur. Le mot de passe oublié se gère depuis la page de connexion.",
     ],
   },
 ];

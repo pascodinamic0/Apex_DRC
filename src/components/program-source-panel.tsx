@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { toast } from "sonner";
-import { FileText, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { formatCount, formatPercent } from "@/lib/epic-source/calc";
 import { PERIOD_FY2026_H1 } from "@/lib/epic-source/provenance";
 import {
@@ -17,7 +17,7 @@ import {
   type AggregateResultRow,
   type IndicatorResultRow,
 } from "@/lib/epic-source/queries";
-import { exportProgramSourceDocx, exportProgramSourcePdf } from "@/lib/export/epic-program-export";
+import { exportProgramSourcePdf } from "@/lib/export/epic-program-export";
 
 function ProvenanceBadge({ level }: { level: string }) {
   const { t } = useT();
@@ -130,9 +130,6 @@ export function ProgramSourcePanel() {
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" size="sm" onClick={async () => { await exportProgramSourceDocx(data, lang); toast.success(t.docxGenerated); }}>
-            <FileText className="h-4 w-4 mr-1" />{t.exportWord}
-          </Button>
           <Button size="sm" onClick={async () => { await exportProgramSourcePdf(data, lang); toast.success(t.pdfGenerated); }}>
             <Download className="h-4 w-4 mr-1" />{t.export}
           </Button>

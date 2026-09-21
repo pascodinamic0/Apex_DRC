@@ -18,6 +18,8 @@
     "seed:docs": "bun run scripts/seed-epic-source-data.ts && bun run scripts/seed-monthly-reports.ts"
   },
   "dependencies": {
+    "@ai-sdk/gateway": "^4.0.87",
+    "@ai-sdk/openai": "^4.0.71",
     "@cloudflare/vite-plugin": "^1.25.5",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -52,11 +54,11 @@
     "@tanstack/react-router": "^1.168.25",
     "@tanstack/react-start": "^1.167.50",
     "@tanstack/router-plugin": "^1.167.28",
+    "ai": "^7.0.107",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
-    "docx": "^9.5.0",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "jspdf": "^4.2.1",

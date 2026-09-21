@@ -23,6 +23,8 @@ import { Route as AuthenticatedDeskRouteImport } from './routes/_authenticated/d
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConsolidationRouteImport } from './routes/_authenticated/consolidation'
 import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports.index'
+import { Route as ApiConsolidationSummaryRouteImport } from './routes/api/consolidation.summary'
+import { Route as ApiConsolidationActivitySummaryRouteImport } from './routes/api/consolidation.activity-summary'
 import { Route as ApiAdminUsersRouteImport } from './routes/api/admin.users'
 import { Route as AuthenticatedReportsNewRouteImport } from './routes/_authenticated/reports.new'
 import { Route as AuthenticatedReportsReportIdIndexRouteImport } from './routes/_authenticated/reports.$reportId.index'
@@ -102,6 +104,17 @@ const AuthenticatedReportsIndexRoute =
     path: '/reports/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const ApiConsolidationSummaryRoute = ApiConsolidationSummaryRouteImport.update({
+  id: '/api/consolidation/summary',
+  path: '/api/consolidation/summary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiConsolidationActivitySummaryRoute =
+  ApiConsolidationActivitySummaryRouteImport.update({
+    id: '/api/consolidation/activity-summary',
+    path: '/api/consolidation/activity-summary',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
   id: '/api/admin/users',
   path: '/api/admin/users',
@@ -152,6 +165,8 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersRoute
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
+  '/api/consolidation/activity-summary': typeof ApiConsolidationActivitySummaryRoute
+  '/api/consolidation/summary': typeof ApiConsolidationSummaryRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
   '/reports/$reportId/review': typeof AuthenticatedReportsReportIdReviewRoute
@@ -173,6 +188,8 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersRoute
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
+  '/api/consolidation/activity-summary': typeof ApiConsolidationActivitySummaryRoute
+  '/api/consolidation/summary': typeof ApiConsolidationSummaryRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
   '/reports/$reportId/review': typeof AuthenticatedReportsReportIdReviewRoute
@@ -196,6 +213,8 @@ export interface FileRoutesById {
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/reports/new': typeof AuthenticatedReportsNewRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
+  '/api/consolidation/activity-summary': typeof ApiConsolidationActivitySummaryRoute
+  '/api/consolidation/summary': typeof ApiConsolidationSummaryRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
   '/_authenticated/reports/$reportId/review': typeof AuthenticatedReportsReportIdReviewRoute
@@ -219,6 +238,8 @@ export interface FileRouteTypes {
     | '/users'
     | '/reports/new'
     | '/api/admin/users'
+    | '/api/consolidation/activity-summary'
+    | '/api/consolidation/summary'
     | '/reports/'
     | '/reports/$reportId/edit'
     | '/reports/$reportId/review'
@@ -240,6 +261,8 @@ export interface FileRouteTypes {
     | '/users'
     | '/reports/new'
     | '/api/admin/users'
+    | '/api/consolidation/activity-summary'
+    | '/api/consolidation/summary'
     | '/reports'
     | '/reports/$reportId/edit'
     | '/reports/$reportId/review'
@@ -262,6 +285,8 @@ export interface FileRouteTypes {
     | '/_authenticated/users'
     | '/_authenticated/reports/new'
     | '/api/admin/users'
+    | '/api/consolidation/activity-summary'
+    | '/api/consolidation/summary'
     | '/_authenticated/reports/'
     | '/_authenticated/reports/$reportId/edit'
     | '/_authenticated/reports/$reportId/review'
@@ -275,6 +300,8 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiAdminUsersRoute: typeof ApiAdminUsersRoute
+  ApiConsolidationActivitySummaryRoute: typeof ApiConsolidationActivitySummaryRoute
+  ApiConsolidationSummaryRoute: typeof ApiConsolidationSummaryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -377,6 +404,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/consolidation/summary': {
+      id: '/api/consolidation/summary'
+      path: '/api/consolidation/summary'
+      fullPath: '/api/consolidation/summary'
+      preLoaderRoute: typeof ApiConsolidationSummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/consolidation/activity-summary': {
+      id: '/api/consolidation/activity-summary'
+      path: '/api/consolidation/activity-summary'
+      fullPath: '/api/consolidation/activity-summary'
+      preLoaderRoute: typeof ApiConsolidationActivitySummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/users': {
       id: '/api/admin/users'
       path: '/api/admin/users'
@@ -471,6 +512,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiAdminUsersRoute: ApiAdminUsersRoute,
+  ApiConsolidationActivitySummaryRoute: ApiConsolidationActivitySummaryRoute,
+  ApiConsolidationSummaryRoute: ApiConsolidationSummaryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

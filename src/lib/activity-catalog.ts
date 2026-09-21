@@ -1,4 +1,19 @@
 /** Reference grouping for objective tabs (matches donor logframe). */
+export const OBJECTIVE_TITLES: Record<number, { fr: string; en: string }> = {
+  1: {
+    fr: "Accroitre l'adoption de comportements et de services en matiere de sante maternelle, neonatale et infantile, de lutte contre le paludisme, de vaccination et de nutrition",
+    en: "Increase uptake of MNCH, malaria, immunization and nutrition practices and services",
+  },
+  2: {
+    fr: "Renforcer la qualite des services vitaux de sante maternelle, neonatale et infantile, de nutrition et de lutte contre le paludisme aux points de prestation de services",
+    en: "Strengthen the quality of life-saving MNCH, nutrition and malaria services at points of care",
+  },
+  3: {
+    fr: "Renforcer les systemes de sante pour accroitre l'autonomie",
+    en: "Strengthen health systems to increase self-reliance",
+  },
+};
+
 /** Parent activity titles from the EpiC DRC source structure document. */
 export const OBJECTIVE_PARENTS: Record<number, { code: string; titleFr: string; titleEn: string }[]> = {
   1: [

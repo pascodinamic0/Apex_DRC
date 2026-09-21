@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { LangSwitch } from "@/components/lang-switch";
+import { BrandArcs, BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
@@ -56,14 +57,18 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-muted px-4">
-      <div className="absolute top-4 right-4"><LangSwitch /></div>
-      <div className="mb-8 text-center">
-        <div className="mx-auto mb-3 h-14 w-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold">E</div>
-        <h1 className="text-3xl font-bold tracking-tight">{t.appName}</h1>
-        <p className="text-muted-foreground mt-1">{t.tagline}</p>
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      <BrandArcs />
+      <div className="absolute right-4 top-4 z-10">
+        <LangSwitch tone="utility" />
       </div>
-      <Card className="w-full max-w-md">
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12">
+        <div className="mb-8 text-center">
+          <BrandLogo className="mx-auto mb-4 h-12" />
+          <h1 className="text-3xl font-extrabold tracking-tight">{t.appName}</h1>
+          <p className="mt-1 text-muted-foreground">{t.tagline}</p>
+        </div>
+        <Card className="w-full max-w-md shadow-lg">
         <CardHeader><CardTitle>{showForgot ? t.forgotPassword : t.login}</CardTitle></CardHeader>
         <CardContent>
           {showForgot ? (
@@ -126,6 +131,7 @@ function LoginPage() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

@@ -99,8 +99,11 @@ function Dashboard() {
   if (showNational) {
     return (
       <div className="space-y-6 max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold tracking-tight">{t.dashboard}</h1>
-        <h2 className="text-xl font-semibold">{t.monthlyWorkflow}</h2>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">FHI 360</p>
+          <h1 className="text-3xl font-extrabold tracking-tight">{t.dashboard}</h1>
+          <p className="text-muted-foreground">{t.monthlyWorkflow}</p>
+        </div>
         <NationalAnalytics
           month={filterMonth}
           year={filterYear}
@@ -122,7 +125,8 @@ function Dashboard() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t.dashboard}</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">FHI 360</p>
+        <h1 className="text-3xl font-extrabold tracking-tight">{t.dashboard}</h1>
         <p className="text-muted-foreground">{t.months[filterMonth - 1]} {filterYear}</p>
       </div>
 

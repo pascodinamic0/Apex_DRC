@@ -29,7 +29,8 @@ export default function DashboardChartsInner({
   return (
     <Card className="w-full">
       <CardHeader className="shrink-0">
-        <CardTitle>{trendLabel}</CardTitle>
+        <CardTitle className="text-base font-semibold">{trendLabel}</CardTitle>
+        <p className="mt-1 text-sm text-muted-foreground">{t.submissions}</p>
       </CardHeader>
       <CardContent className="p-6 pt-0">
         <ChartContainer

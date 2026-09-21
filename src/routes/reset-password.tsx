@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { LangSwitch } from "@/components/lang-switch";
+import { BrandArcs, BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/reset-password")({ component: ResetPasswordPage });
 
@@ -62,9 +63,12 @@ function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-muted px-4">
-      <div className="absolute top-4 right-4"><LangSwitch /></div>
-      <Card className="w-full max-w-md">
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      <BrandArcs />
+      <div className="absolute right-4 top-4 z-10"><LangSwitch tone="utility" /></div>
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4">
+        <BrandLogo className="mb-6 h-10" />
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader><CardTitle>{t.resetPasswordTitle}</CardTitle></CardHeader>
         <CardContent>
           {!ready ? (
@@ -85,6 +89,7 @@ function ResetPasswordPage() {
           <Link to="/login" className="mt-4 block text-center text-sm text-primary underline">{t.backToLogin}</Link>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

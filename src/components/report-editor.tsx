@@ -7,11 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Save, Send, FileText, Download, AlertTriangle } from "lucide-react";
+import { Save, Send, Download, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { queueDraft } from "@/lib/offline/draft-queue";
-import { exportOfficialDocx } from "@/lib/export/docx-export";
 import { exportOfficialPdf } from "@/lib/export/epic-pdf";
 import { buildOfficialMonthlyPayload } from "@/lib/export/epic-official";
 import { AchievementTable } from "@/components/achievement-table";
@@ -199,11 +198,6 @@ export function ReportEditor({
       narratives,
     });
 
-  const exportReportDocx = async () => {
-    await exportOfficialDocx(officialPayload(), lang, `epic-report-${provinceLabel || "province"}-${report.year}-${String(report.month).padStart(2, "0")}.docx`);
-    toast.success(t.docxGenerated);
-  };
-
   const exportReportPdf = async () => {
     await exportOfficialPdf(officialPayload(), lang, `epic-report-${provinceLabel || "province"}-${report.year}-${String(report.month).padStart(2, "0")}.pdf`);
     toast.success(t.pdfGenerated);
@@ -244,14 +238,9 @@ export function ReportEditor({
         </div>
         <div className="flex gap-2 flex-wrap">
           {showExport && (
-            <>
-              <Button variant="outline" size="sm" onClick={exportReportDocx}>
-                <FileText className="h-4 w-4 mr-1" />{t.exportWord}
-              </Button>
-              <Button variant="outline" size="sm" onClick={exportReportPdf}>
-                <Download className="h-4 w-4 mr-1" />{t.export}
-              </Button>
-            </>
+            <Button variant="outline" size="sm" onClick={exportReportPdf}>
+              <Download className="h-4 w-4 mr-1" />{t.export}
+            </Button>
           )}
           {isDirector && (report.status === "submitted" || report.status === "in_review") && (
             <Button size="sm" asChild>
