@@ -95,6 +95,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_level: Database["public"]["Enums"]["access_level"]
           created_at: string
           email: string | null
           full_name: string | null
@@ -104,6 +105,7 @@ export type Database = {
           province_id: string | null
         }
         Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"]
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -113,6 +115,7 @@ export type Database = {
           province_id?: string | null
         }
         Update: {
+          access_level?: Database["public"]["Enums"]["access_level"]
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -176,6 +179,53 @@ export type Database = {
             foreignKeyName: "report_drafts_report_id_fkey"
             columns: ["report_id"]
             isOneToOne: true
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          file_name: string
+          file_size: number
+          id: string
+          mime_type: string
+          report_id: string
+          sort_order: number
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          file_name: string
+          file_size: number
+          id?: string
+          mime_type: string
+          report_id: string
+          sort_order?: number
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          file_name?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          report_id?: string
+          sort_order?: number
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_photos_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
             referencedRelation: "reports"
             referencedColumns: ["id"]
           },
@@ -354,6 +404,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_duties: {
+        Row: {
+          duty: Database["public"]["Enums"]["app_duty"]
+          id: string
+          user_id: string
+        }
+        Insert: {
+          duty: Database["public"]["Enums"]["app_duty"]
+          id?: string
+          user_id: string
+        }
+        Update: {
+          duty?: Database["public"]["Enums"]["app_duty"]
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -378,6 +446,13 @@ export type Database = {
     }
     Functions: {
       get_user_province: { Args: { _user_id: string }; Returns: string }
+      has_duty: {
+        Args: {
+          _duty: Database["public"]["Enums"]["app_duty"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -387,6 +462,15 @@ export type Database = {
       }
     }
     Enums: {
+      access_level: "edit" | "view"
+      app_duty:
+        | "edit_reports"
+        | "submit_reports"
+        | "validate_reports"
+        | "comment_consolidation"
+        | "write_national_summary"
+        | "manage_users"
+        | "manage_provinces"
       app_role: "province_user" | "technical_director" | "read_only"
       narrative_section:
         | "stakeholder_coordination"
@@ -524,6 +608,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      access_level: ["edit", "view"],
+      app_duty: [
+        "edit_reports",
+        "submit_reports",
+        "validate_reports",
+        "comment_consolidation",
+        "write_national_summary",
+        "manage_users",
+        "manage_provinces",
+      ],
       app_role: ["province_user", "technical_director", "read_only"],
       narrative_section: [
         "stakeholder_coordination",

@@ -152,7 +152,7 @@ export function officialLabels(lang: "fr" | "en"): OfficialLabels {
       challenges: "Challenges",
       solutions: "Solutions and adaptations",
       priorities: "Follow-up priorities / next month",
-      partners: "Partner contributions / enabling factors",
+      partners: "Contributions of other partners / enabling factors",
       coordination: "II. Programme coordination and stakeholder engagement",
       stories: "III. Success stories and lessons learned",
       challengesSection: "IV. Challenges",
@@ -197,7 +197,7 @@ export function officialLabels(lang: "fr" | "en"): OfficialLabels {
     challenges: "Défis rencontrés",
     solutions: "Solutions et adaptations apportées",
     priorities: "Priorités de suivi / Actions pour le mois prochain",
-    partners: "Contributions des partenaires / Facteurs facilitateurs",
+    partners: "Contributions des autres partenaires / Facteurs facilitateurs",
     coordination: "II. Coordination du programme et engagement des parties prenantes",
     stories: "III. Histoires de succès et leçons apprises",
     challengesSection: "IV. Défis",
@@ -254,6 +254,7 @@ export type OfficialReportPayload = {
   provinceRates?: { name: string; rate: number; total: number; approved: number }[];
   /** DT-reviewed national AI summary (does not replace source tables). */
   aiNationalSummary?: string;
+  photos?: { caption: string; jpegDataUrl: string }[];
 };
 
 function pct(n: number, total: number) {

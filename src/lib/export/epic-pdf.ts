@@ -65,6 +65,60 @@ function bodyBlock(doc: JsPdf, title: string, body: string, y: number) {
   return y + 6;
 }
 
+function renderAnnexPhotos(
+  doc: JsPdf,
+  title: string,
+  photos: { caption: string; jpegDataUrl: string }[],
+  lang: "fr" | "en",
+  y: number,
+) {
+  y = sectionTitle(doc, title, y);
+  if (!photos.length) {
+    const empty =
+      lang === "en"
+        ? "No implementation photos were attached to this report."
+        : "Aucune photo de mise en oeuvre n'a ete jointe a ce rapport.";
+    y = addWrapped(doc, empty, 14, y, 182, 4.4);
+    return y + 6;
+  }
+  const pageH = doc.internal.pageSize.getHeight();
+  const maxW = 182;
+  const maxH = 110;
+  for (const photo of photos) {
+    if (y + 40 > pageH - 16) {
+      doc.addPage("a4", "portrait");
+      y = 22;
+    }
+    try {
+      const props = doc.getImageProperties(photo.jpegDataUrl);
+      const ratio = props.width / Math.max(props.height, 1);
+      let w = maxW;
+      let h = w / ratio;
+      if (h > maxH) {
+        h = maxH;
+        w = h * ratio;
+      }
+      if (y + h + 16 > pageH - 16) {
+        doc.addPage("a4", "portrait");
+        y = 22;
+      }
+      doc.addImage(photo.jpegDataUrl, "JPEG", 14, y, w, h);
+      y += h + 5;
+    } catch {
+      y = addWrapped(doc, lang === "en" ? "(Photo could not be embedded.)" : "(Photo non integree.)", 14, y, 182, 4.4);
+    }
+    if (photo.caption?.trim()) {
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(8);
+      y = addWrapped(doc, photo.caption, 14, y, 182, 4);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+    }
+    y += 8;
+  }
+  return y;
+}
+
 function parentOf(code: string) {
   const parts = code.split(".");
   if (parts.length >= 2) return `${parts[0]}.${parts[1]}`;
@@ -366,14 +420,7 @@ export async function exportOfficialPdf(payload: OfficialReportPayload, lang: "f
     y = bodyBlock(doc, L.annexA, lang === "en" ? "No annex indicators for this period." : "Aucun indicateur d'annexe pour cette periode.", y);
   }
 
-  y = bodyBlock(
-    doc,
-    L.annexB,
-    lang === "en"
-      ? "Implementation photos are kept with provincial source files and are not generated automatically."
-      : "Les photos de mise en oeuvre restent dans les dossiers provinciaux sources et ne sont pas generees automatiquement.",
-    y,
-  );
+  y = renderAnnexPhotos(doc, L.annexB, payload.photos || [], lang, y);
 
   applyChrome(doc, dateLine);
   downloadBlob(doc.output("blob"), filename);

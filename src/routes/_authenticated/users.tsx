@@ -1,13 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { defaultDutiesForRole, type AccessLevel, type AppDuty } from "@/lib/auth/duties";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,9 +21,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { UserMemberForm, type MemberFormState } from "@/components/user-member-form";
 import { toast } from "sonner";
-import { ChevronDown, MapPin, Plus, Search, Trash2, UserPlus } from "lucide-react";
+import { ChevronDown, MapPin, Pencil, Plus, Search, Trash2, UserPlus } from "lucide-react";
+import type { AppRole } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/users")({ component: UsersPage });
 
@@ -35,22 +44,25 @@ interface UserRow {
   province_id: string | null;
   job_title: string | null;
   role: string | null;
+  access_level: AccessLevel;
+  duties: AppDuty[];
 }
+
 interface ProvinceRow {
   id: string;
   name: string;
   code?: string | null;
 }
 
-type UserRole = "province_user" | "technical_director" | "read_only";
-
-const emptyForm = {
+const emptyForm = (): MemberFormState => ({
   email: "",
   fullName: "",
   provinceId: "",
   jobTitle: "",
-  role: "province_user" as UserRole,
-};
+  role: "province_user",
+  accessLevel: "edit",
+  duties: defaultDutiesForRole("province_user"),
+});
 
 async function authedFetch(input: string, init: RequestInit = {}) {
   const {
@@ -77,18 +89,20 @@ function initials(name: string | null, email: string | null) {
 
 function UsersPage() {
   const { t } = useT();
-  const { role } = useAuth();
+  const { can } = useAuth();
   const nav = useNavigate();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState<MemberFormState>(emptyForm());
+  const [editForm, setEditForm] = useState<MemberFormState | null>(null);
+  const [editUserId, setEditUserId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    if (role && role !== "technical_director") nav({ to: "/dashboard" });
-  }, [role, nav]);
+    if (!can("manage_users")) nav({ to: "/dashboard" });
+  }, [can, nav]);
 
   const refreshProvinces = async () => {
     const { data, error } = await supabase.from("provinces").select("id, name, code").order("name");
@@ -97,17 +111,11 @@ function UsersPage() {
   };
 
   const refreshUsers = async () => {
-    const [{ data: profiles, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
-      supabase.from("profiles").select("id, email, full_name, province_id, job_title"),
-      supabase.from("user_roles").select("user_id, role"),
-    ]);
-    if (pErr) return toast.error(pErr.message);
-    if (rErr) return toast.error(rErr.message);
-    const merged: UserRow[] = (profiles || []).map((p) => ({
-      ...p,
-      role: roles?.find((r) => r.user_id === p.id)?.role || null,
-    }));
-    setUsers(merged);
+    const res = await authedFetch("/api/admin/users");
+    if (!res.ok) return toast.error(await res.text());
+    const json = (await res.json()) as { users: UserRow[]; provinces?: ProvinceRow[] };
+    setUsers(json.users || []);
+    if (json.provinces?.length) setProvinces(json.provinces);
   };
 
   const refresh = async () => {
@@ -116,8 +124,8 @@ function UsersPage() {
   };
 
   useEffect(() => {
-    if (role === "technical_director") refresh();
-  }, [role]);
+    if (can("manage_users")) refresh();
+  }, [can]);
 
   const onInvite = async () => {
     if (form.role === "province_user" && !form.provinceId) {
@@ -133,12 +141,59 @@ function UsersPage() {
           fullName: form.fullName,
           provinceId: form.role === "province_user" ? form.provinceId || null : null,
           role: form.role,
-          jobTitle: form.role === "technical_director" ? form.jobTitle || null : null,
+          jobTitle: form.jobTitle || null,
+          accessLevel: form.accessLevel,
+          duties: form.accessLevel === "edit" ? form.duties : [],
         }),
       });
       if (!res.ok) throw new Error(await res.text());
       toast.success(t.inviteSent);
-      setForm(emptyForm);
+      setForm(emptyForm());
+      refresh();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : t.error);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const openEdit = (u: UserRow) => {
+    setEditUserId(u.id);
+    setEditForm({
+      email: u.email || "",
+      fullName: u.full_name || "",
+      provinceId: u.province_id || "",
+      jobTitle: u.job_title || "",
+      role: (u.role as AppRole) || "province_user",
+      accessLevel: u.access_level || "edit",
+      duties: u.duties?.length ? u.duties : defaultDutiesForRole((u.role as AppRole) || "province_user"),
+    });
+  };
+
+  const onSaveEdit = async () => {
+    if (!editForm || !editUserId) return;
+    if (editForm.role === "province_user" && !editForm.provinceId) {
+      toast.error(t.selectProvince);
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await authedFetch("/api/admin/users", {
+        method: "PATCH",
+        body: JSON.stringify({
+          userId: editUserId,
+          fullName: editForm.fullName,
+          provinceId: editForm.role === "province_user" ? editForm.provinceId || null : null,
+          role: editForm.role,
+          jobTitle: editForm.jobTitle || null,
+          accessLevel: editForm.accessLevel,
+          duties: editForm.accessLevel === "edit" ? editForm.duties : [],
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      toast.success(t.memberUpdated);
+      setEditUserId(null);
+      setEditForm(null);
       refresh();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : t.error);
@@ -158,7 +213,7 @@ function UsersPage() {
     }
   };
 
-  if (role !== "technical_director") return null;
+  if (!can("manage_users")) return null;
 
   const provinceName = (id: string | null) => provinces.find((p) => p.id === id)?.name || "—";
   const roleLabel = (r: string | null) =>
@@ -207,76 +262,12 @@ function UsersPage() {
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="member-name">{t.fullName}</Label>
-              <Input
-                id="member-name"
-                autoComplete="name"
-                placeholder="Marie Kabila"
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="member-email">{t.email}</Label>
-              <Input
-                id="member-email"
-                type="email"
-                autoComplete="email"
-                placeholder="marie@epic.cd"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{t.role}</Label>
-              <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as UserRole })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="province_user">{t.provinceUser}</SelectItem>
-                  <SelectItem value="technical_director">{t.director}</SelectItem>
-                  <SelectItem value="read_only">{t.readOnly}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {form.role === "technical_director" ? (
-              <div className="space-y-1.5">
-                <Label htmlFor="member-title">{t.jobTitle}</Label>
-                <Input
-                  id="member-title"
-                  placeholder={t.jobTitlePlaceholder}
-                  value={form.jobTitle}
-                  onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
-                />
-              </div>
-            ) : form.role === "province_user" ? (
-              <div className="space-y-1.5">
-                <Label>{t.province}</Label>
-                <Select value={form.provinceId} onValueChange={(v) => setForm({ ...form, provinceId: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t.selectProvince} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {provinces.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : (
-              <div className="hidden sm:block" />
-            )}
-            <div className="flex items-end justify-end sm:col-span-2">
-              <Button onClick={onInvite} disabled={!canInvite} className="w-full sm:w-auto">
-                <Plus className="h-4 w-4" />
-                {busy ? t.sendingInvite : t.invite}
-              </Button>
-            </div>
+          <UserMemberForm form={form} setForm={setForm} provinces={provinces} />
+          <div className="flex justify-end">
+            <Button onClick={onInvite} disabled={!canInvite} className="w-full sm:w-auto">
+              <Plus className="h-4 w-4" />
+              {busy ? t.sendingInvite : t.invite}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -320,6 +311,8 @@ function UsersPage() {
                   const displayName = u.full_name && u.full_name !== u.email ? u.full_name : u.email || "—";
                   const showEmail = Boolean(u.email && u.email !== displayName);
                   const extra = u.job_title && u.job_title !== roleLabel(u.role) ? u.job_title : null;
+                  const accessBadge =
+                    u.access_level === "view" ? t.accessLevelView : t.accessLevelEdit;
                   return (
                     <li key={u.id} className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
                       <Avatar className="h-10 w-10 border border-border/60">
@@ -339,16 +332,20 @@ function UsersPage() {
                           )}
                         </div>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
                         <Badge variant="outline" className={roleClass(u.role)}>
                           {roleLabel(u.role)}
                         </Badge>
+                        <Badge variant={u.access_level === "view" ? "secondary" : "outline"}>{accessBadge}</Badge>
                         {u.role === "province_user" && (
                           <span className="hidden items-center gap-1 text-sm text-muted-foreground md:inline-flex">
                             <MapPin className="h-3.5 w-3.5" />
                             {provinceName(u.province_id)}
                           </span>
                         )}
+                        <Button size="icon" variant="ghost" aria-label={t.editMember} onClick={() => openEdit(u)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="icon" variant="ghost" aria-label={t.remove}>
@@ -381,7 +378,27 @@ function UsersPage() {
         </Card>
       </div>
 
-      <ProvincesManager provinces={provinces} onChange={refresh} />
+      <Dialog open={Boolean(editUserId && editForm)} onOpenChange={(open) => !open && (setEditUserId(null), setEditForm(null))}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t.editMember}</DialogTitle>
+            <DialogDescription>{t.editMemberHint}</DialogDescription>
+          </DialogHeader>
+          {editForm && (
+            <UserMemberForm form={editForm} setForm={setEditForm} provinces={provinces} showEmail={false} idPrefix="edit" />
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => (setEditUserId(null), setEditForm(null))}>
+              {t.cancel}
+            </Button>
+            <Button onClick={onSaveEdit} disabled={busy || !editForm?.fullName}>
+              {busy ? t.saving : t.saveMember}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {can("manage_provinces") && <ProvincesManager provinces={provinces} onChange={refresh} />}
     </div>
   );
 }
@@ -415,10 +432,7 @@ function ProvincesManager({ provinces, onChange }: { provinces: ProvinceRow[]; o
       <Card>
         <CardContent className="p-4 sm:p-5">
           <CollapsibleTrigger asChild>
-            <button
-              type="button"
-              className="flex w-full items-center justify-between gap-3 text-left"
-            >
+            <button type="button" className="flex w-full items-center justify-between gap-3 text-left">
               <div>
                 <h2 className="text-base font-semibold">{t.provinces}</h2>
                 <p className="text-sm text-muted-foreground">{t.provincesHint}</p>
@@ -431,12 +445,7 @@ function ProvincesManager({ provinces, onChange }: { provinces: ProvinceRow[]; o
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-4 pt-4">
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Input
-                placeholder={t.provinceCode}
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                className="sm:w-28"
-              />
+              <Input placeholder={t.provinceCode} value={code} onChange={(e) => setCode(e.target.value)} className="sm:w-28" />
               <Input placeholder={t.provinceName} value={name} onChange={(e) => setName(e.target.value)} />
               <Button onClick={add} disabled={busy || !code || !name}>
                 <Plus className="h-4 w-4" />

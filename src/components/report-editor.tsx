@@ -24,6 +24,8 @@ import {
 } from "@/lib/activity-catalog";
 import { persistExtendedReport, type ReportMeta } from "@/lib/report-data";
 import { loadExtendedReportData } from "@/lib/report-data";
+import { ReportMediaPanel } from "@/components/report-media";
+import { photosForPdf } from "@/lib/report-photos";
 
 export interface ActivityRow {
   id?: string;
@@ -199,7 +201,12 @@ export function ReportEditor({
     });
 
   const exportReportPdf = async () => {
-    await exportOfficialPdf(officialPayload(), lang, `epic-report-${provinceLabel || "province"}-${report.year}-${String(report.month).padStart(2, "0")}.pdf`);
+    const photos = await photosForPdf(report.id);
+    await exportOfficialPdf(
+      { ...officialPayload(), photos },
+      lang,
+      `epic-report-${provinceLabel || "province"}-${report.year}-${String(report.month).padStart(2, "0")}.pdf`,
+    );
     toast.success(t.pdfGenerated);
   };
 
@@ -281,6 +288,7 @@ export function ReportEditor({
           <TabsTrigger value="stories">{t.tabStories}</TabsTrigger>
           <TabsTrigger value="challenges">{t.tabChallenges}</TabsTrigger>
           <TabsTrigger value="priorities">{t.tabPriorities}</TabsTrigger>
+          <TabsTrigger value="media">{t.tabMedia}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary">
@@ -373,6 +381,14 @@ export function ReportEditor({
               {renderNarrative("priorities_objective_3", `${t.objective} 3`)}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="media">
+          <ReportMediaPanel
+            reportId={report.id}
+            readOnly={readOnly}
+            zipBaseName={`epic-photos-${provinceLabel || "province"}-${report.year}-${String(report.month).padStart(2, "0")}`}
+          />
         </TabsContent>
       </Tabs>
     </div>

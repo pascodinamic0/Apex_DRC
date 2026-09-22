@@ -23,7 +23,7 @@ export const helpSectionsFr: HelpSection[] = [
     roles: ["province_user"],
     body: [
       "Créez un rapport via Rapports → Nouveau rapport (mois et année).",
-      "Remplissez les onglets A à G : activités, récits et résumé exécutif.",
+      "Remplissez les onglets, y compris Média pour les photos de mise en œuvre (Annexe B).",
       "Enregistrez le brouillon (autosauvegarde toutes les 30 s) puis Soumettre.",
       "Après soumission, le statut devient « En attente de validation ». Vous pouvez encore modifier le rapport jusqu'à validation par le DT.",
     ],
@@ -44,8 +44,9 @@ export const helpSectionsFr: HelpSection[] = [
     roles: ["technical_director"],
     body: [
       "Le TDR prévoit trois personnes au niveau DT (Directeur de projet et conseillers seniors).",
-      "Créez trois utilisateurs avec le rôle Directeur Technique dans Utilisateurs.",
-      "Attribuez un titre distinct (ex. Directeur de projet, Conseiller senior) pour les identifier dans l'interface.",
+      "Dans Utilisateurs, invitez chaque personne avec un rôle, un titre, un niveau (Édition ou Lecture seule) et des tâches précises.",
+      "Édition / Lecture seule détermine si le compte peut écrire. Les tâches définissent ce qu'il peut faire en mode Édition.",
+      "Utilisez Modifier le membre pour relever ou réduire les droits sans renvoyer d'invitation.",
     ],
   },
   {

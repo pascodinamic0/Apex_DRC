@@ -17,7 +17,7 @@ export const helpSectionsEn: HelpSection[] = [
     roles: ["province_user"],
     body: [
       "Create a report via Reports → New report (month and year).",
-      "Complete tabs A through G: activities, narratives, and executive summary.",
+      "Complete the tabs, including Media for implementation photos (Annex B).",
       "Save draft (auto-saves every 30s) then Submit.",
       "After submission, status becomes Awaiting validation. You can still edit until the DT validates.",
     ],
@@ -38,8 +38,9 @@ export const helpSectionsEn: HelpSection[] = [
     roles: ["technical_director"],
     body: [
       "The TDR specifies three DT-level people (Project Director and senior advisors).",
-      "Create three users with Technical Director role under Users.",
-      "Set distinct job titles (e.g. Project Director, Senior Advisor) to identify them in the UI.",
+      "Under Users, invite each person with a role, job title, account level (Edit or View only), and specific duties.",
+      "Edit or View only controls whether the account can write at all. Duties control what they may do when Edit is enabled.",
+      "Use Edit member on the team list to raise or lower access later without re-inviting.",
     ],
   },
   {

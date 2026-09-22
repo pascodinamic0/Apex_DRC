@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { getDirectorUserId } from "@/lib/auth/director-server";
+import { requireDuty } from "@/lib/auth/director-server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   buildConsolidationAiContext,
@@ -64,7 +64,7 @@ export const Route = createFileRoute("/api/consolidation/summary")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const uid = await getDirectorUserId(request);
+        const uid = await requireDuty(request, "write_national_summary");
         if (!uid) return new Response("Forbidden", { status: 403 });
 
         let body: unknown;
