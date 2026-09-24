@@ -18,6 +18,7 @@ import {
   type IndicatorResultRow,
 } from "@/lib/epic-source/queries";
 import { exportProgramSourceDocx } from "@/lib/export/epic-program-export";
+import { localizeEpicSource, metricLabel } from "@/lib/epic-source/locale";
 
 function ProvenanceBadge({ level }: { level: string }) {
   const { t } = useT();
@@ -58,37 +59,39 @@ export function ProgramSourcePanel() {
     return () => { cancelled = true; };
   }, [periodCode]);
 
+  const view = useMemo(() => (data ? localizeEpicSource(data, lang) : null), [data, lang]);
+
   const filteredIndicators = useMemo(() => {
-    if (!data) return [] as IndicatorResultRow[];
-    return data.indicators.filter((row) => {
+    if (!view) return [] as IndicatorResultRow[];
+    return view.indicators.filter((row) => {
       if (area !== "all" && row.technical_area_code !== area) return false;
       if (indicator !== "all" && row.indicator_code !== indicator) return false;
       return true;
     });
-  }, [data, area, indicator]);
+  }, [view, area, indicator]);
 
   const filteredAggregates = useMemo(() => {
-    if (!data) return [] as AggregateResultRow[];
-    return data.aggregates.filter((row) => area === "all" || row.technical_area_code === area);
-  }, [data, area]);
+    if (!view) return [] as AggregateResultRow[];
+    return view.aggregates.filter((row) => area === "all" || row.technical_area_code === area);
+  }, [view, area]);
 
   const filteredActivities = useMemo(() => {
-    if (!data) return [];
-    return data.activities.filter((a) => {
+    if (!view) return [];
+    return view.activities.filter((a) => {
       if (objective !== "all" && a.objective_code !== objective) return false;
       if (activity !== "all" && a.code !== activity && a.parent_code !== activity) return false;
       return true;
     });
-  }, [data, objective, activity]);
+  }, [view, objective, activity]);
 
   const filteredHz = useMemo(() => {
-    if (!data) return [];
-    return data.healthZones.filter((z) => {
+    if (!view) return [];
+    return view.healthZones.filter((z) => {
       if (province !== "all" && z.province_name !== province) return false;
       if (hz !== "all" && z.code !== hz) return false;
       return true;
     });
-  }, [data, province, hz]);
+  }, [view, province, hz]);
 
   if (loading) {
     return (
@@ -99,7 +102,7 @@ export function ProgramSourcePanel() {
     );
   }
 
-  if (error || !data?.period) {
+  if (error || !view?.period) {
     return (
       <Alert>
         <AlertTitle>{t.programDataTitle}</AlertTitle>
@@ -108,8 +111,8 @@ export function ProgramSourcePanel() {
     );
   }
 
-  const period = data.period;
-  const hzCount = data.coverage.find((c) => c.health_zone_count)?.health_zone_count;
+  const period = view.period;
+  const hzCount = view.coverage.find((c) => c.health_zone_count)?.health_zone_count;
 
   return (
     <div className="space-y-6">
@@ -124,7 +127,7 @@ export function ProgramSourcePanel() {
             <Select value={periodCode} onValueChange={setPeriodCode}>
               <SelectTrigger className="w-56 h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {data.periods.map((p) => (
+                {view.periods.map((p) => (
                   <SelectItem key={p.code} value={p.code}>{p.fiscal_year} {p.period_label}</SelectItem>
                 ))}
               </SelectContent>
@@ -143,18 +146,18 @@ export function ProgramSourcePanel() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card><CardContent className="p-4"><div className="text-xs uppercase text-muted-foreground">{t.reportingPeriod}</div><div className="text-lg font-bold mt-1">{period.fiscal_year} {period.period_label}</div><div className="text-xs text-muted-foreground">{period.start_date} → {period.end_date}</div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs uppercase text-muted-foreground">{t.provinces}</div><div className="text-2xl font-bold mt-1">{data.coverage.filter((c) => c.province_name).length}</div><div className="text-xs text-muted-foreground">{t.mnchFourProvinces}</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs uppercase text-muted-foreground">{t.provinces}</div><div className="text-2xl font-bold mt-1">{view.coverage.filter((c) => c.province_name).length}</div><div className="text-xs text-muted-foreground">{t.mnchFourProvinces}</div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-xs uppercase text-muted-foreground">{t.healthZones}</div><div className="text-2xl font-bold mt-1">{hzCount ?? "—"}</div><div className="text-xs text-muted-foreground">{t.hzNamesUnavailable}</div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs uppercase text-muted-foreground">{t.indicators}</div><div className="text-2xl font-bold mt-1">{data.indicators.length}</div><div className="text-xs text-muted-foreground">Annex B</div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="text-xs uppercase text-muted-foreground">{t.indicators}</div><div className="text-2xl font-bold mt-1">{view.indicators.length}</div><div className="text-xs text-muted-foreground">{t.annexB}</div></CardContent></Card>
       </div>
 
       <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <Filter label={t.domains} value={area} onChange={setArea} options={[{ value: "all", label: t.allAreas }, ...data.technicalAreas.map((a) => ({ value: a.code, label: a.name_fr }))]} />
-        <Filter label={t.objective} value={objective} onChange={setObjective} options={[{ value: "all", label: t.allObjectives }, ...data.objectives.map((o) => ({ value: o.code, label: `${t.objective} ${o.number}` }))]} />
-        <Filter label={t.activities} value={activity} onChange={setActivity} options={[{ value: "all", label: t.allActivities }, ...data.activities.filter((a) => a.level === "activity").map((a) => ({ value: a.code, label: a.code }))]} />
-        <Filter label={t.indicators} value={indicator} onChange={setIndicator} options={[{ value: "all", label: t.allIndicators }, ...data.indicators.map((i) => ({ value: i.indicator_code, label: i.indicator_code }))]} />
-        <Filter label={t.province} value={province} onChange={setProvince} options={[{ value: "all", label: t.allProvinces }, ...Array.from(new Map(data.coverage.filter((c) => c.province_name).map((c) => [c.province_name!, c.province_name!])).entries()).map(([value, label]) => ({ value, label }))]} />
-        <Filter label={t.healthZone} value={hz} onChange={setHz} options={[{ value: "all", label: t.allHealthZones }, ...data.healthZones.map((z) => ({ value: z.code, label: z.name }))]} />
+        <Filter label={t.domains} value={area} onChange={setArea} options={[{ value: "all", label: t.allAreas }, ...view.technicalAreas.map((a) => ({ value: a.code, label: a.name_fr }))]} />
+        <Filter label={t.objective} value={objective} onChange={setObjective} options={[{ value: "all", label: t.allObjectives }, ...view.objectives.map((o) => ({ value: o.code, label: `${t.objective} ${o.number}` }))]} />
+        <Filter label={t.activities} value={activity} onChange={setActivity} options={[{ value: "all", label: t.allActivities }, ...view.activities.filter((a) => a.level === "activity").map((a) => ({ value: a.code, label: a.code }))]} />
+        <Filter label={t.indicators} value={indicator} onChange={setIndicator} options={[{ value: "all", label: t.allIndicators }, ...view.indicators.map((i) => ({ value: i.indicator_code, label: i.indicator_code }))]} />
+        <Filter label={t.province} value={province} onChange={setProvince} options={[{ value: "all", label: t.allProvinces }, ...Array.from(new Map(view.coverage.filter((c) => c.province_name).map((c) => [c.province_name!, c.province_name!])).entries()).map(([value, label]) => ({ value, label }))]} />
+        <Filter label={t.healthZone} value={hz} onChange={setHz} options={[{ value: "all", label: t.allHealthZones }, ...view.healthZones.map((z) => ({ value: z.code, label: z.name }))]} />
       </div>
 
       <Tabs defaultValue="indicators">
@@ -215,7 +218,7 @@ export function ProgramSourcePanel() {
         </TabsContent>
 
         <TabsContent value="activities" className="space-y-4">
-          {data.objectives.filter((o) => objective === "all" || o.code === objective).map((o) => (
+          {view.objectives.filter((o) => objective === "all" || o.code === objective).map((o) => (
             <Card key={o.code}>
               <CardHeader>
                 <CardTitle className="text-base">{t.objective} {o.number}. {o.title_fr}</CardTitle>
@@ -240,7 +243,7 @@ export function ProgramSourcePanel() {
         </TabsContent>
 
         <TabsContent value="ghs" className="space-y-4">
-          {data.ghs.map((g) => (
+          {view.ghs.map((g) => (
             <Card key={g.ghs_indicator_code}>
               <CardHeader>
                 <CardTitle className="text-base flex flex-wrap items-center gap-2">
@@ -265,7 +268,7 @@ export function ProgramSourcePanel() {
                       <span>{d.label}</span>
                       <span className="tabular-nums shrink-0">
                         {d.value == null ? "" : `${d.value_is_minimum ? "≥" : ""}${formatCount(d.value)}`}
-                        {d.sex_breakdown_status === "verified" ? ` (${d.male_count ?? "—"} M / ${d.female_count ?? "—"} F)` : ""}
+                        {d.sex_breakdown_status === "verified" ? ` (${d.male_count ?? "—"} ${lang === "fr" ? "H" : "M"} / ${d.female_count ?? "—"} F)` : ""}
                       </span>
                     </li>
                   ))}
@@ -276,7 +279,7 @@ export function ProgramSourcePanel() {
         </TabsContent>
 
         <TabsContent value="stories" className="space-y-4">
-          {data.stories.map((s) => (
+          {view.stories.map((s) => (
             <Card key={s.code}>
               <CardHeader>
                 <CardTitle className="text-base">{s.title}</CardTitle>
@@ -294,7 +297,7 @@ export function ProgramSourcePanel() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {Object.entries(s.metrics).map(([k, v]) => (
                       <div key={k} className="rounded-md border p-2">
-                        <div className="text-xs text-muted-foreground">{k.replaceAll("_", " ")}</div>
+                        <div className="text-xs text-muted-foreground">{metricLabel(k, lang)}</div>
                         <div className="text-lg font-semibold tabular-nums">{formatCount(v)}</div>
                       </div>
                     ))}
@@ -332,7 +335,7 @@ export function ProgramSourcePanel() {
           <Card>
             <CardHeader><CardTitle className="text-base">{t.notAvailableInSource}</CardTitle></CardHeader>
             <CardContent className="space-y-2">
-              {data.gaps.map((g) => (
+              {view.gaps.map((g) => (
                 <div key={g.code}>
                   <p className="text-sm font-medium">{g.topic}</p>
                   <p className="text-xs text-muted-foreground">{g.reason}</p>

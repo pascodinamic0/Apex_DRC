@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Eye, Pencil } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PeriodFilters, periodFilterLabels } from "@/components/national-analytics";
+import { createDefaultPeriodSelection, filterReportsInPeriod, periodBounds, type PeriodSelection } from "@/lib/analytics";
+import { reportingYears, SOURCE_MONTH, SOURCE_YEAR } from "@/lib/export/epic-official";
 
 export const Route = createFileRoute("/_authenticated/reports/")({ component: ReportsList });
 
@@ -18,9 +21,17 @@ function ReportsList() {
   const { t } = useT();
   const { role, profile } = useAuth();
   const nav = useNavigate();
+  const [period, setPeriod] = useState<PeriodSelection>(() =>
+    createDefaultPeriodSelection(SOURCE_MONTH, SOURCE_YEAR),
+  );
   const [reports, setReports] = useState<ReportRow[]>([]);
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const years = reportingYears();
+  const visibleReports = useMemo(
+    () => filterReportsInPeriod(reports, periodBounds(period)),
+    [reports, period],
+  );
 
   useEffect(() => {
     (async () => {
@@ -70,14 +81,31 @@ function ReportsList() {
       </div>
 
       <Card>
+        <CardHeader>
+          <CardTitle>{t.reportingPeriod}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PeriodFilters
+            period={period}
+            years={years}
+            months={t.months}
+            trimesters={t.trimesters}
+            semesters={t.semesters}
+            labels={periodFilterLabels(t)}
+            onPeriodChange={setPeriod}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardContent className="p-0">
           {loading ? (
             <div className="p-6 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
-          ) : reports.length === 0 ? (
+          ) : visibleReports.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground">{t.noReports}</div>
           ) : (
             <div className="divide-y">
-              {reports.map((r) => (
+              {visibleReports.map((r) => (
                 <div key={r.id} className="flex items-center justify-between p-4 hover:bg-accent/40">
                   <div className="flex-1 min-w-0">
                     <div className="font-medium">{provinceName(r.province_id)}</div>

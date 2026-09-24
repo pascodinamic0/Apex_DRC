@@ -13,8 +13,19 @@ export interface Profile {
   province_id: string | null;
   preferred_lang: string | null;
   job_title: string | null;
+  phone: string | null;
+  address: string | null;
+  onboarding_completed: boolean;
   access_level: AccessLevel;
   access_blocked: boolean;
+}
+
+/** True when an invited account still has to set a password and identity before the app opens. */
+export function accountNeedsOnboarding(user: User | null, profile: Profile | null): boolean {
+  if (!user) return false;
+  const meta = user.app_metadata as { must_set_password?: boolean } | undefined;
+  if (meta?.must_set_password === true) return true;
+  return profile?.onboarding_completed === false;
 }
 
 interface AuthState {
@@ -70,7 +81,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const level = (prof?.access_level as AccessLevel) ?? "edit";
     setProfile(
       prof
-        ? { ...prof, access_blocked: Boolean((prof as Profile).access_blocked) }
+        ? {
+            ...prof,
+            phone: prof.phone ?? null,
+            address: prof.address ?? null,
+            onboarding_completed: prof.onboarding_completed !== false,
+            access_blocked: Boolean((prof as Profile).access_blocked),
+          }
         : null,
     );
     setRole((r?.role as AppRole) ?? null);

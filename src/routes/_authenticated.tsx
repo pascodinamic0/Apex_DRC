@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
-import { useAuth } from "@/lib/auth";
+import { accountNeedsOnboarding, useAuth } from "@/lib/auth";
 import { navGroupsForRole } from "@/lib/auth/navigation";
 import { useT } from "@/lib/i18n";
 import { NotificationBell } from "@/components/notification-bell";
@@ -79,9 +79,15 @@ function Layout() {
     setPendingSync(await getPendingCount());
   }, [t.syncComplete]);
 
+  const needsOnboarding = accountNeedsOnboarding(user, profile);
+
   useEffect(() => {
     if (!loading && !user) nav({ to: "/login" });
   }, [user, loading, nav]);
+
+  useEffect(() => {
+    if (!loading && user && needsOnboarding) nav({ to: "/onboarding", replace: true });
+  }, [loading, user, needsOnboarding, nav]);
 
   useEffect(() => {
     if (!loading && profile?.access_blocked) {
@@ -107,7 +113,7 @@ function Layout() {
     };
   }, [syncQueuedDrafts]);
 
-  if (loading || !user) {
+  if (loading || !user || needsOnboarding) {
     return (
       <div className="flex min-h-screen items-center justify-center p-8">
         <div className="space-y-3 w-full max-w-xs">

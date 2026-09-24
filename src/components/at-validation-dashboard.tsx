@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PeriodFilters } from "@/components/national-analytics";
+import { PeriodFilters, periodFilterLabels } from "@/components/national-analytics";
 import { toast } from "sonner";
 import { MessageSquare, SendHorizonal } from "lucide-react";
 import { loadExtendedReportData } from "@/lib/report-data";
@@ -231,20 +231,8 @@ export function AtValidationDashboard() {
           years={years}
           months={t.months}
           trimesters={t.trimesters}
-          labels={{
-            periodType: t.periodType,
-            month: t.month,
-            year: t.year,
-            trimester: t.trimester,
-            from: t.from,
-            to: t.to,
-            grains: {
-              month: t.periodGrainMonth,
-              trimester: t.periodGrainTrimester,
-              year: t.periodGrainYear,
-              custom: t.periodGrainCustom,
-            },
-          }}
+          semesters={t.semesters}
+          labels={periodFilterLabels(t)}
           onPeriodChange={setPeriod}
         />
       </div>

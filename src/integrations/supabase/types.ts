@@ -97,33 +97,42 @@ export type Database = {
         Row: {
           access_blocked: boolean
           access_level: Database["public"]["Enums"]["access_level"]
+          address: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
           job_title: string | null
+          onboarding_completed: boolean
+          phone: string | null
           preferred_lang: string | null
           province_id: string | null
         }
         Insert: {
           access_blocked?: boolean
           access_level?: Database["public"]["Enums"]["access_level"]
+          address?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
           job_title?: string | null
+          onboarding_completed?: boolean
+          phone?: string | null
           preferred_lang?: string | null
           province_id?: string | null
         }
         Update: {
           access_blocked?: boolean
           access_level?: Database["public"]["Enums"]["access_level"]
+          address?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
           job_title?: string | null
+          onboarding_completed?: boolean
+          phone?: string | null
           preferred_lang?: string | null
           province_id?: string | null
         }

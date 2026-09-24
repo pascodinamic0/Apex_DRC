@@ -8,13 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DashboardCharts } from "@/components/dashboard-charts";
-import { NationalAnalytics } from "@/components/national-analytics";
+import { NationalAnalytics, PeriodFilters, periodFilterLabels } from "@/components/national-analytics";
 import { AtValidationDashboard } from "@/components/at-validation-dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Layers, Users } from "lucide-react";
 import {
   createDefaultPeriodSelection,
   filterReportsInPeriod,
+  formatPeriodLabel,
   periodBounds,
   type AchievementRow,
   type PeriodSelection,
@@ -86,8 +87,12 @@ function Dashboard() {
     return r?.status || "missing";
   };
 
+  const periodLabel = formatPeriodLabel(period, t.months, t.trimesters, t.semesters);
   const myReports = isProvinceUser
-    ? reports.filter((r) => r.province_id === profile?.province_id).sort((a, b) => b.year - a.year || b.month - a.month).slice(0, 6)
+    ? filterReportsInPeriod(
+        reports.filter((r) => r.province_id === profile?.province_id),
+        bounds,
+      ).sort((a, b) => b.year - a.year || b.month - a.month)
     : [];
 
   const statusBadge = (s: string) => {
@@ -178,8 +183,23 @@ function Dashboard() {
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">FHI 360</p>
         <h1 className="text-3xl font-extrabold tracking-tight">{t.dashboard}</h1>
-        <p className="text-muted-foreground">{t.months[period.month - 1]} {period.year}</p>
+        <p className="text-muted-foreground">{periodLabel}</p>
       </div>
+
+      <Card>
+        <CardHeader><CardTitle>{t.reportingPeriod}</CardTitle></CardHeader>
+        <CardContent>
+          <PeriodFilters
+            period={period}
+            years={years}
+            months={t.months}
+            trimesters={t.trimesters}
+            semesters={t.semesters}
+            labels={periodFilterLabels(t)}
+            onPeriodChange={setPeriod}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle>{t.yourProvinceStatus}</CardTitle></CardHeader>

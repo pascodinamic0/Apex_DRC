@@ -19,6 +19,8 @@ function ProfilePage() {
   const { t, lang, setLang } = useT();
   const [fullName, setFullName] = useState("");
   const [jobTitle, setJobTitle] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [preferredLang, setPreferredLang] = useState<Lang>("fr");
   const [provinceName, setProvinceName] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -38,6 +40,8 @@ function ProfilePage() {
     if (profile) {
       setFullName(profile.full_name || "");
       setJobTitle(profile.job_title || "");
+      setPhone(profile.phone || "");
+      setAddress(profile.address || "");
       if (profile.preferred_lang === "en" || profile.preferred_lang === "fr") {
         setPreferredLang(profile.preferred_lang);
       } else setPreferredLang(lang);
@@ -63,6 +67,8 @@ function ProfilePage() {
     const { error } = await supabase.from("profiles").update({
       full_name: fullName,
       job_title: jobTitle || null,
+      phone: phone || null,
+      address: address || null,
       preferred_lang: preferredLang,
     }).eq("id", user.id);
     setBusy(false);
@@ -111,6 +117,14 @@ function ProfilePage() {
           <div className="space-y-2">
             <Label>{t.fullName}</Label>
             <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t.phone}</Label>
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>{t.address}</Label>
+            <Input value={address} onChange={(e) => setAddress(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>{t.jobTitle}</Label>

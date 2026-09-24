@@ -15,7 +15,7 @@ import {
   periodBounds,
   type PeriodSelection,
 } from "@/lib/analytics";
-import { PeriodFilters } from "@/components/national-analytics";
+import { PeriodFilters, periodFilterLabels } from "@/components/national-analytics";
 import { loadCatalog } from "@/lib/report-data";
 import {
   buildOfficialMonthlyPayload,
@@ -189,23 +189,7 @@ function ProvincialRollup() {
             months={t.months}
             trimesters={t.trimesters}
             semesters={t.semesters}
-            allowedGrains={["month", "trimester", "semester", "year"]}
-            labels={{
-              periodType: t.periodType,
-              month: t.month,
-              year: t.year,
-              trimester: t.trimester,
-              semester: t.semester,
-              from: t.from,
-              to: t.to,
-              grains: {
-                month: t.periodGrainMonth,
-                trimester: t.periodGrainTrimester,
-                semester: t.periodGrainSemester,
-                year: t.periodGrainYear,
-                custom: t.periodGrainCustom,
-              },
-            }}
+            labels={periodFilterLabels(t)}
             onPeriodChange={setPeriod}
           />
         </CardContent>

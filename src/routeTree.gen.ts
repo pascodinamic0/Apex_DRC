@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -24,6 +25,7 @@ import { Route as AuthenticatedDeskRouteImport } from './routes/_authenticated/d
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConsolidationRouteImport } from './routes/_authenticated/consolidation'
 import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports.index'
+import { Route as ApiOnboardingCompleteRouteImport } from './routes/api/onboarding.complete'
 import { Route as ApiConsolidationSummaryRouteImport } from './routes/api/consolidation.summary'
 import { Route as ApiConsolidationActivitySummaryRouteImport } from './routes/api/consolidation.activity-summary'
 import { Route as ApiAdminUsersRouteImport } from './routes/api/admin.users'
@@ -36,6 +38,11 @@ import { Route as AuthenticatedReportsReportIdEditRouteImport } from './routes/_
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -110,6 +117,11 @@ const AuthenticatedReportsIndexRoute =
     path: '/reports/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const ApiOnboardingCompleteRoute = ApiOnboardingCompleteRouteImport.update({
+  id: '/api/onboarding/complete',
+  path: '/api/onboarding/complete',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiConsolidationSummaryRoute = ApiConsolidationSummaryRouteImport.update({
   id: '/api/consolidation/summary',
   path: '/api/consolidation/summary',
@@ -159,6 +171,7 @@ const AuthenticatedReportsReportIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/consolidation': typeof AuthenticatedConsolidationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -174,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/consolidation/activity-summary': typeof ApiConsolidationActivitySummaryRoute
   '/api/consolidation/summary': typeof ApiConsolidationSummaryRoute
+  '/api/onboarding/complete': typeof ApiOnboardingCompleteRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
   '/reports/$reportId/review': typeof AuthenticatedReportsReportIdReviewRoute
@@ -183,6 +197,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/consolidation': typeof AuthenticatedConsolidationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -198,6 +213,7 @@ export interface FileRoutesByTo {
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/consolidation/activity-summary': typeof ApiConsolidationActivitySummaryRoute
   '/api/consolidation/summary': typeof ApiConsolidationSummaryRoute
+  '/api/onboarding/complete': typeof ApiOnboardingCompleteRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
   '/reports/$reportId/review': typeof AuthenticatedReportsReportIdReviewRoute
@@ -209,6 +225,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/consolidation': typeof AuthenticatedConsolidationRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -224,6 +241,7 @@ export interface FileRoutesById {
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/consolidation/activity-summary': typeof ApiConsolidationActivitySummaryRoute
   '/api/consolidation/summary': typeof ApiConsolidationSummaryRoute
+  '/api/onboarding/complete': typeof ApiOnboardingCompleteRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
   '/_authenticated/reports/$reportId/review': typeof AuthenticatedReportsReportIdReviewRoute
@@ -235,6 +253,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/onboarding'
     | '/reset-password'
     | '/consolidation'
     | '/dashboard'
@@ -250,6 +269,7 @@ export interface FileRouteTypes {
     | '/api/admin/users'
     | '/api/consolidation/activity-summary'
     | '/api/consolidation/summary'
+    | '/api/onboarding/complete'
     | '/reports/'
     | '/reports/$reportId/edit'
     | '/reports/$reportId/review'
@@ -259,6 +279,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/onboarding'
     | '/reset-password'
     | '/consolidation'
     | '/dashboard'
@@ -274,6 +295,7 @@ export interface FileRouteTypes {
     | '/api/admin/users'
     | '/api/consolidation/activity-summary'
     | '/api/consolidation/summary'
+    | '/api/onboarding/complete'
     | '/reports'
     | '/reports/$reportId/edit'
     | '/reports/$reportId/review'
@@ -284,6 +306,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/onboarding'
     | '/reset-password'
     | '/_authenticated/consolidation'
     | '/_authenticated/dashboard'
@@ -299,6 +322,7 @@ export interface FileRouteTypes {
     | '/api/admin/users'
     | '/api/consolidation/activity-summary'
     | '/api/consolidation/summary'
+    | '/api/onboarding/complete'
     | '/_authenticated/reports/'
     | '/_authenticated/reports/$reportId/edit'
     | '/_authenticated/reports/$reportId/review'
@@ -310,10 +334,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiAdminUsersRoute: typeof ApiAdminUsersRoute
   ApiConsolidationActivitySummaryRoute: typeof ApiConsolidationActivitySummaryRoute
   ApiConsolidationSummaryRoute: typeof ApiConsolidationSummaryRoute
+  ApiOnboardingCompleteRoute: typeof ApiOnboardingCompleteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -323,6 +349,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -422,6 +455,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/reports/'
       preLoaderRoute: typeof AuthenticatedReportsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/onboarding/complete': {
+      id: '/api/onboarding/complete'
+      path: '/api/onboarding/complete'
+      fullPath: '/api/onboarding/complete'
+      preLoaderRoute: typeof ApiOnboardingCompleteRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/consolidation/summary': {
       id: '/api/consolidation/summary'
@@ -531,10 +571,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiAdminUsersRoute: ApiAdminUsersRoute,
   ApiConsolidationActivitySummaryRoute: ApiConsolidationActivitySummaryRoute,
   ApiConsolidationSummaryRoute: ApiConsolidationSummaryRoute,
+  ApiOnboardingCompleteRoute: ApiOnboardingCompleteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

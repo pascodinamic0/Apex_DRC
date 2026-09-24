@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/auth";
+import { accountNeedsOnboarding, useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import { BrandArcs, BrandLogo } from "@/components/brand-logo";
 export const Route = createFileRoute("/login")({ component: LoginPage });
 
 function LoginPage() {
-  const { signIn, signInWithGoogle, resetPasswordForEmail, user, loading } = useAuth();
+  const { signIn, signInWithGoogle, resetPasswordForEmail, user, profile, loading } = useAuth();
   const { t } = useT();
   const nav = useNavigate();
   const [email, setEmail] = useState("");
@@ -23,8 +23,9 @@ function LoginPage() {
   const [resetEmail, setResetEmail] = useState("");
 
   useEffect(() => {
-    if (!loading && user) nav({ to: "/dashboard" });
-  }, [user, loading, nav]);
+    if (loading || !user) return;
+    nav({ to: accountNeedsOnboarding(user, profile) ? "/onboarding" : "/dashboard", replace: true });
+  }, [user, profile, loading, nav]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

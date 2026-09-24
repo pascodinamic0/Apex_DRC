@@ -3,22 +3,27 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { reportingYears, SOURCE_YEAR } from "@/lib/export/epic-official";
+import { PeriodFilters, periodFilterLabels } from "@/components/national-analytics";
+import { createDefaultPeriodSelection, filterReportsInPeriod, periodBounds, type PeriodSelection } from "@/lib/analytics";
+import { reportingYears, SOURCE_MONTH, SOURCE_YEAR } from "@/lib/export/epic-official";
 
 export const Route = createFileRoute("/_authenticated/history")({ component: History });
 
 function History() {
   const { t } = useT();
-  const { role } = useAuth();
+  const { role, profile } = useAuth();
   const isAt = role === "technical_assistant";
-  const [year, setYear] = useState<string>(String(SOURCE_YEAR));
+  const showProvinceFilter = role === "technical_director" || role === "technical_assistant";
+  const [period, setPeriod] = useState<PeriodSelection>(() =>
+    createDefaultPeriodSelection(SOURCE_MONTH, SOURCE_YEAR),
+  );
   const [provinceId, setProvinceId] = useState<string>("all");
   const [provinces, setProvinces] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
@@ -37,13 +42,15 @@ function History() {
 
   const filtered = useMemo(
     () =>
-      reports.filter(
-        (r) =>
-          String(r.year) === year &&
-          (provinceId === "all" || r.province_id === provinceId) &&
-          (!isAt || r.status === "validated"),
-      ),
-    [reports, year, provinceId, isAt],
+      filterReportsInPeriod(reports, periodBounds(period)).filter((r) => {
+        if (showProvinceFilter) {
+          if (provinceId !== "all" && r.province_id !== provinceId) return false;
+        } else if (profile?.province_id && r.province_id !== profile.province_id) {
+          return false;
+        }
+        return !isAt || r.status === "validated";
+      }),
+    [reports, period, provinceId, showProvinceFilter, profile?.province_id, isAt],
   );
 
   const provinceName = (id: string) => provinces.find((p) => p.id === id)?.name || "—";
@@ -66,24 +73,28 @@ function History() {
         {isAt && <p className="text-muted-foreground mt-1">{t.atValidatedArchiveHint}</p>}
       </div>
       <Card>
-        <CardContent className="flex flex-wrap gap-4 p-4">
-          <div className="space-y-1">
-            <Label>{t.year}</Label>
-            <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-              <SelectContent>{years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label>{t.province}</Label>
-            <Select value={provinceId} onValueChange={setProvinceId}>
-              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t.allProvinces}</SelectItem>
-                {provinces.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+        <CardContent className="flex flex-wrap items-end gap-4 p-4">
+          <PeriodFilters
+            period={period}
+            years={years}
+            months={t.months}
+            trimesters={t.trimesters}
+            semesters={t.semesters}
+            labels={periodFilterLabels(t)}
+            onPeriodChange={setPeriod}
+          />
+          {showProvinceFilter && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t.province}</Label>
+              <Select value={provinceId} onValueChange={setProvinceId}>
+                <SelectTrigger className="h-9 w-56"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t.allProvinces}</SelectItem>
+                  {provinces.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </CardContent>
       </Card>
 

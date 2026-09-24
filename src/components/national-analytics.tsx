@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useT } from "@/lib/i18n";
+import { useT, type Dict } from "@/lib/i18n";
 import {
   filterReportsInPeriod,
   formatPeriodLabel,
@@ -78,6 +78,25 @@ function MonthYearSelect({
       </div>
     </>
   );
+}
+
+export function periodFilterLabels(t: Dict) {
+  return {
+    periodType: t.periodType,
+    month: t.month,
+    year: t.year,
+    trimester: t.trimester,
+    semester: t.semester,
+    from: t.from,
+    to: t.to,
+    grains: {
+      month: t.periodGrainMonth,
+      trimester: t.periodGrainTrimester,
+      semester: t.periodGrainSemester,
+      year: t.periodGrainYear,
+      custom: t.periodGrainCustom,
+    },
+  };
 }
 
 export function PeriodFilters({
@@ -305,21 +324,8 @@ export function NationalAnalytics({
           years={years}
           months={t.months}
           trimesters={t.trimesters}
-          labels={{
-            periodType: t.periodType,
-            month: t.month,
-            year: t.year,
-            trimester: t.trimester,
-            from: t.from,
-            to: t.to,
-            grains: {
-              month: t.periodGrainMonth,
-              trimester: t.periodGrainTrimester,
-              semester: t.periodGrainSemester,
-              year: t.periodGrainYear,
-              custom: t.periodGrainCustom,
-            },
-          }}
+          semesters={t.semesters}
+          labels={periodFilterLabels(t)}
           onPeriodChange={onPeriodChange}
         />
       </div>

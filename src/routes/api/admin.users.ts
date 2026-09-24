@@ -9,6 +9,7 @@ import {
   type AppDuty,
 } from "@/lib/auth/duties";
 import type { AppRole } from "@/lib/auth";
+import type { Database } from "@/integrations/supabase/types";
 
 const roleSchema = z.enum(["province_user", "technical_director", "technical_assistant", "read_only"]);
 const accessLevelSchema = z.enum(["edit", "view"]);
@@ -43,6 +44,14 @@ const patchSchema = z.object({
   duties: z.array(dutySchema).optional(),
   accessBlocked: z.boolean().optional(),
 });
+
+function publicOrigin(request: Request): string {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = forwardedHost || request.headers.get("host");
+  const proto = request.headers.get("x-forwarded-proto") || new URL(request.url).protocol.replace(":", "");
+  if (host) return `${proto}://${host}`;
+  return new URL(request.url).origin;
+}
 
 function resolveAccessLevel(role: AppRole, accessLevel: AccessLevel): AccessLevel {
   if (role === "read_only") return "view";
@@ -156,11 +165,18 @@ export const Route = createFileRoute("/api/admin/users")({
           return new Response("Province required for provincial accounts", { status: 400 });
         }
 
+        const origin = publicOrigin(request);
         const { data: created, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(input.email, {
           data: { full_name: input.fullName },
+          redirectTo: `${origin}/onboarding`,
         });
         if (error) return new Response(error.message, { status: 400 });
         const newId = created.user!.id;
+
+        const { data: invited } = await supabaseAdmin.auth.admin.getUserById(newId);
+        await supabaseAdmin.auth.admin.updateUserById(newId, {
+          app_metadata: { ...(invited.user?.app_metadata ?? {}), must_set_password: true },
+        });
 
         await supabaseAdmin.from("profiles").upsert({
           id: newId,
@@ -169,6 +185,7 @@ export const Route = createFileRoute("/api/admin/users")({
           province_id: requiresProvince(input.role) ? input.provinceId : null,
           job_title: input.jobTitle || null,
           access_level: accessLevel,
+          onboarding_completed: false,
         });
         await supabaseAdmin.from("user_roles").delete().eq("user_id", newId);
         await supabaseAdmin.from("user_roles").insert({ user_id: newId, role: input.role });
@@ -262,7 +279,7 @@ export const Route = createFileRoute("/api/admin/users")({
         const lastMgrErr = await validateLastManager(input.userId, nextDuties, nextAccess);
         if (lastMgrErr) return new Response(lastMgrErr, { status: 400 });
 
-        const profilePatch: Record<string, unknown> = {};
+        const profilePatch: Database["public"]["Tables"]["profiles"]["Update"] = {};
         if (input.fullName !== undefined) profilePatch.full_name = input.fullName;
         if (input.jobTitle !== undefined) profilePatch.job_title = input.jobTitle;
         if (input.accessLevel !== undefined || nextRole === "read_only") profilePatch.access_level = nextAccess;

@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Bell,
   ClipboardList,
@@ -15,7 +16,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { useAuth } from "@/lib/auth";
+import { accountNeedsOnboarding, useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { LangSwitch } from "@/components/lang-switch";
@@ -28,10 +29,16 @@ export const Route = createFileRoute("/")({
 const moduleIcons = [LayoutDashboard, FileText, ClipboardList, Layers, Bell, HelpCircle];
 
 function Index() {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
+  const nav = useNavigate();
   const { lang, t } = useT();
   const copy = landingCopy[lang];
-  const primaryHref = user ? "/dashboard" : "/login";
+  const needsOnboarding = accountNeedsOnboarding(user, profile);
+  const primaryHref = !user ? "/login" : needsOnboarding ? "/onboarding" : "/dashboard";
+
+  useEffect(() => {
+    if (!loading && needsOnboarding) nav({ to: "/onboarding", replace: true });
+  }, [loading, needsOnboarding, nav]);
   const primaryLabel = user ? t.dashboard : t.signIn;
 
   return (

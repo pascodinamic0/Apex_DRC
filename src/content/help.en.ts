@@ -39,6 +39,7 @@ export const helpSectionsEn: HelpSection[] = [
     body: [
       "The TDR specifies three DT-level people (Project Director and senior advisors).",
       "Under Users, invite each person with a role. The rank (DT, AT, CP, Viewer) attaches its duties automatically.",
+      "They open the email link, choose a password, then confirm their name, phone, and address before the app opens.",
       "You can still raise or lower individual duties afterward. Viewers have no write duties.",
       "Use Edit member on the team list to raise or lower access later without re-inviting.",
     ],

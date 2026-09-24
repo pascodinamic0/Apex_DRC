@@ -4,7 +4,7 @@ import type { AppDuty } from "@/lib/auth/duties";
 
 export type UserAdminScope = "full" | "provincial";
 
-async function getAuthenticatedUserId(request: Request): Promise<string | null> {
+export async function getAuthenticatedUser(request: Request) {
   const auth = request.headers.get("authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
   if (!token) return null;
@@ -17,7 +17,12 @@ async function getAuthenticatedUserId(request: Request): Promise<string | null> 
   const sb = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await sb.auth.getUser(token);
   if (error || !data?.user) return null;
-  return data.user.id;
+  return data.user;
+}
+
+async function getAuthenticatedUserId(request: Request): Promise<string | null> {
+  const user = await getAuthenticatedUser(request);
+  return user?.id ?? null;
 }
 
 async function userHasDuty(userId: string, duty: AppDuty): Promise<boolean> {

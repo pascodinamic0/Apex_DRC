@@ -45,6 +45,7 @@ export const helpSectionsFr: HelpSection[] = [
     body: [
       "Le TDR prévoit trois personnes au niveau DT (Directeur de projet et conseillers seniors).",
       "Dans Utilisateurs, invitez chaque personne avec un rôle. Le rang (DT, AT, CP, Lecteur) attache automatiquement ses tâches.",
+      "La personne ouvre le lien reçu par email, choisit un mot de passe, puis confirme son nom, son téléphone et son adresse avant d'entrer.",
       "Vous pouvez encore ajuster les tâches ensuite. Les lecteurs n'ont aucune tâche d'écriture.",
       "Utilisez Modifier le membre pour relever ou réduire les droits sans renvoyer d'invitation.",
     ],

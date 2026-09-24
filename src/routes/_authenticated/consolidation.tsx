@@ -14,7 +14,7 @@ import { loadCatalog } from "@/lib/report-data";
 import { applyAcceptedActivitySummaries, buildNationalActivityViews, buildOfficialNationalPayload, reportingYears, SOURCE_MONTH, SOURCE_YEAR } from "@/lib/export/epic-official";
 import { exportOfficialDocx } from "@/lib/export/epic-docx";
 import { ConsolidationActivities, type ActivitySummaryRow } from "@/components/consolidation-activities";
-import { PeriodFilters } from "@/components/national-analytics";
+import { PeriodFilters, periodFilterLabels } from "@/components/national-analytics";
 import {
   createDefaultPeriodSelection,
   filterReportsInPeriod,
@@ -350,22 +350,7 @@ function Consolidation() {
         months={t.months}
         trimesters={t.trimesters}
         semesters={t.semesters}
-        labels={{
-          periodType: t.periodType,
-          month: t.month,
-          year: t.year,
-          trimester: t.trimester,
-          semester: t.semester,
-          from: t.from,
-          to: t.to,
-          grains: {
-            month: t.periodGrainMonth,
-            trimester: t.periodGrainTrimester,
-            semester: t.periodGrainSemester,
-            year: t.periodGrainYear,
-            custom: t.periodGrainCustom,
-          },
-        }}
+        labels={periodFilterLabels(t)}
         onPeriodChange={setPeriod}
       />
 
