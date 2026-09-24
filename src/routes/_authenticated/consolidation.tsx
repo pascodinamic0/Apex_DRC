@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
@@ -14,15 +14,22 @@ import { toast } from "sonner";
 import { type AchievementSummary, type ActivityResponseFields, type CatalogRow } from "@/lib/activity-catalog";
 import { loadCatalog } from "@/lib/report-data";
 import { applyAcceptedActivitySummaries, buildNationalActivityViews, buildOfficialNationalPayload, reportingYears, SOURCE_MONTH, SOURCE_YEAR } from "@/lib/export/epic-official";
-import { exportOfficialPdf } from "@/lib/export/epic-pdf";
+import { exportOfficialDocx } from "@/lib/export/epic-docx";
 import { ConsolidationActivities, type ActivitySummaryRow } from "@/components/consolidation-activities";
 
 export const Route = createFileRoute("/_authenticated/consolidation")({ component: Consolidation });
 
 function Consolidation() {
   const { t, lang } = useT();
-  const { role, user } = useAuth();
-  const isDirector = role === "technical_director";
+  const { role, user, can } = useAuth();
+  const nav = useNavigate();
+
+  useEffect(() => {
+    if (role === "technical_assistant" || role === "province_user") {
+      nav({ to: "/dashboard", replace: true });
+    }
+  }, [role, nav]);
+  const canWriteSummary = can("write_national_summary");
   const [month, setMonth] = useState(String(SOURCE_MONTH));
   const [year, setYear] = useState(String(SOURCE_YEAR));
   const [provinces, setProvinces] = useState<{ id: string; name: string }[]>([]);
@@ -143,13 +150,13 @@ function Consolidation() {
     [payload, aiSummary, activitySummaries],
   );
 
-  const exportPdf = async () => {
-    await exportOfficialPdf(exportPayload, lang, `epic-rdc-national-${year}-${String(month).padStart(2, "0")}.pdf`);
+  const exportDocx = async () => {
+    await exportOfficialDocx(exportPayload, lang, `epic-rdc-national-${year}-${String(month).padStart(2, "0")}.docx`);
     toast.success(t.pdfGenerated);
   };
 
   const generateSummary = async () => {
-    if (!isDirector) return;
+    if (!canWriteSummary) return;
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
     if (!token) {
@@ -191,7 +198,7 @@ function Consolidation() {
   };
 
   const saveSummary = async () => {
-    if (!isDirector || !user) return;
+    if (!canWriteSummary || !user) return;
     setSavingSummary(true);
     const { error } = await supabase.from("consolidation_summaries").upsert(
       {
@@ -227,7 +234,7 @@ function Consolidation() {
           <h1 className="text-3xl font-extrabold tracking-tight">{t.consolidation}</h1>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {isDirector && (
+          {canWriteSummary && (
             <Button
               variant="secondary"
               onClick={generateSummary}
@@ -237,7 +244,7 @@ function Consolidation() {
               {hasSummary ? t.regenerateAiSummary : t.generateAiSummary}
             </Button>
           )}
-          <Button onClick={exportPdf}><Download className="h-4 w-4 mr-1" />{t.export}</Button>
+          <Button onClick={exportDocx}><Download className="h-4 w-4 mr-1" />{t.export}</Button>
         </div>
       </div>
 
@@ -264,11 +271,11 @@ function Consolidation() {
         </CardContent>
       </Card>
 
-      {(isDirector || hasSummary) && (
+      {(canWriteSummary || hasSummary) && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
             <CardTitle>{t.aiSummaryTitle}</CardTitle>
-            {isDirector && aiSummaryDirty && (
+            {canWriteSummary && aiSummaryDirty && (
               <Button size="sm" variant="outline" onClick={saveSummary} disabled={savingSummary}>
                 {t.saveAiSummary}
               </Button>
@@ -278,7 +285,7 @@ function Consolidation() {
             <p className="text-sm text-muted-foreground">{t.aiSummaryHint}</p>
             {summaryLoading ? (
               <Skeleton className="h-32 w-full" />
-            ) : isDirector ? (
+            ) : canWriteSummary ? (
               <Textarea
                 rows={12}
                 value={aiSummary}
@@ -343,7 +350,7 @@ function Consolidation() {
             month={Number(month)}
             year={Number(year)}
             periodLabel={t.months[Number(month) - 1]}
-            isDirector={isDirector}
+            isDirector={canWriteSummary}
             onSummariesChange={onActivitySummariesChange}
           />
         </CardContent>

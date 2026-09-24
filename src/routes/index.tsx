@@ -263,7 +263,7 @@ const landingCopy = {
       secondaryCta: "Découvrir le parcours",
       stats: [
         { value: "FR / EN", label: "interface bilingue" },
-        { value: "PDF", label: "exports nationaux" },
+        { value: "Word", label: "exports nationaux" },
         { value: "Rôles", label: "province, AT et DT" },
       ],
     },
@@ -275,7 +275,7 @@ const landingCopy = {
       stories: [
         { tag: "Province", title: "Préparer et soumettre", text: "Les équipes provinciales complètent les activités du catalogue et envoient le rapport au DT." },
         { tag: "Revue", title: "Commenter et valider", text: "Les AT et le DT ouvrent chaque section, laissent des commentaires et approuvent le contenu." },
-        { tag: "National", title: "Consolider et exporter", text: "Les rapports validés alimentent la vue nationale, les résumés IA et l'export PDF officiel." },
+        { tag: "National", title: "Consolider et exporter", text: "Les rapports validés alimentent la vue nationale, les résumés IA et l'export Word officiel." },
       ],
     },
     overview: {
@@ -324,8 +324,8 @@ const landingCopy = {
     modules: [
       { title: "Tableau de bord", text: "Indicateurs, statuts provinciaux et tendances du mois en cours." },
       { title: "Rapports", text: "Création, édition, soumission et historique des rapports mensuels." },
-      { title: "Bureau DT", text: "File de revue, relances, commentaires et validations." },
-      { title: "Consolidation", text: "Vue nationale par code d'activité, résumé IA et export PDF officiel." },
+      { title: "Bureau AT", text: "File de revue, relances, commentaires et validations." },
+      { title: "Consolidation", text: "Vue nationale par code d'activité, résumé IA et export Word officiel." },
       { title: "Notifications", text: "Alertes de soumission, de retour et de validation." },
       { title: "Aide", text: "Guide utilisateur intégré, en français et en anglais." },
     ],
@@ -393,7 +393,7 @@ const landingCopy = {
       secondaryCta: "See the cycle",
       stats: [
         { value: "FR / EN", label: "bilingual interface" },
-        { value: "PDF", label: "national exports" },
+        { value: "Word", label: "national exports" },
         { value: "Roles", label: "province, TA and TD" },
       ],
     },
@@ -405,7 +405,7 @@ const landingCopy = {
       stories: [
         { tag: "Province", title: "Prepare and submit", text: "Provincial teams complete catalog activities and send the report to the TD." },
         { tag: "Review", title: "Comment and validate", text: "TAs and the TD open each section, leave comments, and approve the content." },
-        { tag: "National", title: "Consolidate and export", text: "Validated reports feed the national view, AI summaries, and the official PDF export." },
+        { tag: "National", title: "Consolidate and export", text: "Validated reports feed the national view, AI summaries, and the official Word export." },
       ],
     },
     overview: {
@@ -454,8 +454,8 @@ const landingCopy = {
     modules: [
       { title: "Dashboard", text: "Indicators, province statuses, and trends for the current month." },
       { title: "Reports", text: "Create, edit, submit, and review monthly report history." },
-      { title: "TD desk", text: "Review queue, reminders, comments, and validations." },
-      { title: "Consolidation", text: "National view by activity code, AI summary, and official PDF export." },
+      { title: "AT desk", text: "Review queue, reminders, comments, and validations." },
+      { title: "Consolidation", text: "National view by activity code, AI summary, and official Word export." },
       { title: "Notifications", text: "Alerts for submissions, returns, and approvals." },
       { title: "Help", text: "Built-in user guide, in French and English." },
     ],

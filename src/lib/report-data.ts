@@ -180,10 +180,11 @@ export async function persistExtendedReport(
   }
   for (const [section_type, content] of Object.entries(payload.narratives)) {
     if (!content && !EXTENDED_NARRATIVE_KEYS.includes(section_type as never)) continue;
-    await supabase.from("narratives").upsert(
+    const { error } = await supabase.from("narratives").upsert(
       { report_id: reportId, section_type, content: content || "" } as never,
       { onConflict: "report_id,section_type" },
     );
+    if (error) throw new Error(error.message);
   }
   if (payload.meta) {
     await supabase.from("reports").update(payload.meta as never).eq("id", reportId);

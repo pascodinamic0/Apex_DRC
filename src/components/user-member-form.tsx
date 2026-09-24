@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { AppRole } from "@/lib/auth";
 import {
+  defaultAccessLevelForRole,
   defaultDutiesForRole,
   dutiesForRole,
   type AccessLevel,
@@ -50,10 +51,12 @@ export function UserMemberForm({ form, setForm, provinces, showEmail = true, idP
   const dutiesDisabled = form.accessLevel === "view";
 
   const setRole = (role: AppRole) => {
+    const accessLevel = defaultAccessLevelForRole(role);
     setForm({
       ...form,
       role,
-      duties: defaultDutiesForRole(role),
+      accessLevel,
+      duties: accessLevel === "view" ? [] : defaultDutiesForRole(role),
       provinceId: role === "province_user" ? form.provinceId : "",
     });
   };
@@ -103,8 +106,9 @@ export function UserMemberForm({ form, setForm, provinces, showEmail = true, idP
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="province_user">{t.provinceUser}</SelectItem>
             <SelectItem value="technical_director">{t.director}</SelectItem>
+            <SelectItem value="technical_assistant">{t.technicalAssistant}</SelectItem>
+            <SelectItem value="province_user">{t.provinceUser}</SelectItem>
             <SelectItem value="read_only">{t.readOnly}</SelectItem>
           </SelectContent>
         </Select>
@@ -137,7 +141,11 @@ export function UserMemberForm({ form, setForm, provinces, showEmail = true, idP
       )}
       <div className="space-y-1.5">
         <Label>{t.accountLevel}</Label>
-        <Select value={form.accessLevel} onValueChange={(v) => setAccessLevel(v as AccessLevel)}>
+        <Select
+          value={form.accessLevel}
+          onValueChange={(v) => setAccessLevel(v as AccessLevel)}
+          disabled={form.role === "read_only"}
+        >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -150,6 +158,7 @@ export function UserMemberForm({ form, setForm, provinces, showEmail = true, idP
       <div className="space-y-2 sm:col-span-2">
         <Label>{t.dutiesLabel}</Label>
         <p className="text-xs text-muted-foreground">{dutiesDisabled ? t.dutiesViewOnlyHint : t.dutiesHint}</p>
+        {availableDuties.length === 0 ? null : (
         <div className="grid gap-2 sm:grid-cols-2">
           {availableDuties.map((duty) => (
             <label
@@ -167,6 +176,7 @@ export function UserMemberForm({ form, setForm, provinces, showEmail = true, idP
             </label>
           ))}
         </div>
+        )}
       </div>
     </div>
   );

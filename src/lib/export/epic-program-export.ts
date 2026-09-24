@@ -1,111 +1,199 @@
+import {
+  Document,
+  Footer,
+  Header,
+  HeadingLevel,
+  Packer,
+  PageBreak,
+  PageNumber,
+  Paragraph,
+  Table,
+  TableCell,
+  TableRow,
+  TextRun,
+  WidthType,
+} from "docx";
 import { EPIC_AGREEMENT, EPIC_PROJECT } from "./epic-official";
 import { downloadBlob } from "./consolidated-report";
 import type { loadProgramDataset } from "@/lib/epic-source/queries";
 
 type Dataset = Awaited<ReturnType<typeof loadProgramDataset>>;
 
-function pdfSafe(s: string) {
-  return (s || "")
-    .replace(/[\u2018\u2019]/g, "'")
-    .replace(/[\u201C\u201D]/g, '"')
-    .replace(/[\u2013\u2014]/g, "-")
-    .replace(/\u2026/g, "...")
-    .replace(/[^\x00-\xFF]/g, " ");
+const NAVY = "0F4C81";
+
+function headerCell(text: string): TableCell {
+  return new TableCell({
+    shading: { fill: NAVY },
+    children: [
+      new Paragraph({
+        children: [new TextRun({ text, bold: true, color: "FFFFFF", size: 18 })],
+      }),
+    ],
+  });
 }
 
-export async function exportProgramSourcePdf(data: Dataset, lang: "fr" | "en") {
-  const { default: jsPDF } = await import("jspdf");
-  const autoTable = (await import("jspdf-autotable")).default;
+function dataCell(text: string): TableCell {
+  return new TableCell({
+    children: [new Paragraph({ children: [new TextRun({ text, size: 18 })] })],
+  });
+}
+
+function sectionHeading(title: string): Paragraph {
+  return new Paragraph({
+    heading: HeadingLevel.HEADING_2,
+    spacing: { before: 240, after: 120 },
+    children: [new TextRun({ text: title, bold: true, color: NAVY, size: 24 })],
+  });
+}
+
+export async function exportProgramSourceDocx(data: Dataset, lang: "fr" | "en") {
   const period = data.period;
   if (!period) return;
-  const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
-  const title = lang === "en" ? "Semi-annual performance annex (source data)" : "Annexe de performance semestrielle (donnees sources)";
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.text(pdfSafe(title), 14, 14);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text(pdfSafe(`${period.dataset_label} — ${period.start_date} / ${period.end_date}`), 14, 21);
-  doc.text(pdfSafe(`${EPIC_PROJECT} — ${EPIC_AGREEMENT}`), 14, 26);
 
-  autoTable(doc, {
-    startY: 32,
-    head: [[
-      "Code",
-      lang === "en" ? "Indicator" : "Indicateur",
-      "N",
-      "D",
-      "%",
-      lang === "en" ? "Comment" : "Commentaire",
-    ]],
-    body: data.indicators.map((r) => [
-      pdfSafe(r.indicator_code),
-      pdfSafe(r.name),
-      r.numerator == null ? "—" : String(r.numerator),
-      r.denominator == null ? "—" : String(r.denominator),
-      r.reported_percent == null ? "—" : `${r.reported_percent}%`,
-      pdfSafe(r.comment || r.notes || ""),
-    ]),
-    styles: { fontSize: 7, cellPadding: 1.2, valign: "top" },
-    headStyles: { fillColor: [15, 76, 129], textColor: 255 },
-    margin: { left: 10, right: 10 },
+  const title =
+    lang === "en"
+      ? "Semi-annual performance annex (source data)"
+      : "Annexe de performance semestrielle (donnees sources)";
+  const storiesTitle =
+    lang === "en" ? "Field records / success stories" : "Recits de terrain / histoires de succes";
+
+  const doc = new Document({
+    sections: [
+      {
+        properties: {
+          page: {
+            size: { width: 16838, height: 11906, orientation: "landscape" },
+            margin: { top: 720, right: 720, bottom: 720, left: 720 },
+          },
+        },
+        headers: {
+          default: new Header({
+            children: [
+              new Paragraph({
+                children: [new TextRun({ text: `${EPIC_PROJECT} — ${EPIC_AGREEMENT}`, size: 16 })],
+              }),
+            ],
+          }),
+        },
+        footers: {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    children: [PageNumber.CURRENT, " / ", PageNumber.TOTAL_PAGES],
+                    size: 16,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        },
+        children: [
+          new Paragraph({
+            children: [new TextRun({ text: title, bold: true, size: 28 })],
+          }),
+          new Paragraph({
+            spacing: { after: 120 },
+            children: [
+              new TextRun({
+                text: `${period.dataset_label} — ${period.start_date} / ${period.end_date}`,
+                size: 20,
+              }),
+            ],
+          }),
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                children: [
+                  headerCell("Code"),
+                  headerCell(lang === "en" ? "Indicator" : "Indicateur"),
+                  headerCell("N"),
+                  headerCell("D"),
+                  headerCell("%"),
+                  headerCell(lang === "en" ? "Comment" : "Commentaire"),
+                ],
+              }),
+              ...data.indicators.map(
+                (r) =>
+                  new TableRow({
+                    children: [
+                      dataCell(r.indicator_code),
+                      dataCell(r.name),
+                      dataCell(r.numerator == null ? "—" : String(r.numerator)),
+                      dataCell(r.denominator == null ? "—" : String(r.denominator)),
+                      dataCell(r.reported_percent == null ? "—" : `${r.reported_percent}%`),
+                      dataCell(r.comment || r.notes || ""),
+                    ],
+                  }),
+              ),
+            ],
+          }),
+          new Paragraph({ children: [new PageBreak()] }),
+          sectionHeading("GHS"),
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                children: [
+                  headerCell("Code"),
+                  headerCell(lang === "en" ? "Indicator" : "Indicateur"),
+                  headerCell(lang === "en" ? "Total" : "Total"),
+                  headerCell(lang === "en" ? "Male" : "Hommes"),
+                  headerCell(lang === "en" ? "Female" : "Femmes"),
+                  headerCell(lang === "en" ? "Notes" : "Notes"),
+                ],
+              }),
+              ...data.ghs.map(
+                (g) =>
+                  new TableRow({
+                    children: [
+                      dataCell(g.ghs_indicator_code),
+                      dataCell(g.name),
+                      dataCell(
+                        g.total_value == null
+                          ? g.planned_later
+                            ? lang === "en"
+                              ? "Later"
+                              : "A venir"
+                            : "—"
+                          : String(g.total_value),
+                      ),
+                      dataCell(g.male_count == null ? "—" : String(g.male_count)),
+                      dataCell(g.female_count == null ? "—" : String(g.female_count)),
+                      dataCell(g.notes || ""),
+                    ],
+                  }),
+              ),
+            ],
+          }),
+        ],
+      },
+      {
+        properties: {
+          page: { margin: { top: 720, right: 720, bottom: 720, left: 720 } },
+        },
+        children: [
+          sectionHeading(storiesTitle),
+          ...data.stories.flatMap((s) => [
+            new Paragraph({
+              spacing: { before: 200, after: 80 },
+              children: [new TextRun({ text: s.title, bold: true, size: 22 })],
+            }),
+            ...s.body.split(/\n+/).map(
+              (line) =>
+                new Paragraph({
+                  spacing: { after: 80 },
+                  children: [new TextRun({ text: line, size: 20 })],
+                }),
+            ),
+          ]),
+        ],
+      },
+    ],
   });
 
-  doc.addPage("a4", "landscape");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text("GHS", 14, 14);
-  autoTable(doc, {
-    startY: 18,
-    head: [[
-      "Code",
-      lang === "en" ? "Indicator" : "Indicateur",
-      lang === "en" ? "Total" : "Total",
-      lang === "en" ? "Male" : "Hommes",
-      lang === "en" ? "Female" : "Femmes",
-      lang === "en" ? "Notes" : "Notes",
-    ]],
-    body: data.ghs.map((g) => [
-      pdfSafe(g.ghs_indicator_code),
-      pdfSafe(g.name),
-      g.total_value == null ? (g.planned_later ? (lang === "en" ? "Later" : "A venir") : "—") : String(g.total_value),
-      g.male_count == null ? "—" : String(g.male_count),
-      g.female_count == null ? "—" : String(g.female_count),
-      pdfSafe(g.notes || ""),
-    ]),
-    styles: { fontSize: 7, cellPadding: 1.2 },
-    headStyles: { fillColor: [15, 76, 129], textColor: 255 },
-    margin: { left: 10, right: 10 },
-  });
-
-  doc.addPage("a4", "portrait");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text(pdfSafe(lang === "en" ? "Field records / success stories" : "Recits de terrain / histoires de succes"), 14, 18);
-  let y = 26;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  for (const s of data.stories) {
-    if (y > 250) {
-      doc.addPage("a4", "portrait");
-      y = 18;
-    }
-    doc.setFont("helvetica", "bold");
-    const titleLines = doc.splitTextToSize(pdfSafe(s.title), 182) as string[];
-    doc.text(titleLines, 14, y);
-    y += titleLines.length * 5 + 2;
-    doc.setFont("helvetica", "normal");
-    const body = doc.splitTextToSize(pdfSafe(s.body), 182) as string[];
-    for (const line of body) {
-      if (y > 280) {
-        doc.addPage("a4", "portrait");
-        y = 18;
-      }
-      doc.text(line, 14, y);
-      y += 4.4;
-    }
-    y += 6;
-  }
-
-  downloadBlob(doc.output("blob"), `epic-source-${period.code}.pdf`);
+  const blob = await Packer.toBlob(doc);
+  downloadBlob(blob, `epic-source-${period.code}.docx`);
 }

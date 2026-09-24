@@ -80,7 +80,7 @@ function MonthYearSelect({
   );
 }
 
-function PeriodFilters({
+export function PeriodFilters({
   period,
   years,
   months,

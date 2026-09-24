@@ -61,7 +61,7 @@ function EditPage() {
       initialCatalog={catalog}
       readOnly={false}
       isProvinceUser={isMine}
-      isDirector={false}
+      canValidateReports={false}
       showExport={isMine}
       provinceLabel={provinceName}
       onAfterAction={() => nav({ to: "/reports/$reportId", params: { reportId } })}

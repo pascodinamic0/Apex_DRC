@@ -471,7 +471,7 @@ export type Database = {
         | "write_national_summary"
         | "manage_users"
         | "manage_provinces"
-      app_role: "province_user" | "technical_director" | "read_only"
+      app_role: "province_user" | "technical_director" | "technical_assistant" | "read_only"
       narrative_section:
         | "stakeholder_coordination"
         | "success_stories"
@@ -618,7 +618,7 @@ export const Constants = {
         "manage_users",
         "manage_provinces",
       ],
-      app_role: ["province_user", "technical_director", "read_only"],
+      app_role: ["province_user", "technical_director", "technical_assistant", "read_only"],
       narrative_section: [
         "stakeholder_coordination",
         "success_stories",

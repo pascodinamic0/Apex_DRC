@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Lang } from "@/lib/i18n";
 import { canWithDuties, type AccessLevel, type AppDuty } from "@/lib/auth/duties";
 
-export type AppRole = "province_user" | "technical_director" | "read_only";
+export type AppRole = "province_user" | "technical_director" | "technical_assistant" | "read_only";
 
 export interface Profile {
   id: string;

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { isNationalRole } from "@/lib/auth/duties";
 import { supabase } from "@/integrations/supabase/client";
 import { ReportEditor, loadReportData, type ActivityRow, type Narratives, type ReportData } from "@/components/report-editor";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/reports/$reportId/")({ com
 
 function ViewPage() {
   const { reportId } = Route.useParams();
-  const { role, profile } = useAuth();
+  const { role, profile, can } = useAuth();
   const nav = useNavigate();
   const [report, setReport] = useState<ReportData | null>(null);
   const [activities, setActivities] = useState<ActivityRow[]>([]);
@@ -41,9 +42,9 @@ function ViewPage() {
     );
   }
 
-  const isDirector = role === "technical_director";
+  const canValidate = can("validate_reports");
   const isMine = role === "province_user" && report.province_id === profile?.province_id;
-  const canExport = isDirector || isMine || role === "read_only";
+  const canExport = canValidate || isMine || isNationalRole(role);
 
   return (
     <ReportEditor
@@ -55,7 +56,7 @@ function ViewPage() {
       initialCatalog={catalog}
       readOnly={true}
       isProvinceUser={isMine}
-      isDirector={isDirector}
+      canValidateReports={canValidate}
       showExport={canExport}
       provinceLabel={provinceName}
       onAfterAction={() => nav({ to: "/reports" })}

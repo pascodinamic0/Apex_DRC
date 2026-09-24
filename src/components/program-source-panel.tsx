@@ -17,7 +17,7 @@ import {
   type AggregateResultRow,
   type IndicatorResultRow,
 } from "@/lib/epic-source/queries";
-import { exportProgramSourcePdf } from "@/lib/export/epic-program-export";
+import { exportProgramSourceDocx } from "@/lib/export/epic-program-export";
 
 function ProvenanceBadge({ level }: { level: string }) {
   const { t } = useT();
@@ -130,7 +130,7 @@ export function ProgramSourcePanel() {
               </SelectContent>
             </Select>
           </div>
-          <Button size="sm" onClick={async () => { await exportProgramSourcePdf(data, lang); toast.success(t.pdfGenerated); }}>
+          <Button size="sm" onClick={async () => { await exportProgramSourceDocx(data, lang); toast.success(t.pdfGenerated); }}>
             <Download className="h-4 w-4 mr-1" />{t.export}
           </Button>
         </div>

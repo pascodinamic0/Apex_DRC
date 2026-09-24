@@ -11,7 +11,7 @@ import { Save, Send, Download, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { queueDraft } from "@/lib/offline/draft-queue";
-import { exportOfficialPdf } from "@/lib/export/epic-pdf";
+import { exportOfficialDocx } from "@/lib/export/epic-docx";
 import { buildOfficialMonthlyPayload } from "@/lib/export/epic-official";
 import { AchievementTable } from "@/components/achievement-table";
 import { ObjectiveActivities } from "@/components/objective-activities";
@@ -25,6 +25,7 @@ import {
 import { persistExtendedReport, type ReportMeta } from "@/lib/report-data";
 import { loadExtendedReportData } from "@/lib/report-data";
 import { ReportMediaPanel } from "@/components/report-media";
+import { activityTarget, commentMatches, fieldTarget } from "@/components/report-review-panel";
 import { photosForPdf } from "@/lib/report-photos";
 
 export interface ActivityRow {
@@ -58,7 +59,7 @@ export function ReportEditor({
   initialCatalog,
   readOnly,
   isProvinceUser,
-  isDirector,
+  canValidateReports = false,
   onAfterAction,
   showExport = false,
   provinceLabel = "",
@@ -71,12 +72,13 @@ export function ReportEditor({
   initialCatalog?: CatalogRow[];
   readOnly: boolean;
   isProvinceUser: boolean;
-  isDirector: boolean;
+  canValidateReports?: boolean;
   onAfterAction?: () => void;
   showExport?: boolean;
   provinceLabel?: string;
 }) {
   const { t, lang } = useT();
+  const [openNotes, setOpenNotes] = useState<{ id: string; section_key: string; body: string }[]>([]);
   const [narratives, setNarratives] = useState<Narratives>(initialNarratives);
   const [achievement, setAchievement] = useState<AchievementSummary>(initialAchievement || emptyAchievementSummary());
   const [activityResponses, setActivityResponses] = useState<ActivityResponseFields[]>(initialActivityResponses || []);
@@ -160,17 +162,37 @@ export function ReportEditor({
     );
   };
 
-  const renderNarrative = (key: string, label: string) => (
-    <div className="space-y-2">
-      <span className="text-sm font-medium">{label}</span>
-      <Textarea
-        rows={5}
-        value={narratives[key] || ""}
-        disabled={readOnly}
-        onChange={(e) => setNarratives({ ...narratives, [key]: e.target.value })}
-      />
-    </div>
+  useEffect(() => {
+    supabase.from("report_comments").select("id, section_key, body").eq("report_id", report.id).is("resolved_at", null)
+      .then(({ data }) => setOpenNotes((data || []) as { id: string; section_key: string; body: string }[]));
+  }, [report.id, report.status]);
+
+  const notesFor = (target: string) => openNotes.filter((c) => commentMatches(c.section_key, target));
+  const showFlags = isProvinceUser && report.status !== "validated";
+  const flaggedCodes = new Set(
+    catalog.filter((row) => showFlags && notesFor(activityTarget(row.code)).length).map((row) => row.code),
   );
+
+  const renderNarrative = (key: string, label: string) => {
+    const notes = showFlags ? notesFor(fieldTarget(key)) : [];
+    const flagged = notes.length > 0;
+    return (
+      <div className={`space-y-2 rounded-md p-2 ${flagged ? "border border-red-500 bg-red-50 dark:bg-red-950/30" : ""}`}>
+        <span className={`text-sm font-medium ${flagged ? "text-red-700" : ""}`}>{label}</span>
+        {flagged && <p className="text-xs font-medium text-red-700">{t.fixThisSpot}</p>}
+        {notes.map((note) => (
+          <p key={note.id} className="text-sm text-red-800 dark:text-red-100">{note.body}</p>
+        ))}
+        <Textarea
+          rows={5}
+          value={narratives[key] || ""}
+          disabled={readOnly}
+          onChange={(e) => setNarratives({ ...narratives, [key]: e.target.value })}
+          className={flagged ? "border-red-500" : ""}
+        />
+      </div>
+    );
+  };
 
   const statusCls: Record<string, string> = {
     draft: "bg-muted text-muted-foreground",
@@ -200,12 +222,12 @@ export function ReportEditor({
       narratives,
     });
 
-  const exportReportPdf = async () => {
+  const exportReportDocx = async () => {
     const photos = await photosForPdf(report.id);
-    await exportOfficialPdf(
+    await exportOfficialDocx(
       { ...officialPayload(), photos },
       lang,
-      `epic-report-${provinceLabel || "province"}-${report.year}-${String(report.month).padStart(2, "0")}.pdf`,
+      `epic-report-${provinceLabel || "province"}-${report.year}-${String(report.month).padStart(2, "0")}.docx`,
     );
     toast.success(t.pdfGenerated);
   };
@@ -224,6 +246,11 @@ export function ReportEditor({
             <Button size="sm" variant="outline" asChild>
               <Link to="/reports/$reportId/revisions" params={{ reportId: report.id }}>{t.viewComments}</Link>
             </Button>
+            {readOnly && (
+              <Button size="sm" asChild>
+                <Link to="/reports/$reportId/edit" params={{ reportId: report.id }}>{t.editReportAgain}</Link>
+              </Button>
+            )}
           </AlertDescription>
         </Alert>
       )}
@@ -245,11 +272,11 @@ export function ReportEditor({
         </div>
         <div className="flex gap-2 flex-wrap">
           {showExport && (
-            <Button variant="outline" size="sm" onClick={exportReportPdf}>
+            <Button variant="outline" size="sm" onClick={exportReportDocx}>
               <Download className="h-4 w-4 mr-1" />{t.export}
             </Button>
           )}
-          {isDirector && (report.status === "submitted" || report.status === "in_review") && (
+          {canValidateReports && (report.status === "submitted" || report.status === "in_review") && (
             <Button size="sm" asChild>
               <Link to="/reports/$reportId/review" params={{ reportId: report.id }}>{t.reviewReport}</Link>
             </Button>
@@ -323,6 +350,17 @@ export function ReportEditor({
                   responses={activityResponses}
                   onChange={updateResponse}
                   readOnly={readOnly}
+                  flaggedCodes={flaggedCodes}
+                  renderTaskExtra={(code) => {
+                    const notes = showFlags ? notesFor(activityTarget(code)) : [];
+                    if (!notes.length) return null;
+                    return (
+                      <div className="mb-3 space-y-1 rounded-md border border-red-500 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-100">
+                        <p className="text-xs font-medium text-red-700">{t.fixThisSpot}</p>
+                        {notes.map((note) => <p key={note.id}>{note.body}</p>)}
+                      </div>
+                    );
+                  }}
                 />
               </CardContent>
             </Card>

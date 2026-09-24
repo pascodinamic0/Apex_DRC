@@ -5,21 +5,20 @@ import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ReportReviewPanel, buildReviewSections } from "@/components/report-review-panel";
+import { ReportReviewPanel, type ReviewSubmission } from "@/components/report-review-panel";
 import { loadExtendedReportData } from "@/lib/report-data";
-import { calcAchievementRate } from "@/lib/activity-catalog";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/reports/$reportId/revisions")({ component: RevisionsPage });
 
 function RevisionsPage() {
   const { reportId } = Route.useParams();
-  const { profile, role } = useAuth();
-  const { t, lang } = useT();
+  const { profile, role, can } = useAuth();
+  const { t } = useT();
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState<{ id: string; province_id: string; month: number; year: number; status: string } | null>(null);
   const [provinceName, setProvinceName] = useState("");
-  const [sections, setSections] = useState<ReturnType<typeof buildReviewSections>>([]);
+  const [submission, setSubmission] = useState<ReviewSubmission | null>(null);
   const [tick, setTick] = useState(0);
 
   const load = async () => {
@@ -27,20 +26,24 @@ function RevisionsPage() {
     setReport(d.report);
     const { data: pv } = await supabase.from("provinces").select("name").eq("id", d.report.province_id).maybeSingle();
     setProvinceName(pv?.name || "");
-    const rate = calcAchievementRate(d.achievement);
-    const preview = `${d.achievement.total_planned} ${t.achTotalPlanned.toLowerCase()} · ${rate}%`;
-    setSections(buildReviewSections(d.narratives, preview, lang));
+    setSubmission({
+      narratives: d.narratives,
+      achievement: d.achievement,
+      catalog: d.catalog,
+      activityResponses: d.activityResponses,
+    });
     setLoading(false);
   };
 
   useEffect(() => { load(); }, [reportId, tick]);
 
-  if (loading || !report) {
+  if (loading || !report || !submission) {
     return <div className="max-w-4xl mx-auto"><Skeleton className="h-10 w-64 mb-4" /><Skeleton className="h-96" /></div>;
   }
 
   const isMine = role === "province_user" && report.province_id === profile?.province_id;
-  if (!isMine && role !== "technical_director") {
+  const canValidate = can("validate_reports");
+  if (!isMine && !canValidate) {
     return <p className="text-muted-foreground">{t.noAccess}</p>;
   }
 
@@ -59,8 +62,8 @@ function RevisionsPage() {
             reportId={reportId}
             provinceId={report.province_id}
             reportStatus={report.status}
-            sections={sections}
-            mode="cp"
+            submission={submission}
+            mode={canValidate ? "dt" : "cp"}
             onStatusChange={() => setTick((x) => x + 1)}
           />
         </CardContent>

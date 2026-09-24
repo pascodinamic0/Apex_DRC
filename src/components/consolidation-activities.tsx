@@ -55,8 +55,8 @@ export function ConsolidationActivities({
   onSummariesChange,
 }: Props) {
   const { t, lang } = useT();
-  const { user, role, profile } = useAuth();
-  const canComment = role === "technical_director" || role === "read_only";
+  const { user, can, profile } = useAuth();
+  const canComment = can("comment_consolidation");
   const [openCode, setOpenCode] = useState<string | null>(null);
   const [summaries, setSummaries] = useState<Record<string, ActivitySummaryRow>>({});
   const [comments, setComments] = useState<CommentRow[]>([]);

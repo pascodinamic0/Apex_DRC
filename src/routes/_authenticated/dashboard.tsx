@@ -1,13 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { isNationalRole } from "@/lib/auth/duties";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DashboardCharts } from "@/components/dashboard-charts";
 import { NationalAnalytics } from "@/components/national-analytics";
+import { AtValidationDashboard } from "@/components/at-validation-dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Layers, Users } from "lucide-react";
 import {
   createDefaultPeriodSelection,
   filterReportsInPeriod,
@@ -33,7 +37,7 @@ interface ReportRow {
 
 function Dashboard() {
   const { t } = useT();
-  const { role, profile } = useAuth();
+  const { role, profile, can } = useAuth();
   const [period, setPeriod] = useState<PeriodSelection>(() =>
     createDefaultPeriodSelection(SOURCE_MONTH, SOURCE_YEAR),
   );
@@ -44,7 +48,9 @@ function Dashboard() {
 
   const years = reportingYears();
   const isProvinceUser = role === "province_user";
-  const showNational = role === "technical_director" || role === "read_only";
+  const isAt = role === "technical_assistant";
+  const isDt = role === "technical_director";
+  const showNational = isNationalRole(role) && !isAt;
 
   useEffect(() => {
     (async () => {
@@ -104,14 +110,53 @@ function Dashboard() {
     return <Badge variant="outline" className={map[s]}>{lbl[s]}</Badge>;
   };
 
+  if (isAt) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <AtValidationDashboard />
+      </div>
+    );
+  }
+
   if (showNational) {
     return (
       <div className="space-y-6 max-w-7xl mx-auto">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">FHI 360</p>
-          <h1 className="text-3xl font-extrabold tracking-tight">{t.dashboard}</h1>
-          <p className="text-muted-foreground">{t.monthlyWorkflow}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            {isDt ? t.director : "FHI 360"}
+          </p>
+          <h1 className="text-3xl font-extrabold tracking-tight">
+            {isDt ? t.dtDashboardTitle : t.dashboard}
+          </h1>
+          <p className="text-muted-foreground">
+            {isDt ? t.dtDashboardSubtitle : t.monthlyWorkflow}
+          </p>
         </div>
+
+        {isDt && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">{t.dtQuickActions}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/consolidation">
+                  <Layers className="h-4 w-4 mr-1" />
+                  {t.goToConsolidation}
+                </Link>
+              </Button>
+              {can("manage_users") && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/users">
+                    <Users className="h-4 w-4 mr-1" />
+                    {t.manageTeam}
+                  </Link>
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         <NationalAnalytics
           period={period}
           onPeriodChange={setPeriod}

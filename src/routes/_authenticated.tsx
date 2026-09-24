@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
+import { navGroupsForRole } from "@/lib/auth/navigation";
 import { useT } from "@/lib/i18n";
 import { NotificationBell } from "@/components/notification-bell";
 import { SidebarUserMenu } from "@/components/sidebar-user-menu";
@@ -11,6 +12,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -21,7 +23,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { BrandLogo, BrandMark } from "@/components/brand-logo";
-import { LayoutDashboard, FileText, Layers, Archive, Users, WifiOff, Wifi, ClipboardList } from "lucide-react";
+import { WifiOff, Wifi } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getPendingCount, replayDraftQueue, type QueuedDraft } from "@/lib/offline/draft-queue";
 import { toast } from "sonner";
@@ -29,7 +31,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated")({ component: Layout });
 
 function Layout() {
-  const { user, loading, profile, role } = useAuth();
+  const { user, loading, profile, role, can } = useAuth();
   const { t } = useT();
   const nav = useNavigate();
   const loc = useLocation();
@@ -108,60 +110,68 @@ function Layout() {
     );
   }
 
-  const items = [
-    { to: "/dashboard", icon: LayoutDashboard, label: t.dashboard },
-    { to: "/reports", icon: FileText, label: t.reports },
-    ...(role === "technical_director" || role === "read_only"
-      ? [{ to: "/desk", icon: ClipboardList, label: t.desk }]
-      : []),
-    ...(role !== "province_user" ? [{ to: "/consolidation", icon: Layers, label: t.consolidation }] : []),
-    { to: "/history", icon: Archive, label: t.history },
-    ...(role === "technical_director" ? [{ to: "/users", icon: Users, label: t.users }] : []),
-  ];
+  const isAt = role === "technical_assistant";
+  const navGroups = navGroupsForRole(role, can, t);
 
   const roleLabel =
     role === "technical_director"
       ? (profile?.job_title || t.director)
-      : role === "province_user"
-        ? t.provinceUser
-        : t.readOnly;
+      : role === "technical_assistant"
+        ? (profile?.job_title || t.technicalAssistant)
+        : role === "province_user"
+          ? t.provinceUser
+          : t.readOnly;
 
   return (
     <SidebarProvider defaultOpen>
-      <Sidebar collapsible="icon">
-        <SidebarHeader className="border-b border-sidebar-border">
+      <Sidebar
+        collapsible="icon"
+        className={isAt ? "border-r border-blue-500/20 [&_[data-sidebar=sidebar]]:bg-gradient-to-b from-blue-500/[0.03] to-transparent" : undefined}
+      >
+        <SidebarHeader className={`border-b ${isAt ? "border-blue-500/20" : "border-sidebar-border"}`}>
           <div className="flex items-center gap-2 px-2 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
             <BrandMark className="hidden h-7 w-5 group-data-[collapsible=icon]:block" />
             <BrandLogo className="h-8 w-auto shrink-0 group-data-[collapsible=icon]:hidden" />
             <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
               <span className="truncate font-semibold">{t.appName}</span>
-              <span className="truncate text-xs text-muted-foreground">{t.tagline}</span>
+              <span className={`truncate text-xs ${isAt ? "text-blue-700 dark:text-blue-300" : "text-muted-foreground"}`}>
+                {isAt ? t.atSidebarHint : role === "technical_director" ? t.dtSidebarHint : t.tagline}
+              </span>
             </div>
           </div>
         </SidebarHeader>
 
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {items.map((it) => (
-                  <SidebarMenuItem key={it.to}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={loc.pathname.startsWith(it.to)}
-                      tooltip={it.label}
-                      className="data-[active=true]:bg-primary/10 data-[active=true]:text-primary"
-                    >
-                      <Link to={it.to}>
-                        <it.icon />
-                        <span>{it.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {navGroups.map((group) => (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel className={isAt ? "text-blue-600/80 dark:text-blue-400/80" : undefined}>
+                {group.label}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((it) => (
+                    <SidebarMenuItem key={it.to}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={it.exact ? loc.pathname === it.to : loc.pathname.startsWith(it.to)}
+                        tooltip={it.label}
+                        className={
+                          isAt
+                            ? "data-[active=true]:bg-blue-500/15 data-[active=true]:text-blue-700 dark:data-[active=true]:text-blue-300"
+                            : "data-[active=true]:bg-primary/10 data-[active=true]:text-primary"
+                        }
+                      >
+                        <Link to={it.to}>
+                          <it.icon />
+                          <span>{it.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
         </SidebarContent>
 
         <SidebarFooter className="border-t border-sidebar-border">
@@ -180,7 +190,11 @@ function Layout() {
           </div>
         )}
 
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-t-4 border-t-primary bg-card px-4">
+        <header
+          className={`flex h-14 shrink-0 items-center gap-2 border-b border-t-4 bg-card px-4 ${
+            isAt ? "border-t-blue-500" : "border-t-primary"
+          }`}
+        >
           <SidebarTrigger />
           <BrandLogo className="h-7 md:hidden" />
           <div className="flex-1 truncate font-semibold md:hidden">{t.appName}</div>

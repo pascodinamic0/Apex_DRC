@@ -4,6 +4,7 @@
  * Requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env
  */
 import { createClient } from "@supabase/supabase-js";
+import { defaultAccessLevelForRole, defaultDutiesForRole } from "../src/lib/auth/duties";
 
 const DEMO_PASSWORD = "Demo1234!";
 
@@ -12,7 +13,7 @@ const DEMO_USERS = [
   { email: "kinshasa@epic.cd", fullName: "CP Kinshasa", role: "province_user" as const, provinceCode: "kin" },
   { email: "lualaba@epic.cd", fullName: "CP Lualaba", role: "province_user" as const, provinceCode: "lualaba" },
   { email: "viewer@epic.cd", fullName: "Lecteur", role: "read_only" as const },
-  { email: "at@epic.cd", fullName: "Assistant Technique", role: "read_only" as const, jobTitle: "Assistant Technique" },
+  { email: "at@epic.cd", fullName: "Assistant Technique", role: "technical_assistant" as const, jobTitle: "Assistant Technique" },
 ];
 
 async function main() {
@@ -78,10 +79,17 @@ async function main() {
       full_name: demo.fullName,
       province_id: provinceId,
       job_title: demo.jobTitle ?? null,
+      access_level: defaultAccessLevelForRole(demo.role),
     });
 
     await sb.from("user_roles").delete().eq("user_id", userId);
     await sb.from("user_roles").insert({ user_id: userId, role: demo.role });
+
+    await sb.from("user_duties").delete().eq("user_id", userId);
+    const duties = defaultDutiesForRole(demo.role);
+    if (duties.length) {
+      await sb.from("user_duties").insert(duties.map((duty) => ({ user_id: userId, duty })));
+    }
   }
 
   console.log("\nDone. Log in with any demo email and password:", DEMO_PASSWORD);

@@ -48,7 +48,7 @@ export async function getStaffNotifierIds(): Promise<string[]> {
     const { data: fallback } = await supabase
       .from("user_roles")
       .select("user_id")
-      .in("role", ["technical_director", "read_only"]);
+      .in("role", ["technical_director", "technical_assistant"]);
     return (fallback || []).map((r) => r.user_id);
   }
   return (data as string[]) || [];

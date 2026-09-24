@@ -28,9 +28,11 @@ function ProfilePage() {
   const roleLabel =
     role === "technical_director"
       ? (profile?.job_title || t.director)
-      : role === "province_user"
-        ? t.provinceUser
-        : t.readOnly;
+      : role === "technical_assistant"
+        ? (profile?.job_title || t.technicalAssistant)
+        : role === "province_user"
+          ? t.provinceUser
+          : t.readOnly;
 
   useEffect(() => {
     if (profile) {

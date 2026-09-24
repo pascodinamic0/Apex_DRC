@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/history")({ component: His
 
 function History() {
   const { t } = useT();
+  const { role } = useAuth();
+  const isAt = role === "technical_assistant";
   const [year, setYear] = useState<string>(String(SOURCE_YEAR));
   const [provinceId, setProvinceId] = useState<string>("all");
   const [provinces, setProvinces] = useState<any[]>([]);
@@ -32,9 +35,16 @@ function History() {
     })();
   }, []);
 
-  const filtered = useMemo(() => reports.filter((r) =>
-    String(r.year) === year && (provinceId === "all" || r.province_id === provinceId)
-  ), [reports, year, provinceId]);
+  const filtered = useMemo(
+    () =>
+      reports.filter(
+        (r) =>
+          String(r.year) === year &&
+          (provinceId === "all" || r.province_id === provinceId) &&
+          (!isAt || r.status === "validated"),
+      ),
+    [reports, year, provinceId, isAt],
+  );
 
   const provinceName = (id: string) => provinces.find((p) => p.id === id)?.name || "—";
   const cls: Record<string, string> = {
@@ -46,7 +56,15 @@ function History() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold tracking-tight">{t.history}</h1>
+      <div>
+        {isAt && (
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400 mb-1">
+            {t.technicalAssistant}
+          </p>
+        )}
+        <h1 className="text-3xl font-bold tracking-tight">{isAt ? t.atValidatedArchive : t.history}</h1>
+        {isAt && <p className="text-muted-foreground mt-1">{t.atValidatedArchiveHint}</p>}
+      </div>
       <Card>
         <CardContent className="flex flex-wrap gap-4 p-4">
           <div className="space-y-1">

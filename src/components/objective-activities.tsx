@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useT } from "@/lib/i18n";
 import { OBJECTIVE_PARENTS, type ActivityResponseFields, type CatalogRow } from "@/lib/activity-catalog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -11,11 +12,13 @@ type Props = {
   responses: ActivityResponseFields[];
   onChange: (code: string, field: keyof Omit<ActivityResponseFields, "catalog_code">, value: string) => void;
   readOnly?: boolean;
+  flaggedCodes?: Set<string>;
+  renderTaskExtra?: (code: string) => ReactNode;
 };
 
 const FIELD_KEYS = ["realized", "progress", "challenges", "solutions", "priorities", "partners"] as const;
 
-export function ObjectiveActivities({ objective, catalog, responses, onChange, readOnly }: Props) {
+export function ObjectiveActivities({ objective, catalog, responses, onChange, readOnly, flaggedCodes, renderTaskExtra }: Props) {
   const { t, lang } = useT();
   const parents = OBJECTIVE_PARENTS[objective] || [];
   const byCode = new Map(responses.map((r) => [r.catalog_code, r]));
@@ -42,7 +45,7 @@ export function ObjectiveActivities({ objective, catalog, responses, onChange, r
             <p className="text-sm font-semibold text-primary bg-primary/5 rounded-md px-3 py-2 border-l-2 border-primary">
               {lang === "en" ? parent.titleEn : parent.titleFr}
             </p>
-            <Accordion type="multiple" className="w-full">
+            <Accordion type="multiple" defaultValue={[...items.map((item) => item.code)].filter((code) => flaggedCodes?.has(code))} className="w-full">
               {items.map((item) => {
                 const row = byCode.get(item.code) || {
                   catalog_code: item.code,
@@ -55,13 +58,16 @@ export function ObjectiveActivities({ objective, catalog, responses, onChange, r
                 };
                 const title = lang === "en" ? item.title_en : item.title_fr;
                 return (
-                  <AccordionItem key={item.code} value={item.code} className="border rounded-md px-3 mb-2">
+                  <AccordionItem key={item.code} value={item.code} className={`border rounded-md px-3 mb-2 ${flaggedCodes?.has(item.code) ? "border-red-500 bg-red-50 dark:bg-red-950/30" : ""}`}>
                     <AccordionTrigger className="hover:no-underline py-3">
                       <div className="flex items-start gap-2 text-left flex-1 min-w-0">
-                        <Badge variant="outline" className="shrink-0 font-mono text-xs">
+                        <Badge variant="outline" className={`shrink-0 font-mono text-xs ${flaggedCodes?.has(item.code) ? "border-red-500 text-red-700" : ""}`}>
                           {item.code}
                         </Badge>
                         <span className="text-sm leading-snug">{title}</span>
+                        {flaggedCodes?.has(item.code) && (
+                          <Badge variant="destructive" className="shrink-0">{t.fixThisSpot}</Badge>
+                        )}
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
@@ -81,6 +87,7 @@ export function ObjectiveActivities({ objective, catalog, responses, onChange, r
                           </div>
                         ))}
                       </div>
+                      {renderTaskExtra?.(item.code)}
                     </AccordionContent>
                   </AccordionItem>
                 );

@@ -217,9 +217,18 @@ function UsersPage() {
 
   const provinceName = (id: string | null) => provinces.find((p) => p.id === id)?.name || "—";
   const roleLabel = (r: string | null) =>
-    r === "technical_director" ? t.director : r === "read_only" ? t.readOnly : r === "province_user" ? t.provinceUser : "—";
+    r === "technical_director"
+      ? t.director
+      : r === "technical_assistant"
+        ? t.technicalAssistant
+        : r === "read_only"
+          ? t.readOnly
+          : r === "province_user"
+            ? t.provinceUser
+            : "—";
   const roleClass = (r: string | null) => {
     if (r === "technical_director") return "border-primary/20 bg-primary/10 text-primary";
+    if (r === "technical_assistant") return "border-blue-500/20 bg-blue-500/10 text-blue-800 dark:text-blue-200";
     if (r === "province_user") return "border-transparent bg-secondary text-secondary-foreground";
     return "border-transparent bg-muted text-muted-foreground";
   };

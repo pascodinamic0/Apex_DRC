@@ -10,7 +10,7 @@ import {
 } from "@/lib/auth/duties";
 import type { AppRole } from "@/lib/auth";
 
-const roleSchema = z.enum(["province_user", "technical_director", "read_only"]);
+const roleSchema = z.enum(["province_user", "technical_director", "technical_assistant", "read_only"]);
 const accessLevelSchema = z.enum(["edit", "view"]);
 const dutySchema = z.enum([
   "edit_reports",
@@ -41,6 +41,11 @@ const patchSchema = z.object({
   accessLevel: accessLevelSchema.optional(),
   duties: z.array(dutySchema).optional(),
 });
+
+function resolveAccessLevel(role: AppRole, accessLevel: AccessLevel): AccessLevel {
+  if (role === "read_only") return "view";
+  return accessLevel;
+}
 
 function resolveDuties(role: AppRole, accessLevel: AccessLevel, duties?: AppDuty[]): AppDuty[] {
   if (accessLevel === "view") return [];
@@ -116,7 +121,7 @@ export const Route = createFileRoute("/api/admin/users")({
         if (!uid) return new Response("Forbidden", { status: 403 });
         const body = await request.json();
         const input = inviteSchema.parse(body);
-        const accessLevel = input.accessLevel;
+        const accessLevel = resolveAccessLevel(input.role, input.accessLevel);
         const duties = resolveDuties(input.role, accessLevel, input.duties as AppDuty[] | undefined);
         const dutyErr = validateDutiesForRole(input.role, duties);
         if (dutyErr) return new Response(dutyErr, { status: 400 });
@@ -165,7 +170,10 @@ export const Route = createFileRoute("/api/admin/users")({
           .select("access_level, province_id")
           .eq("id", input.userId)
           .maybeSingle();
-        const nextAccess = (input.accessLevel ?? existingProfile?.access_level ?? "edit") as AccessLevel;
+        const nextAccess = resolveAccessLevel(
+          nextRole,
+          (input.accessLevel ?? existingProfile?.access_level ?? "edit") as AccessLevel,
+        );
         const nextProvinceId =
           input.provinceId !== undefined
             ? input.provinceId
@@ -201,7 +209,7 @@ export const Route = createFileRoute("/api/admin/users")({
         const profilePatch: Record<string, unknown> = {};
         if (input.fullName !== undefined) profilePatch.full_name = input.fullName;
         if (input.jobTitle !== undefined) profilePatch.job_title = input.jobTitle;
-        if (input.accessLevel !== undefined) profilePatch.access_level = input.accessLevel;
+        if (input.accessLevel !== undefined || nextRole === "read_only") profilePatch.access_level = nextAccess;
         if (input.provinceId !== undefined || input.role !== undefined) {
           profilePatch.province_id = nextRole === "province_user" ? nextProvinceId : null;
         }

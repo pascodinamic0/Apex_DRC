@@ -25,17 +25,17 @@ export const helpSectionsFr: HelpSection[] = [
       "Créez un rapport via Rapports → Nouveau rapport (mois et année).",
       "Remplissez les onglets, y compris Média pour les photos de mise en œuvre (Annexe B).",
       "Enregistrez le brouillon (autosauvegarde toutes les 30 s) puis Soumettre.",
-      "Après soumission, le statut devient « En attente de validation ». Vous pouvez encore modifier le rapport jusqu'à validation par le DT.",
+      "Après soumission, le statut devient « En attente de validation ». Vous pouvez encore modifier le rapport jusqu'à validation par l'AT.",
     ],
   },
   {
-    id: "dt-validate",
-    title: "Valider les rapports (DT)",
-    roles: ["technical_director"],
+    id: "at-validate",
+    title: "Valider les rapports (AT)",
+    roles: ["technical_assistant"],
     body: [
-      "Consultez le tableau de bord pour voir l'état des neuf provinces.",
-      "Ouvrez un rapport soumis et cliquez sur Valider.",
-      "La consolidation nationale agrège tous les rapports du mois sélectionné.",
+      "Consultez le Bureau AT pour voir l'état des neuf provinces.",
+      "Ouvrez un rapport soumis, commentez par section, retournez au CP ou cliquez sur Valider.",
+      "La consolidation nationale agrège tous les rapports validés du mois sélectionné.",
     ],
   },
   {
@@ -44,27 +44,35 @@ export const helpSectionsFr: HelpSection[] = [
     roles: ["technical_director"],
     body: [
       "Le TDR prévoit trois personnes au niveau DT (Directeur de projet et conseillers seniors).",
-      "Dans Utilisateurs, invitez chaque personne avec un rôle, un titre, un niveau (Édition ou Lecture seule) et des tâches précises.",
-      "Édition / Lecture seule détermine si le compte peut écrire. Les tâches définissent ce qu'il peut faire en mode Édition.",
+      "Dans Utilisateurs, invitez chaque personne avec un rôle. Le rang (DT, AT, CP, Lecteur) attache automatiquement ses tâches.",
+      "Vous pouvez encore ajuster les tâches ensuite. Les lecteurs n'ont aucune tâche d'écriture.",
       "Utilisez Modifier le membre pour relever ou réduire les droits sans renvoyer d'invitation.",
     ],
   },
   {
     id: "export",
-    title: "Export PDF",
-    roles: ["technical_director", "read_only"],
+    title: "Export Word",
+    roles: ["technical_director", "technical_assistant", "read_only"],
     body: [
-      "Sur Consolidation, choisissez le mois et l'année puis exportez le PDF officiel.",
+      "Sur Consolidation, choisissez le mois et l'année puis exportez le document Word officiel.",
       "Le rapport national suit le modèle de rapport mensuel provincial : couverture, table des matières, sigles, résumé exécutif, tableau des résultats et annexes.",
     ],
   },
   {
     id: "readonly",
-    title: "Lecture seule",
+    title: "Lecteur",
     roles: ["read_only"],
     body: [
-      "Vous pouvez consulter tous les rapports et le tableau de bord sans modifier ni valider.",
-      "Le compte Assistant Technique (AT) utilise ce rôle : commentaires sur la consolidation, sans validation DT.",
+      "Vous pouvez consulter les rapports validés et le tableau de bord sans modifier, commenter ni valider.",
+    ],
+  },
+  {
+    id: "at-comments",
+    title: "Assistant Technique (AT)",
+    roles: ["technical_assistant"],
+    body: [
+      "Vous validez les rapports provinciaux depuis le Bureau AT : commentaires par section, retour au CP ou validation.",
+      "Vous pouvez aussi commenter les activités de la consolidation nationale.",
     ],
   },
   {
