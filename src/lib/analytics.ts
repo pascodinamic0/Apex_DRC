@@ -1,7 +1,7 @@
 import type { AchievementSummary } from "@/lib/activity-catalog";
 import { calcAchievementRate } from "@/lib/activity-catalog";
 
-export type PeriodGrain = "month" | "trimester" | "year" | "custom";
+export type PeriodGrain = "month" | "trimester" | "semester" | "year" | "custom";
 
 export interface PeriodBounds {
   fromMonth: number;
@@ -15,6 +15,7 @@ export interface PeriodSelection {
   month: number;
   year: number;
   trimester: number;
+  semester: number;
   fromMonth: number;
   fromYear: number;
   toMonth: number;
@@ -37,6 +38,15 @@ export function trimesterMonthRange(trimester: number, year: number): PeriodBoun
   const fromMonth = (trimester - 1) * 3 + 1;
   const toMonth = trimester * 3;
   return { fromMonth, fromYear: year, toMonth, toYear: year };
+}
+
+export function semesterOf(month: number): number {
+  return month <= 6 ? 1 : 2;
+}
+
+export function semesterMonthRange(semester: number, year: number): PeriodBounds {
+  if (semester === 1) return { fromMonth: 1, fromYear: year, toMonth: 6, toYear: year };
+  return { fromMonth: 7, fromYear: year, toMonth: 12, toYear: year };
 }
 
 export function normalizeCustomBounds(
@@ -62,6 +72,8 @@ export function periodBounds(selection: PeriodSelection): PeriodBounds {
       };
     case "trimester":
       return trimesterMonthRange(selection.trimester, selection.year);
+    case "semester":
+      return semesterMonthRange(selection.semester, selection.year);
     case "year":
       return { fromMonth: 1, fromYear: selection.year, toMonth: 12, toYear: selection.year };
     case "custom":
@@ -94,6 +106,7 @@ export function createDefaultPeriodSelection(month: number, year: number): Perio
     month,
     year,
     trimester: trimesterOf(month),
+    semester: semesterOf(month),
     fromMonth: month,
     fromYear: year,
     toMonth: month,
@@ -108,6 +121,8 @@ export function mapPeriodToGrain(selection: PeriodSelection, grain: PeriodGrain)
       return { ...selection, grain, month, year, trimester: trimesterOf(month) };
     case "trimester":
       return { ...selection, grain, trimester: trimesterOf(month), year };
+    case "semester":
+      return { ...selection, grain, semester: semesterOf(month), year };
     case "year":
       return { ...selection, grain, year };
     case "custom":
@@ -126,6 +141,7 @@ export function formatPeriodLabel(
   selection: PeriodSelection,
   months: string[],
   trimesterLabels?: string[],
+  semesterLabels?: string[],
 ): string {
   const bounds = periodBounds(selection);
   switch (selection.grain) {
@@ -134,6 +150,10 @@ export function formatPeriodLabel(
     case "trimester": {
       const tLabel = trimesterLabels?.[selection.trimester - 1] ?? `T${selection.trimester}`;
       return `${tLabel} ${selection.year}`;
+    }
+    case "semester": {
+      const sLabel = semesterLabels?.[selection.semester - 1] ?? `S${selection.semester}`;
+      return `${sLabel} ${selection.year}`;
     }
     case "year":
       return String(selection.year);

@@ -52,18 +52,19 @@ export const helpSectionsFr: HelpSection[] = [
   {
     id: "export",
     title: "Export Word",
-    roles: ["technical_director", "technical_assistant", "read_only"],
+    roles: ["technical_director", "province_user"],
     body: [
-      "Sur Consolidation, choisissez le mois et l'année puis exportez le document Word officiel.",
-      "Le rapport national suit le modèle de rapport mensuel provincial : couverture, table des matières, sigles, résumé exécutif, tableau des résultats et annexes.",
+      "Le CP extrait son province via Consultation provinciale (période mois, trimestre, semestre ou année).",
+      "Le DT exporte la consolidation nationale après validation AT des neuf provinces et approbation DT du mois.",
     ],
   },
   {
     id: "readonly",
-    title: "Lecteur",
+    title: "Lecteur (VIEW)",
     roles: ["read_only"],
     body: [
-      "Vous pouvez consulter les rapports validés et le tableau de bord sans modifier, commenter ni valider.",
+      "Consultation limitée à votre province : rapports validés, tableaux de bord et périodes mensuelles, trimestrielles et annuelles.",
+      "Aucune modification, export ou accès aux autres provinces.",
     ],
   },
   {

@@ -7,6 +7,7 @@ export type AppDuty =
   | "comment_consolidation"
   | "write_national_summary"
   | "manage_users"
+  | "manage_provincial_users"
   | "manage_provinces";
 
 export type AccessLevel = "edit" | "view";
@@ -20,12 +21,16 @@ export const NATIONAL_DUTIES: AppDuty[] = [
   "manage_provinces",
 ];
 
-export const AT_DUTIES: AppDuty[] = ["validate_reports", "comment_consolidation"];
+export const AT_DUTIES: AppDuty[] = [
+  "validate_reports",
+  "comment_consolidation",
+  "manage_provincial_users",
+];
 
 export const VIEWER_DUTIES: AppDuty[] = [];
 
 export function isNationalRole(role: AppRole | null | undefined): boolean {
-  return role === "technical_director" || role === "technical_assistant" || role === "read_only";
+  return role === "technical_director" || role === "technical_assistant";
 }
 
 export function defaultAccessLevelForRole(role: AppRole): AccessLevel {
@@ -55,6 +60,9 @@ export function validateDutiesForRole(role: AppRole, duties: AppDuty[]): string 
     }
     if (d === "validate_reports" && role !== "technical_assistant") {
       return "validate_reports is only valid for Technical Assistant accounts";
+    }
+    if (d === "manage_provincial_users" && role !== "technical_assistant") {
+      return "manage_provincial_users is only valid for Technical Assistant accounts";
     }
   }
   return null;

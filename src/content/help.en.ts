@@ -46,18 +46,19 @@ export const helpSectionsEn: HelpSection[] = [
   {
     id: "export",
     title: "Word export",
-    roles: ["technical_director", "technical_assistant", "read_only"],
+    roles: ["technical_director", "province_user"],
     body: [
-      "On Consolidation, select month and year then export the official Word document.",
-      "The national report follows the provincial monthly activity report structure: cover, contents, acronyms, executive summary, results table, and annexes.",
+      "CP accounts extract their province from Provincial consultation (month, quarter, semester, or year).",
+      "The TD exports the national consolidation after AT validation of all provinces and TD approval for the month.",
     ],
   },
   {
     id: "readonly",
-    title: "Viewer access",
+    title: "Viewer (VIEW)",
     roles: ["read_only"],
     body: [
-      "You can view validated reports and the dashboard without editing, commenting, or validating.",
+      "View-only access to your province: validated reports, dashboard, and monthly, quarterly, and annual periods.",
+      "No edits, exports, or access to other provinces.",
     ],
   },
   {

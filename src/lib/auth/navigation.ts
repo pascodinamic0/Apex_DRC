@@ -29,6 +29,8 @@ export function navGroupsForRole(
         label: t.atNavValidation,
         items: [
           { to: "/dashboard", icon: ClipboardCheck, label: t.atDashboardTitle, exact: true },
+          { to: "/reports", icon: FileText, label: t.reports },
+          { to: "/consolidation", icon: Layers, label: t.consolidation },
         ],
       },
       {
@@ -36,6 +38,9 @@ export function navGroupsForRole(
         items: [
           { to: "/notifications", icon: Bell, label: t.notifications },
           { to: "/history", icon: Archive, label: t.atValidatedArchive },
+          ...(can("manage_provincial_users")
+            ? [{ to: "/users", icon: Users, label: t.users }]
+            : []),
         ],
       },
       {
@@ -75,9 +80,8 @@ export function navGroupsForRole(
         label: t.navConsultation,
         items: [
           { to: "/dashboard", icon: LayoutDashboard, label: t.dashboard, exact: true },
-          { to: "/consolidation", icon: Layers, label: t.consolidation },
-          { to: "/program", icon: Database, label: t.programDataTitle },
-          { to: "/history", icon: Archive, label: t.history },
+          { to: "/provincial", icon: FileText, label: t.provincialRollupTitle },
+          { to: "/reports", icon: FileText, label: t.reports },
         ],
       },
       {
@@ -93,6 +97,7 @@ export function navGroupsForRole(
       items: [
         { to: "/dashboard", icon: LayoutDashboard, label: t.dashboard, exact: true },
         { to: "/reports", icon: FileText, label: t.reports },
+        { to: "/provincial", icon: Layers, label: t.provincialRollupTitle },
         { to: "/history", icon: Archive, label: t.history },
       ],
     },

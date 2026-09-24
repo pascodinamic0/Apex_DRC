@@ -14,6 +14,7 @@ export interface Profile {
   preferred_lang: string | null;
   job_title: string | null;
   access_level: AccessLevel;
+  access_blocked: boolean;
 }
 
 interface AuthState {
@@ -67,7 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     const prof = p as Profile | null;
     const level = (prof?.access_level as AccessLevel) ?? "edit";
-    setProfile(prof);
+    setProfile(
+      prof
+        ? { ...prof, access_blocked: Boolean((prof as Profile).access_blocked) }
+        : null,
+    );
     setRole((r?.role as AppRole) ?? null);
     setDuties((dutyRows || []).map((row) => row.duty as AppDuty));
     setAccessLevel(level);

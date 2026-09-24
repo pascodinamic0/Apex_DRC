@@ -481,10 +481,10 @@ const landingCopy = {
       text: "Quatre étapes, un statut clair à chaque fois : brouillon, soumis, en revue, validé.",
     },
     workflow: [
-      { stage: "Province", title: "Préparer", text: "Compléter les activités, récits et résumé, puis enregistrer le brouillon." },
-      { stage: "Province", title: "Soumettre", text: "Envoyer le rapport mensuel à la direction technique." },
-      { stage: "DT / AT", title: "Revoir", text: "Ouvrir chaque activité, commenter, retourner ou approuver." },
-      { stage: "National", title: "Consolider", text: "Comparer les provinces, synthétiser et exporter le rapport national." },
+      { stage: "CP", title: "Saisir", text: "Le coordonnateur provincial rédige et soumet le rapport mensuel." },
+      { stage: "AT", title: "Valider", text: "L'assistant technique commente, retourne ou verrouille le rapport provincial." },
+      { stage: "DT", title: "Approuver", text: "Le directeur technique approuve la consolidation nationale du mois." },
+      { stage: "DT", title: "Extraire", text: "Export Word national ; le CP extrait sa province par période." },
     ],
     modulesIntro: {
       eyebrow: "Modules",
@@ -648,10 +648,10 @@ const landingCopy = {
       text: "Four steps, with a clear status at each one: draft, submitted, in review, validated.",
     },
     workflow: [
-      { stage: "Province", title: "Prepare", text: "Complete activities, narratives, and the summary, then save the draft." },
-      { stage: "Province", title: "Submit", text: "Send the monthly report to technical direction." },
-      { stage: "TD / TA", title: "Review", text: "Open each activity, comment, return, or approve." },
-      { stage: "National", title: "Consolidate", text: "Compare provinces, synthesize, and export the national report." },
+      { stage: "CP", title: "Enter", text: "The provincial coordinator drafts and submits the monthly report." },
+      { stage: "AT", title: "Validate", text: "The technical assistant comments, returns, or locks the provincial report." },
+      { stage: "TD", title: "Approve", text: "The technical director gives final approval to the month's national consolidation." },
+      { stage: "TD", title: "Extract", text: "National Word export; CP extracts their province by period." },
     ],
     modulesIntro: {
       eyebrow: "Modules",

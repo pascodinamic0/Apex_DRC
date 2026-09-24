@@ -45,6 +45,7 @@ interface UserRow {
   job_title: string | null;
   role: string | null;
   access_level: AccessLevel;
+  access_blocked?: boolean;
   duties: AppDuty[];
 }
 
@@ -89,8 +90,14 @@ function initials(name: string | null, email: string | null) {
 
 function UsersPage() {
   const { t } = useT();
-  const { can } = useAuth();
+  const { can, user: currentUser } = useAuth();
   const nav = useNavigate();
+  const canManageFull = can("manage_users");
+  const canManageProvincial = can("manage_provincial_users");
+  const canManage = canManageFull || canManageProvincial;
+  const allowedInviteRoles: AppRole[] = canManageFull
+    ? ["technical_director", "technical_assistant", "province_user", "read_only"]
+    : ["province_user", "read_only"];
   const [users, setUsers] = useState<UserRow[]>([]);
   const [provinces, setProvinces] = useState<ProvinceRow[]>([]);
   const [form, setForm] = useState<MemberFormState>(emptyForm());
@@ -101,8 +108,8 @@ function UsersPage() {
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    if (!can("manage_users")) nav({ to: "/dashboard" });
-  }, [can, nav]);
+    if (!canManage) nav({ to: "/dashboard" });
+  }, [canManage, nav]);
 
   const refreshProvinces = async () => {
     const { data, error } = await supabase.from("provinces").select("id, name, code").order("name");
@@ -124,11 +131,13 @@ function UsersPage() {
   };
 
   useEffect(() => {
-    if (can("manage_users")) refresh();
-  }, [can]);
+    if (canManage) refresh();
+  }, [canManage]);
+
+  const needsProvince = (r: AppRole) => r === "province_user" || r === "read_only";
 
   const onInvite = async () => {
-    if (form.role === "province_user" && !form.provinceId) {
+    if (needsProvince(form.role) && !form.provinceId) {
       toast.error(t.selectProvince);
       return;
     }
@@ -139,7 +148,7 @@ function UsersPage() {
         body: JSON.stringify({
           email: form.email,
           fullName: form.fullName,
-          provinceId: form.role === "province_user" ? form.provinceId || null : null,
+          provinceId: needsProvince(form.role) ? form.provinceId || null : null,
           role: form.role,
           jobTitle: form.jobTitle || null,
           accessLevel: form.accessLevel,
@@ -172,7 +181,7 @@ function UsersPage() {
 
   const onSaveEdit = async () => {
     if (!editForm || !editUserId) return;
-    if (editForm.role === "province_user" && !editForm.provinceId) {
+    if (needsProvince(editForm.role) && !editForm.provinceId) {
       toast.error(t.selectProvince);
       return;
     }
@@ -183,7 +192,7 @@ function UsersPage() {
         body: JSON.stringify({
           userId: editUserId,
           fullName: editForm.fullName,
-          provinceId: editForm.role === "province_user" ? editForm.provinceId || null : null,
+          provinceId: needsProvince(editForm.role) ? editForm.provinceId || null : null,
           role: editForm.role,
           jobTitle: editForm.jobTitle || null,
           accessLevel: editForm.accessLevel,
@@ -213,7 +222,21 @@ function UsersPage() {
     }
   };
 
-  if (!can("manage_users")) return null;
+  const toggleBlock = async (userId: string, blocked: boolean) => {
+    try {
+      const res = await authedFetch("/api/admin/users", {
+        method: "PATCH",
+        body: JSON.stringify({ userId, accessBlocked: blocked }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      toast.success(blocked ? t.userBlockedToast : t.userRestoredToast);
+      refresh();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : t.error);
+    }
+  };
+
+  if (!canManage) return null;
 
   const provinceName = (id: string | null) => provinces.find((p) => p.id === id)?.name || "—";
   const roleLabel = (r: string | null) =>
@@ -271,7 +294,7 @@ function UsersPage() {
             </div>
           </div>
 
-          <UserMemberForm form={form} setForm={setForm} provinces={provinces} />
+          <UserMemberForm form={form} setForm={setForm} provinces={provinces} allowedRoles={allowedInviteRoles} />
           <div className="flex justify-end">
             <Button onClick={onInvite} disabled={!canInvite} className="w-full sm:w-auto">
               <Plus className="h-4 w-4" />
@@ -346,37 +369,51 @@ function UsersPage() {
                           {roleLabel(u.role)}
                         </Badge>
                         <Badge variant={u.access_level === "view" ? "secondary" : "outline"}>{accessBadge}</Badge>
-                        {u.role === "province_user" && (
+                        {(u.role === "province_user" || u.role === "read_only") && (
                           <span className="hidden items-center gap-1 text-sm text-muted-foreground md:inline-flex">
                             <MapPin className="h-3.5 w-3.5" />
                             {provinceName(u.province_id)}
                           </span>
                         )}
+                        {u.access_blocked && (
+                          <Badge variant="destructive">{t.userBlockedBadge}</Badge>
+                        )}
                         <Button size="icon" variant="ghost" aria-label={t.editMember} onClick={() => openEdit(u)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="icon" variant="ghost" aria-label={t.remove}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>{t.remove}</AlertDialogTitle>
-                              <AlertDialogDescription>{t.confirmRemove}</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-                              <AlertDialogAction
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                onClick={() => onRemove(u.id)}
-                              >
-                                {t.remove}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        {canManageFull && u.id !== currentUser?.id && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => toggleBlock(u.id, !u.access_blocked)}
+                          >
+                            {u.access_blocked ? t.restoreAccess : t.blockAccess}
+                          </Button>
+                        )}
+                        {canManageFull && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="icon" variant="ghost" aria-label={t.remove}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>{t.remove}</AlertDialogTitle>
+                                <AlertDialogDescription>{t.confirmRemove}</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={() => onRemove(u.id)}
+                                >
+                                  {t.remove}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                       </div>
                     </li>
                   );
@@ -394,7 +431,14 @@ function UsersPage() {
             <DialogDescription>{t.editMemberHint}</DialogDescription>
           </DialogHeader>
           {editForm && (
-            <UserMemberForm form={editForm} setForm={setEditForm} provinces={provinces} showEmail={false} idPrefix="edit" />
+            <UserMemberForm
+              form={editForm}
+              setForm={setEditForm}
+              provinces={provinces}
+              showEmail={false}
+              idPrefix="edit"
+              allowedRoles={allowedInviteRoles}
+            />
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => (setEditUserId(null), setEditForm(null))}>

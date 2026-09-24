@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as AuthenticatedProvincialRouteImport } from './routes/_authenticated/provincial'
 import { Route as AuthenticatedProgramRouteImport } from './routes/_authenticated/program'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -54,6 +55,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedProvincialRoute = AuthenticatedProvincialRouteImport.update({
+  id: '/provincial',
+  path: '/provincial',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedProgramRoute = AuthenticatedProgramRouteImport.update({
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/program': typeof AuthenticatedProgramRoute
+  '/provincial': typeof AuthenticatedProvincialRoute
   '/users': typeof AuthenticatedUsersRoute
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/program': typeof AuthenticatedProgramRoute
+  '/provincial': typeof AuthenticatedProvincialRoute
   '/users': typeof AuthenticatedUsersRoute
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/program': typeof AuthenticatedProgramRoute
+  '/_authenticated/provincial': typeof AuthenticatedProvincialRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/_authenticated/reports/new': typeof AuthenticatedReportsNewRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/program'
+    | '/provincial'
     | '/users'
     | '/reports/new'
     | '/api/admin/users'
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/program'
+    | '/provincial'
     | '/users'
     | '/reports/new'
     | '/api/admin/users'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/program'
+    | '/_authenticated/provincial'
     | '/_authenticated/users'
     | '/_authenticated/reports/new'
     | '/api/admin/users'
@@ -339,6 +351,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/users'
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/provincial': {
+      id: '/_authenticated/provincial'
+      path: '/provincial'
+      fullPath: '/provincial'
+      preLoaderRoute: typeof AuthenticatedProvincialRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/program': {
@@ -472,6 +491,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProgramRoute: typeof AuthenticatedProgramRoute
+  AuthenticatedProvincialRoute: typeof AuthenticatedProvincialRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedReportsNewRoute: typeof AuthenticatedReportsNewRoute
   AuthenticatedReportsIndexRoute: typeof AuthenticatedReportsIndexRoute
@@ -490,6 +510,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProgramRoute: AuthenticatedProgramRoute,
+  AuthenticatedProvincialRoute: AuthenticatedProvincialRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedReportsNewRoute: AuthenticatedReportsNewRoute,
   AuthenticatedReportsIndexRoute: AuthenticatedReportsIndexRoute,

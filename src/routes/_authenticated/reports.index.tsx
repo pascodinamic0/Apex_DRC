@@ -23,12 +23,6 @@ function ReportsList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (role === "technical_assistant") {
-      nav({ to: "/dashboard", replace: true });
-    }
-  }, [role, nav]);
-
-  useEffect(() => {
     (async () => {
       const [{ data: rp }, { data: pv }] = await Promise.all([
         supabase.from("reports").select("*").order("year", { ascending: false }).order("month", { ascending: false }),

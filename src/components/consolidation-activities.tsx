@@ -334,7 +334,7 @@ export function ConsolidationActivities({
                   <span>{openView.title}</span>
                 </SheetTitle>
                 <SheetDescription>
-                  {openView.contributions.length} {t.provinces.toLowerCase()} · {periodLabel} {year}
+                  {openView.contributions.length} {t.provinces.toLowerCase()} · {periodLabel}{year ? ` ${year}` : ""}
                 </SheetDescription>
               </SheetHeader>
 
@@ -409,7 +409,7 @@ export function ConsolidationActivities({
                 ))}
               </div>
 
-              {canComment && (
+              {canComment && month >= 1 && year >= 2000 && (
                 <div className="mt-6 space-y-3 border-t pt-4">
                   <p className="text-sm font-semibold flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />

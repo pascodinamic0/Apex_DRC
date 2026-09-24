@@ -33,6 +33,7 @@ interface UserMemberFormProps {
   provinces: ProvinceRow[];
   showEmail?: boolean;
   idPrefix?: string;
+  allowedRoles?: AppRole[];
 }
 
 const DUTY_LABEL_KEYS: Record<AppDuty, string> = {
@@ -42,10 +43,20 @@ const DUTY_LABEL_KEYS: Record<AppDuty, string> = {
   comment_consolidation: "dutyCommentConsolidation",
   write_national_summary: "dutyWriteNationalSummary",
   manage_users: "dutyManageUsers",
+  manage_provincial_users: "dutyManageProvincialUsers",
   manage_provinces: "dutyManageProvinces",
 };
 
-export function UserMemberForm({ form, setForm, provinces, showEmail = true, idPrefix = "member" }: UserMemberFormProps) {
+const ALL_ROLES: AppRole[] = ["technical_director", "technical_assistant", "province_user", "read_only"];
+
+export function UserMemberForm({
+  form,
+  setForm,
+  provinces,
+  showEmail = true,
+  idPrefix = "member",
+  allowedRoles = ALL_ROLES,
+}: UserMemberFormProps) {
   const { t } = useT();
   const availableDuties = dutiesForRole(form.role);
   const dutiesDisabled = form.accessLevel === "view";
@@ -57,7 +68,7 @@ export function UserMemberForm({ form, setForm, provinces, showEmail = true, idP
       role,
       accessLevel,
       duties: accessLevel === "view" ? [] : defaultDutiesForRole(role),
-      provinceId: role === "province_user" ? form.provinceId : "",
+      provinceId: role === "province_user" || role === "read_only" ? form.provinceId : "",
     });
   };
 
@@ -106,10 +117,18 @@ export function UserMemberForm({ form, setForm, provinces, showEmail = true, idP
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="technical_director">{t.director}</SelectItem>
-            <SelectItem value="technical_assistant">{t.technicalAssistant}</SelectItem>
-            <SelectItem value="province_user">{t.provinceUser}</SelectItem>
-            <SelectItem value="read_only">{t.readOnly}</SelectItem>
+            {allowedRoles.includes("technical_director") && (
+              <SelectItem value="technical_director">{t.director}</SelectItem>
+            )}
+            {allowedRoles.includes("technical_assistant") && (
+              <SelectItem value="technical_assistant">{t.technicalAssistant}</SelectItem>
+            )}
+            {allowedRoles.includes("province_user") && (
+              <SelectItem value="province_user">{t.provinceUser}</SelectItem>
+            )}
+            {allowedRoles.includes("read_only") && (
+              <SelectItem value="read_only">{t.readOnly}</SelectItem>
+            )}
           </SelectContent>
         </Select>
       </div>
@@ -122,7 +141,7 @@ export function UserMemberForm({ form, setForm, provinces, showEmail = true, idP
           onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
         />
       </div>
-      {form.role === "province_user" && (
+      {(form.role === "province_user" || form.role === "read_only") && (
         <div className="space-y-1.5 sm:col-span-2">
           <Label>{t.province}</Label>
           <Select value={form.provinceId} onValueChange={(v) => setForm({ ...form, provinceId: v })}>

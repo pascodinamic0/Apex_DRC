@@ -12,7 +12,7 @@ const DEMO_USERS = [
   { email: "director@epic.cd", fullName: "Directeur Technique", role: "technical_director" as const, jobTitle: "Directeur Technique" },
   { email: "kinshasa@epic.cd", fullName: "CP Kinshasa", role: "province_user" as const, provinceCode: "kin" },
   { email: "lualaba@epic.cd", fullName: "CP Lualaba", role: "province_user" as const, provinceCode: "lualaba" },
-  { email: "viewer@epic.cd", fullName: "Lecteur", role: "read_only" as const },
+  { email: "viewer@epic.cd", fullName: "Lecteur", role: "read_only" as const, provinceCode: "kin" },
   { email: "at@epic.cd", fullName: "Assistant Technique", role: "technical_assistant" as const, jobTitle: "Assistant Technique" },
 ];
 
@@ -64,7 +64,7 @@ async function main() {
     }
 
     let provinceId: string | null = null;
-    if (demo.role === "province_user" && demo.provinceCode) {
+    if ((demo.role === "province_user" || demo.role === "read_only") && demo.provinceCode) {
       const pv = provinces?.find(
         (p) =>
           p.code?.toLowerCase() === demo.provinceCode ||

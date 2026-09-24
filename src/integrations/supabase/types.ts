@@ -95,6 +95,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_blocked: boolean
           access_level: Database["public"]["Enums"]["access_level"]
           created_at: string
           email: string | null
@@ -105,6 +106,7 @@ export type Database = {
           province_id: string | null
         }
         Insert: {
+          access_blocked?: boolean
           access_level?: Database["public"]["Enums"]["access_level"]
           created_at?: string
           email?: string | null
@@ -115,6 +117,7 @@ export type Database = {
           province_id?: string | null
         }
         Update: {
+          access_blocked?: boolean
           access_level?: Database["public"]["Enums"]["access_level"]
           created_at?: string
           email?: string | null
@@ -280,6 +283,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      consolidation_approvals: {
+        Row: {
+          approved_at: string
+          approved_by: string
+          id: string
+          month: number
+          year: number
+        }
+        Insert: {
+          approved_at?: string
+          approved_by: string
+          id?: string
+          month: number
+          year: number
+        }
+        Update: {
+          approved_at?: string
+          approved_by?: string
+          id?: string
+          month?: number
+          year?: number
+        }
+        Relationships: []
       }
       consolidation_summaries: {
         Row: {
@@ -470,6 +497,7 @@ export type Database = {
         | "comment_consolidation"
         | "write_national_summary"
         | "manage_users"
+        | "manage_provincial_users"
         | "manage_provinces"
       app_role: "province_user" | "technical_director" | "technical_assistant" | "read_only"
       narrative_section:
@@ -616,6 +644,7 @@ export const Constants = {
         "comment_consolidation",
         "write_national_summary",
         "manage_users",
+        "manage_provincial_users",
         "manage_provinces",
       ],
       app_role: ["province_user", "technical_director", "technical_assistant", "read_only"],

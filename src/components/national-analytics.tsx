@@ -85,6 +85,8 @@ export function PeriodFilters({
   years,
   months,
   trimesters,
+  semesters = ["S1", "S2"],
+  allowedGrains,
   labels,
   onPeriodChange,
 }: {
@@ -92,23 +94,30 @@ export function PeriodFilters({
   years: number[];
   months: string[];
   trimesters: string[];
+  semesters?: string[];
+  allowedGrains?: PeriodGrain[];
   labels: {
     periodType: string;
     month: string;
     year: string;
     trimester: string;
+    semester?: string;
     from: string;
     to: string;
-    grains: { month: string; trimester: string; year: string; custom: string };
+    grains: { month: string; trimester: string; semester?: string; year: string; custom: string };
   };
   onPeriodChange: (period: PeriodSelection) => void;
 }) {
-  const grainOptions: { value: PeriodGrain; label: string }[] = [
+  const allGrains: { value: PeriodGrain; label: string }[] = [
     { value: "month", label: labels.grains.month },
     { value: "trimester", label: labels.grains.trimester },
+    { value: "semester", label: labels.grains.semester ?? "Semester" },
     { value: "year", label: labels.grains.year },
     { value: "custom", label: labels.grains.custom },
   ];
+  const grainOptions = allowedGrains
+    ? allGrains.filter((g) => allowedGrains.includes(g.value))
+    : allGrains;
 
   return (
     <div className="flex flex-wrap items-end gap-3">
@@ -138,6 +147,39 @@ export function PeriodFilters({
           onMonthChange={(month) => onPeriodChange({ ...period, month })}
           onYearChange={(year) => onPeriodChange({ ...period, year })}
         />
+      )}
+
+      {period.grain === "semester" && (
+        <>
+          <div className="space-y-1.5">
+            <Label className="text-xs">{labels.semester ?? "Semester"}</Label>
+            <Select
+              value={String(period.semester)}
+              onValueChange={(v) => onPeriodChange({ ...period, semester: Number(v) })}
+            >
+              <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {semesters.map((s, i) => (
+                  <SelectItem key={i} value={String(i + 1)}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">{labels.year}</Label>
+            <Select
+              value={String(period.year)}
+              onValueChange={(v) => onPeriodChange({ ...period, year: Number(v) })}
+            >
+              <SelectTrigger className="h-9 w-28"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {years.map((y) => (
+                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </>
       )}
 
       {period.grain === "trimester" && (
@@ -273,6 +315,7 @@ export function NationalAnalytics({
             grains: {
               month: t.periodGrainMonth,
               trimester: t.periodGrainTrimester,
+              semester: t.periodGrainSemester,
               year: t.periodGrainYear,
               custom: t.periodGrainCustom,
             },

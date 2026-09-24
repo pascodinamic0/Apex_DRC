@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { isNationalRole } from "@/lib/auth/duties";
 import { supabase } from "@/integrations/supabase/client";
 import { ReportEditor, loadReportData, type ActivityRow, type Narratives, type ReportData } from "@/components/report-editor";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,7 +43,8 @@ function ViewPage() {
 
   const canValidate = can("validate_reports");
   const isMine = role === "province_user" && report.province_id === profile?.province_id;
-  const canExport = canValidate || isMine || isNationalRole(role);
+  const canExport =
+    (isMine && role === "province_user") || role === "technical_director";
 
   return (
     <ReportEditor

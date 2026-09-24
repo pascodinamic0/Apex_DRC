@@ -5,17 +5,24 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { Download, Sparkles } from "lucide-react";
+import { CheckCircle2, Download, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { type AchievementSummary, type ActivityResponseFields, type CatalogRow } from "@/lib/activity-catalog";
 import { loadCatalog } from "@/lib/report-data";
 import { applyAcceptedActivitySummaries, buildNationalActivityViews, buildOfficialNationalPayload, reportingYears, SOURCE_MONTH, SOURCE_YEAR } from "@/lib/export/epic-official";
 import { exportOfficialDocx } from "@/lib/export/epic-docx";
 import { ConsolidationActivities, type ActivitySummaryRow } from "@/components/consolidation-activities";
+import { PeriodFilters } from "@/components/national-analytics";
+import {
+  createDefaultPeriodSelection,
+  filterReportsInPeriod,
+  formatPeriodLabel,
+  periodBounds,
+  provinceRates,
+  type PeriodSelection,
+} from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/consolidation")({ component: Consolidation });
 
@@ -25,15 +32,18 @@ function Consolidation() {
   const nav = useNavigate();
 
   useEffect(() => {
-    if (role === "technical_assistant" || role === "province_user") {
+    if (role === "province_user" || role === "read_only") {
       nav({ to: "/dashboard", replace: true });
     }
   }, [role, nav]);
+  const isDt = role === "technical_director";
+  const isAt = role === "technical_assistant";
   const canWriteSummary = can("write_national_summary");
-  const [month, setMonth] = useState(String(SOURCE_MONTH));
-  const [year, setYear] = useState(String(SOURCE_YEAR));
+  const canExportNational = isDt;
+  const [periodApproved, setPeriodApproved] = useState(false);
+  const [period, setPeriod] = useState<PeriodSelection>(() => createDefaultPeriodSelection(SOURCE_MONTH, SOURCE_YEAR));
   const [provinces, setProvinces] = useState<{ id: string; name: string }[]>([]);
-  const [reports, setReports] = useState<{ id: string; province_id: string; submitted_by_name: string | null }[]>([]);
+  const [reports, setReports] = useState<{ id: string; province_id: string; month: number; year: number; submitted_by_name: string | null }[]>([]);
   const [achievements, setAchievements] = useState<(AchievementSummary & { report_id: string })[]>([]);
   const [responses, setResponses] = useState<(ActivityResponseFields & { report_id: string })[]>([]);
   const [narratives, setNarratives] = useState<{ report_id: string; section_type: string; content: string | null }[]>([]);
@@ -50,7 +60,7 @@ function Consolidation() {
   }, []);
 
   useEffect(() => {
-    if (role === "province_user") return;
+    if (role === "province_user" || role === "read_only") return;
     Promise.all([
       supabase.from("provinces").select("id,name").order("name"),
       loadCatalog(),
@@ -60,18 +70,55 @@ function Consolidation() {
     });
   }, [role]);
 
+  const bounds = periodBounds(period);
+  const singleMonth = period.grain === "month";
+  const storageMonth = period.month;
+  const storageYear = period.year;
+  const periodLabel = formatPeriodLabel(period, t.months, t.trimesters, t.semesters);
+  const exportMonthLabel =
+    period.grain === "month"
+      ? t.months[period.month - 1]
+      : period.grain === "trimester"
+        ? (t.trimesters[period.trimester - 1] ?? `T${period.trimester}`)
+        : period.grain === "semester"
+          ? (t.semesters[period.semester - 1] ?? `S${period.semester}`)
+          : period.grain === "year"
+            ? t.periodGrainYear
+            : periodLabel;
+  const exportYear = period.grain === "custom" ? bounds.toYear : period.year;
+
   useEffect(() => {
-    if (role === "province_user") return;
+    if (role === "province_user" || role === "read_only") return;
+    if (!singleMonth) {
+      setPeriodApproved(false);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from("consolidation_approvals")
+        .select("id")
+        .eq("month", storageMonth)
+        .eq("year", storageYear)
+        .maybeSingle();
+      setPeriodApproved(Boolean(data));
+    })();
+  }, [singleMonth, storageMonth, storageYear, role]);
+
+  useEffect(() => {
+    if (role === "province_user" || role === "read_only") return;
     setLoading(true);
     (async () => {
       const { data: rp } = await supabase
         .from("reports")
-        .select("id,province_id,submitted_by_name")
-        .eq("month", Number(month))
-        .eq("year", Number(year));
-      const monthReports = (rp as { id: string; province_id: string; submitted_by_name: string | null }[]) || [];
-      setReports(monthReports);
-      const ids = monthReports.map((r) => r.id);
+        .select("id,province_id,submitted_by_name,month,year")
+        .gte("year", bounds.fromYear)
+        .lte("year", bounds.toYear);
+      const inRange = filterReportsInPeriod(
+        (rp as { id: string; province_id: string; month: number; year: number; submitted_by_name: string | null }[]) || [],
+        bounds,
+      );
+      setReports(inRange);
+      const ids = inRange.map((r) => r.id);
       if (ids.length === 0) {
         setAchievements([]);
         setResponses([]);
@@ -89,16 +136,22 @@ function Consolidation() {
       setNarratives((narrs as { report_id: string; section_type: string; content: string | null }[]) || []);
       setLoading(false);
     })();
-  }, [month, year, role]);
+  }, [bounds.fromMonth, bounds.fromYear, bounds.toMonth, bounds.toYear, role]);
 
   const loadSavedSummary = useCallback(async () => {
-    if (role === "province_user") return;
+    if (role === "province_user" || role === "read_only") return;
+    if (!singleMonth) {
+      setAiSummary("");
+      setAiSummaryDirty(false);
+      setSummaryLoading(false);
+      return;
+    }
     setSummaryLoading(true);
     const { data, error } = await supabase
       .from("consolidation_summaries")
       .select("content")
-      .eq("month", Number(month))
-      .eq("year", Number(year))
+      .eq("month", storageMonth)
+      .eq("year", storageYear)
       .eq("lang", lang)
       .maybeSingle();
     if (error && error.code !== "PGRST116") {
@@ -107,7 +160,7 @@ function Consolidation() {
     setAiSummary((data as { content?: string } | null)?.content || "");
     setAiSummaryDirty(false);
     setSummaryLoading(false);
-  }, [month, year, lang, role]);
+  }, [singleMonth, storageMonth, storageYear, lang, role]);
 
   useEffect(() => {
     loadSavedSummary();
@@ -117,8 +170,8 @@ function Consolidation() {
     () =>
       buildOfficialNationalPayload({
         lang,
-        monthLabel: t.months[Number(month) - 1],
-        year: Number(year),
+        monthLabel: exportMonthLabel,
+        year: exportYear,
         catalog,
         provinces,
         reports,
@@ -126,7 +179,12 @@ function Consolidation() {
         responses,
         narratives,
       }),
-    [lang, t.months, month, year, catalog, provinces, reports, achievements, responses, narratives],
+    [lang, exportMonthLabel, exportYear, catalog, provinces, reports, achievements, responses, narratives],
+  );
+
+  const rates = useMemo(
+    () => provinceRates(provinces, reports, achievements),
+    [provinces, reports, achievements],
   );
 
   const activityViews = useMemo(
@@ -144,19 +202,26 @@ function Consolidation() {
   const exportPayload = useMemo(
     () => ({
       ...payload,
+      provinceRates: rates.map((p) => ({
+        name: p.name,
+        total: p.planned,
+        approved: p.approved,
+        rate: p.rate,
+      })),
       activities: applyAcceptedActivitySummaries(payload.activities, activitySummaries),
       aiNationalSummary: aiSummary.trim() || undefined,
     }),
-    [payload, aiSummary, activitySummaries],
+    [payload, rates, aiSummary, activitySummaries],
   );
 
   const exportDocx = async () => {
-    await exportOfficialDocx(exportPayload, lang, `epic-rdc-national-${year}-${String(month).padStart(2, "0")}.docx`);
+    const slug = periodLabel.replace(/\s+/g, "-").toLowerCase();
+    await exportOfficialDocx(exportPayload, lang, `epic-rdc-national-${slug}.docx`);
     toast.success(t.pdfGenerated);
   };
 
   const generateSummary = async () => {
-    if (!canWriteSummary) return;
+    if (!canWriteSummary || !singleMonth || periodApproved) return;
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
     if (!token) {
@@ -172,8 +237,8 @@ function Consolidation() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          month: Number(month),
-          year: Number(year),
+          month: storageMonth,
+          year: storageYear,
           lang,
           sourceReportIds: reports.map((r) => r.id),
           payload,
@@ -198,12 +263,12 @@ function Consolidation() {
   };
 
   const saveSummary = async () => {
-    if (!canWriteSummary || !user) return;
+    if (!canWriteSummary || !singleMonth || !user) return;
     setSavingSummary(true);
     const { error } = await supabase.from("consolidation_summaries").upsert(
       {
-        month: Number(month),
-        year: Number(year),
+        month: storageMonth,
+        year: storageYear,
         lang,
         content: aiSummary,
         source_report_ids: reports.map((r) => r.id),
@@ -221,10 +286,26 @@ function Consolidation() {
     toast.success(t.aiSummarySaved);
   };
 
-  if (role === "province_user") return <div className="text-muted-foreground">{t.noAccess}</div>;
+  if (role === "province_user" || role === "read_only") {
+    return <div className="text-muted-foreground">{t.noAccess}</div>;
+  }
 
   const years = reportingYears();
   const hasSummary = Boolean(aiSummary.trim());
+  const summaryEditable = canWriteSummary && singleMonth && !periodApproved;
+
+  const approveConsolidation = async () => {
+    if (!isDt || !singleMonth || !user || periodApproved) return;
+    if (!confirm(t.approveConsolidationConfirm)) return;
+    const { error } = await supabase.from("consolidation_approvals").insert({
+      month: storageMonth,
+      year: storageYear,
+      approved_by: user.id,
+    } as never);
+    if (error) return toast.error(error.message);
+    setPeriodApproved(true);
+    toast.success(t.consolidationApprovedToast);
+  };
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -232,9 +313,13 @@ function Consolidation() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">FHI 360</p>
           <h1 className="text-3xl font-extrabold tracking-tight">{t.consolidation}</h1>
+          <p className="text-sm text-muted-foreground">{periodLabel} · {reports.length} {t.reports}</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          {canWriteSummary && (
+        <div className="flex gap-2 flex-wrap items-center">
+          {periodApproved && (
+            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{t.consolidationApprovedBadge}</span>
+          )}
+          {summaryEditable && (
             <Button
               variant="secondary"
               onClick={generateSummary}
@@ -244,38 +329,51 @@ function Consolidation() {
               {hasSummary ? t.regenerateAiSummary : t.generateAiSummary}
             </Button>
           )}
-          <Button onClick={exportDocx}><Download className="h-4 w-4 mr-1" />{t.export}</Button>
+          {isDt && singleMonth && !periodApproved && (
+            <Button variant="outline" onClick={approveConsolidation}>
+              <CheckCircle2 className="h-4 w-4 mr-1" />
+              {t.approveConsolidation}
+            </Button>
+          )}
+          {canExportNational && (
+            <Button onClick={exportDocx}>
+              <Download className="h-4 w-4 mr-1" />
+              {t.export}
+            </Button>
+          )}
         </div>
       </div>
 
-      <Card>
-        <CardHeader><CardTitle>{t.filters}</CardTitle></CardHeader>
-        <CardContent className="flex gap-4 flex-wrap">
-          <div className="space-y-1">
-            <Label>{t.month}</Label>
-            <Select value={month} onValueChange={setMonth}>
-              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-              <SelectContent>{t.months.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label>{t.year}</Label>
-            <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-              <SelectContent>{years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="ml-auto text-sm text-muted-foreground self-end">
-            {reports.length} {t.reports}
-          </div>
-        </CardContent>
-      </Card>
+      <PeriodFilters
+        period={period}
+        years={years}
+        months={t.months}
+        trimesters={t.trimesters}
+        semesters={t.semesters}
+        labels={{
+          periodType: t.periodType,
+          month: t.month,
+          year: t.year,
+          trimester: t.trimester,
+          semester: t.semester,
+          from: t.from,
+          to: t.to,
+          grains: {
+            month: t.periodGrainMonth,
+            trimester: t.periodGrainTrimester,
+            semester: t.periodGrainSemester,
+            year: t.periodGrainYear,
+            custom: t.periodGrainCustom,
+          },
+        }}
+        onPeriodChange={setPeriod}
+      />
 
-      {(canWriteSummary || hasSummary) && (
+      {singleMonth && (summaryEditable || hasSummary || isAt) && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
             <CardTitle>{t.aiSummaryTitle}</CardTitle>
-            {canWriteSummary && aiSummaryDirty && (
+            {summaryEditable && aiSummaryDirty && (
               <Button size="sm" variant="outline" onClick={saveSummary} disabled={savingSummary}>
                 {t.saveAiSummary}
               </Button>
@@ -285,7 +383,7 @@ function Consolidation() {
             <p className="text-sm text-muted-foreground">{t.aiSummaryHint}</p>
             {summaryLoading ? (
               <Skeleton className="h-32 w-full" />
-            ) : canWriteSummary ? (
+            ) : summaryEditable ? (
               <Textarea
                 rows={12}
                 value={aiSummary}
@@ -324,12 +422,12 @@ function Consolidation() {
                   </tr>
                 </thead>
                 <tbody>
-                  {!payload.provinceRates?.length ? (
+                  {!rates.length ? (
                     <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">{t.noData}</td></tr>
-                  ) : payload.provinceRates.map((a) => (
-                    <tr key={a.name} className="border-t">
+                  ) : rates.map((a) => (
+                    <tr key={a.provinceId} className="border-t">
                       <td className="p-2">{a.name}</td>
-                      <td className="p-2 text-right tabular-nums">{a.total}</td>
+                      <td className="p-2 text-right tabular-nums">{a.planned}</td>
                       <td className="p-2 text-right tabular-nums">{a.approved}</td>
                       <td className="p-2 text-right tabular-nums">{a.rate}%</td>
                     </tr>
@@ -347,10 +445,10 @@ function Consolidation() {
           <ConsolidationActivities
             views={activityViews}
             loading={loading}
-            month={Number(month)}
-            year={Number(year)}
-            periodLabel={t.months[Number(month) - 1]}
-            isDirector={canWriteSummary}
+            month={singleMonth ? storageMonth : 0}
+            year={singleMonth ? storageYear : 0}
+            periodLabel={singleMonth ? t.months[storageMonth - 1] : periodLabel}
+            isDirector={canWriteSummary && singleMonth}
             onSummariesChange={onActivitySummariesChange}
           />
         </CardContent>

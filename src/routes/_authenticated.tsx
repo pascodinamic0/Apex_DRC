@@ -84,6 +84,14 @@ function Layout() {
   }, [user, loading, nav]);
 
   useEffect(() => {
+    if (!loading && profile?.access_blocked) {
+      toast.error(t.accessBlockedMessage);
+      supabase.auth.signOut();
+      nav({ to: "/login", replace: true });
+    }
+  }, [loading, profile?.access_blocked, nav, t.accessBlockedMessage]);
+
+  useEffect(() => {
     const refreshPending = () => getPendingCount().then(setPendingSync);
     refreshPending();
     const onOnline = () => {
