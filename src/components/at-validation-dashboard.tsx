@@ -258,9 +258,9 @@ export function AtValidationDashboard() {
               <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <CardTitle className="text-base">{t.atQueueReview}</CardTitle>
                 <TabsList className="h-auto w-full flex-wrap justify-start sm:w-auto">
+                  <TabsTrigger value="waiting">{t.atQueueDrafts} ({drafts.length})</TabsTrigger>
                   <TabsTrigger value="review">{t.atQueueReview} ({toReview.length})</TabsTrigger>
                   <TabsTrigger value="done">{t.atVerifiedSection} ({validated.length})</TabsTrigger>
-                  <TabsTrigger value="waiting">{t.atQueueDrafts} ({drafts.length})</TabsTrigger>
                 </TabsList>
               </CardHeader>
               <CardContent className="p-0">
