@@ -2,12 +2,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Bell,
   ClipboardList,
+  FileDown,
   FileText,
+  Globe,
   HelpCircle,
   Languages,
   LayoutDashboard,
   Layers,
+  MapPin,
+  MessageSquareText,
   ShieldCheck,
+  Users,
+  type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
@@ -71,14 +77,7 @@ function Index() {
               <a href="#overview">{copy.hero.secondaryCta}</a>
             </Button>
           </div>
-          <div className="mt-12 grid gap-6 border-t border-border/80 pt-8 sm:grid-cols-3">
-            {copy.hero.stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="text-2xl font-extrabold tracking-tight">{stat.value}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
-              </div>
-            ))}
-          </div>
+          <HeroSignals stats={copy.hero.stats} />
         </div>
       </section>
 
@@ -92,21 +91,7 @@ function Index() {
               <Link to={primaryHref}>{copy.snapshot.cta}</Link>
             </Button>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {copy.snapshot.stories.map((story, i) => (
-              <article key={story.tag} className="overflow-hidden rounded-2xl bg-white text-foreground shadow-lg">
-                <div className={`flex h-28 items-end p-4 ${i === 1 ? "bg-foreground text-background" : "bg-primary/15"}`}>
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                    {story.tag}
-                  </span>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-base font-semibold leading-snug">{story.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{story.text}</p>
-                </div>
-              </article>
-            ))}
-          </div>
+          <SnapshotStories stories={copy.snapshot.stories} />
         </div>
       </section>
 
@@ -215,7 +200,38 @@ function Index() {
             </div>
           </div>
           <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
-            <p>{copy.footer.copyright}</p>
+            <div className="flex flex-col gap-1">
+              <p>{copy.footer.copyright}</p>
+              <p>
+                {copy.footer.credit.madeBy}{" "}
+                <a
+                  href="https://digni-digital-llc.com"
+                  className="underline hover:text-white"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Digni Digital LLC
+                </a>
+                {" · "}
+                <a
+                  href="https://digni-digital-llc.com"
+                  className="underline hover:text-white"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  digni-digital-llc.com
+                </a>
+                {" · "}
+                <a
+                  href="https://digni-digital-llc.com/custom-saas"
+                  className="underline hover:text-white"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Agentic Softwares
+                </a>
+              </p>
+            </div>
             <p className="inline-flex items-center gap-1">
               <Languages className="h-3.5 w-3.5" />
               {copy.footer.note}
@@ -224,6 +240,108 @@ function Index() {
         </div>
       </footer>
     </main>
+  );
+}
+
+const signalIcons = {
+  language: Languages,
+  export: FileDown,
+  access: Users,
+} satisfies Record<HeroSignal["key"], LucideIcon>;
+
+function HeroSignals({ stats }: { stats: HeroSignal[] }) {
+  return (
+    <div className="mt-14 grid gap-3 sm:grid-cols-3">
+      {stats.map((stat) => {
+        const Icon = signalIcons[stat.key];
+        return (
+          <article
+            key={stat.key}
+            className="group relative flex h-full flex-col overflow-hidden rounded-3xl border bg-card/90 p-5 shadow-[0_24px_60px_-36px_oklch(0.45_0.12_35)] backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_28px_70px_-32px_oklch(0.5_0.16_35)] sm:p-6"
+          >
+            <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                {stat.kicker}
+              </span>
+            </div>
+            <p className="mt-6 text-3xl font-extrabold tracking-tight">{stat.value}</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{stat.detail}</p>
+            {stat.key === "access" ? (
+              <ul className="mt-auto grid grid-cols-2 gap-2 pt-5">
+                {stat.chips.map((chip) => (
+                  <li
+                    key={chip}
+                    className="rounded-2xl border border-border/80 bg-background px-3 py-2 text-center text-sm font-semibold"
+                  >
+                    {chip}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="mt-auto flex flex-wrap gap-2 pt-5">
+                {stat.chips.map((chip) => (
+                  <span
+                    key={chip}
+                    className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            )}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+const storyIcons = {
+  province: MapPin,
+  review: MessageSquareText,
+  national: Globe,
+} satisfies Record<SnapshotStory["key"], LucideIcon>;
+
+function SnapshotStories({ stories }: { stories: SnapshotStory[] }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-3">
+      {stories.map((story, index) => {
+        const Icon = storyIcons[story.key];
+        return (
+          <article
+            key={story.key}
+            className="relative flex h-full flex-col overflow-hidden rounded-3xl bg-white p-5 text-foreground shadow-[0_24px_60px_-36px_oklch(0.2_0.04_35)] transition duration-300 hover:-translate-y-0.5 sm:p-6"
+          >
+            <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className="text-[11px] font-semibold tracking-[0.2em] text-muted-foreground">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+            </div>
+            <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">{story.tag}</p>
+            <h3 className="mt-2 text-xl font-extrabold tracking-tight">{story.title}</h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{story.text}</p>
+            <div className="mt-auto flex flex-wrap gap-2 pt-5">
+              {story.chips.map((chip) => (
+                <span
+                  key={chip}
+                  className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
+          </article>
+        );
+      })}
+    </div>
   );
 }
 
@@ -247,6 +365,22 @@ function SectionIntro({
   );
 }
 
+type SnapshotStory = {
+  key: "province" | "review" | "national";
+  tag: string;
+  title: string;
+  text: string;
+  chips: string[];
+};
+
+type HeroSignal = {
+  key: "language" | "export" | "access";
+  kicker: string;
+  value: string;
+  detail: string;
+  chips: string[];
+};
+
 const landingCopy = {
   fr: {
     nav: [
@@ -262,10 +396,28 @@ const landingCopy = {
         "Les provinces saisissent, la direction technique révise, le niveau national consolide. Un espace bilingue pour suivre les activités, les commentaires et les exports officiels.",
       secondaryCta: "Découvrir le parcours",
       stats: [
-        { value: "FR / EN", label: "interface bilingue" },
-        { value: "Word", label: "exports nationaux" },
-        { value: "Rôles", label: "province, AT et DT" },
-      ],
+        {
+          key: "language",
+          kicker: "Interface",
+          value: "FR / EN",
+          detail: "Français et anglais dans le même dossier.",
+          chips: ["Français", "English"],
+        },
+        {
+          key: "export",
+          kicker: "Sortie",
+          value: "Word",
+          detail: "L'export national officiel, prêt à diffuser.",
+          chips: [".docx", "Officiel"],
+        },
+        {
+          key: "access",
+          kicker: "Accès",
+          value: "4 rôles",
+          detail: "Chaque compte reste dans son périmètre.",
+          chips: ["Province", "AT", "DT", "Lecteur"],
+        },
+      ] satisfies HeroSignal[],
     },
     snapshot: {
       eyebrow: "Ce qui se passe ce mois-ci",
@@ -273,10 +425,28 @@ const landingCopy = {
       lead: "Chaque rapport suit le même chemin : saisie guidée, revue commentée, puis consolidation des données validées.",
       cta: "Entrer dans le cycle",
       stories: [
-        { tag: "Province", title: "Préparer et soumettre", text: "Les équipes provinciales complètent les activités du catalogue et envoient le rapport au DT." },
-        { tag: "Revue", title: "Commenter et valider", text: "Les AT et le DT ouvrent chaque section, laissent des commentaires et approuvent le contenu." },
-        { tag: "National", title: "Consolider et exporter", text: "Les rapports validés alimentent la vue nationale, les résumés IA et l'export Word officiel." },
-      ],
+        {
+          key: "province",
+          tag: "Province",
+          title: "Préparer et soumettre",
+          text: "Les équipes provinciales complètent les activités du catalogue et envoient le rapport au DT.",
+          chips: ["Saisie", "Soumission"],
+        },
+        {
+          key: "review",
+          tag: "Revue",
+          title: "Commenter et valider",
+          text: "Les AT et le DT ouvrent chaque section, laissent des commentaires et approuvent le contenu.",
+          chips: ["AT", "DT"],
+        },
+        {
+          key: "national",
+          tag: "National",
+          title: "Consolider et exporter",
+          text: "Les rapports validés alimentent la vue nationale, les résumés IA et l'export Word officiel.",
+          chips: ["Consolidation", "Word"],
+        },
+      ] satisfies SnapshotStory[],
     },
     overview: {
       eyebrow: "Vue d'ensemble",
@@ -375,6 +545,7 @@ const landingCopy = {
         },
       ],
       copyright: "© 2026 FHI 360 · EPIC RDC. Tous droits réservés.",
+      credit: { madeBy: "Réalisé par" },
       note: "Usage interne autorisé uniquement.",
     },
   },
@@ -392,10 +563,28 @@ const landingCopy = {
         "Provinces enter data, technical direction reviews it, national teams consolidate. One bilingual workspace for activities, comments, and official exports.",
       secondaryCta: "See the cycle",
       stats: [
-        { value: "FR / EN", label: "bilingual interface" },
-        { value: "Word", label: "national exports" },
-        { value: "Roles", label: "province, TA and TD" },
-      ],
+        {
+          key: "language",
+          kicker: "Interface",
+          value: "FR / EN",
+          detail: "French and English in the same file.",
+          chips: ["Français", "English"],
+        },
+        {
+          key: "export",
+          kicker: "Output",
+          value: "Word",
+          detail: "The official national export, ready to share.",
+          chips: [".docx", "Official"],
+        },
+        {
+          key: "access",
+          kicker: "Access",
+          value: "4 roles",
+          detail: "Each account stays inside its scope.",
+          chips: ["Province", "TA", "TD", "Viewer"],
+        },
+      ] satisfies HeroSignal[],
     },
     snapshot: {
       eyebrow: "What's happening this month",
@@ -403,10 +592,28 @@ const landingCopy = {
       lead: "Every report follows the same path: guided entry, commented review, then consolidation of validated data.",
       cta: "Enter the cycle",
       stories: [
-        { tag: "Province", title: "Prepare and submit", text: "Provincial teams complete catalog activities and send the report to the TD." },
-        { tag: "Review", title: "Comment and validate", text: "TAs and the TD open each section, leave comments, and approve the content." },
-        { tag: "National", title: "Consolidate and export", text: "Validated reports feed the national view, AI summaries, and the official Word export." },
-      ],
+        {
+          key: "province",
+          tag: "Province",
+          title: "Prepare and submit",
+          text: "Provincial teams complete catalog activities and send the report to the TD.",
+          chips: ["Entry", "Submit"],
+        },
+        {
+          key: "review",
+          tag: "Review",
+          title: "Comment and validate",
+          text: "TAs and the TD open each section, leave comments, and approve the content.",
+          chips: ["TA", "TD"],
+        },
+        {
+          key: "national",
+          tag: "National",
+          title: "Consolidate and export",
+          text: "Validated reports feed the national view, AI summaries, and the official Word export.",
+          chips: ["Consolidation", "Word"],
+        },
+      ] satisfies SnapshotStory[],
     },
     overview: {
       eyebrow: "Overview",
@@ -505,6 +712,7 @@ const landingCopy = {
         },
       ],
       copyright: "© 2026 FHI 360 · EPIC DRC. All rights reserved.",
+      credit: { madeBy: "Made by" },
       note: "Authorized internal use only.",
     },
   },
