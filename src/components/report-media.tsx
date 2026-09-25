@@ -33,6 +33,7 @@ export function ReportMediaPanel({
   const [photos, setPhotos] = useState<ReportPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   const load = async () => {
     try {
@@ -120,30 +121,44 @@ export function ReportMediaPanel({
               {t.downloadAllPhotos}
             </Button>
           )}
-          {!readOnly && (
-            <>
-              <input
-                ref={inputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                multiple
-                className="hidden"
-                onChange={(e) => onFiles(e.target.files)}
-              />
-              <Button
-                type="button"
-                size="sm"
-                disabled={busy || photos.length >= MAX_REPORT_PHOTOS}
-                onClick={() => inputRef.current?.click()}
-              >
-                {busy ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ImagePlus className="h-4 w-4 mr-1" />}
-                {t.uploadPhotos}
-              </Button>
-            </>
-          )}
         </div>
       </CardHeader>
       <CardContent>
+        {!readOnly && (
+          <div
+            className={`mb-4 rounded-xl border border-dashed p-4 text-center transition-colors ${dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/30 bg-muted/20"}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (!busy && photos.length < MAX_REPORT_PHOTOS) setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              if (busy || photos.length >= MAX_REPORT_PHOTOS) return;
+              onFiles(e.dataTransfer.files);
+            }}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              className="hidden"
+              onChange={(e) => onFiles(e.target.files)}
+            />
+            <Button
+              type="button"
+              size="sm"
+              disabled={busy || photos.length >= MAX_REPORT_PHOTOS}
+              onClick={() => inputRef.current?.click()}
+            >
+              {busy ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ImagePlus className="h-4 w-4 mr-1" />}
+              {t.uploadPhotos}
+            </Button>
+            <p className="mt-2 text-sm text-muted-foreground">{t.uploadPhotosHint}</p>
+          </div>
+        )}
         {loading ? (
           <p className="text-sm text-muted-foreground">{t.loading}</p>
         ) : photos.length === 0 ? (

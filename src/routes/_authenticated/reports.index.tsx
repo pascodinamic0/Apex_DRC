@@ -106,7 +106,7 @@ function ReportsList() {
           ) : (
             <div className="divide-y">
               {visibleReports.map((r) => (
-                <div key={r.id} className="flex items-center justify-between p-4 hover:bg-accent/40">
+                <div key={r.id} className={`flex items-center justify-between p-4 hover:bg-accent/40 ${r.status !== "validated" ? "report-tick" : ""}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium">{provinceName(r.province_id)}</div>
                     <div className="text-sm text-muted-foreground">{t.months[r.month - 1]} {r.year}</div>

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
@@ -14,6 +14,7 @@ import { loadCatalog } from "@/lib/report-data";
 import { applyAcceptedActivitySummaries, buildNationalActivityViews, buildOfficialNationalPayload, reportingYears, SOURCE_MONTH, SOURCE_YEAR } from "@/lib/export/epic-official";
 import { exportOfficialDocx } from "@/lib/export/epic-docx";
 import { ConsolidationActivities, type ActivitySummaryRow } from "@/components/consolidation-activities";
+import { releaseConsolidationFocus, takeConsolidationFocus } from "@/lib/notifications";
 import { PeriodFilters, periodFilterLabels } from "@/components/national-analytics";
 import {
   createDefaultPeriodSelection,
@@ -30,6 +31,26 @@ function Consolidation() {
   const { t, lang } = useT();
   const { role, user, can } = useAuth();
   const nav = useNavigate();
+  const activityHash = useRouterState({ select: (state) => state.location.hash.replace(/^#/, "") });
+  const [focusActivity, setFocusActivity] = useState<string | undefined>();
+  const clearFocus = useCallback(() => {
+    releaseConsolidationFocus();
+    setFocusActivity(undefined);
+    if (activityHash) nav({ to: "/consolidation", hash: "", replace: true });
+  }, [activityHash, nav]);
+
+  useEffect(() => {
+    if (!activityHash) {
+      setFocusActivity(undefined);
+      return;
+    }
+    if (takeConsolidationFocus(activityHash)) {
+      setFocusActivity(activityHash);
+      return;
+    }
+    setFocusActivity(undefined);
+    nav({ to: "/consolidation", hash: "", replace: true });
+  }, [activityHash, nav]);
 
   useEffect(() => {
     if (role === "province_user" || role === "read_only") {
@@ -434,6 +455,8 @@ function Consolidation() {
             year={singleMonth ? storageYear : 0}
             periodLabel={singleMonth ? t.months[storageMonth - 1] : periodLabel}
             isDirector={canWriteSummary && singleMonth}
+            focusActivity={focusActivity}
+            onDismissFocus={clearFocus}
             onSummariesChange={onActivitySummariesChange}
           />
         </CardContent>

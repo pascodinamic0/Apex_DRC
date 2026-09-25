@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, Undo2, Check, MessageSquare } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
@@ -42,6 +42,8 @@ type Props = {
   year: number;
   periodLabel: string;
   isDirector: boolean;
+  focusActivity?: string;
+  onDismissFocus?: () => void;
   onSummariesChange: (rows: ActivitySummaryRow[]) => void;
 };
 
@@ -52,12 +54,15 @@ export function ConsolidationActivities({
   year,
   periodLabel,
   isDirector,
+  focusActivity,
+  onDismissFocus,
   onSummariesChange,
 }: Props) {
   const { t, lang } = useT();
   const { user, can, profile } = useAuth();
   const canComment = can("comment_consolidation");
   const [openCode, setOpenCode] = useState<string | null>(null);
+  const closedFocus = useRef<string | null>(null);
   const [summaries, setSummaries] = useState<Record<string, ActivitySummaryRow>>({});
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [draft, setDraft] = useState("");
@@ -118,6 +123,16 @@ export function ConsolidationActivities({
         setCommentsLoading(false);
       });
   }, [openCode, month, year, t.director]);
+
+  useEffect(() => {
+    if (!focusActivity) {
+      closedFocus.current = null;
+      return;
+    }
+    if (closedFocus.current === focusActivity || loading || !views.some((view) => view.code === focusActivity)) return;
+    setOpenCode(focusActivity);
+    document.getElementById(`activity-${focusActivity}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusActivity, loading, views]);
 
   const grouped = useMemo(() => {
     const byParent = new Map<string, NationalActivityView[]>();
@@ -290,7 +305,7 @@ export function ConsolidationActivities({
                     const summary = summaries[item.code];
                     const usingAi = summary?.selected === "ai" && Boolean(summary.ai_content.trim());
                     return (
-                      <tr key={item.code} className="border-t align-top">
+                      <tr id={`activity-${item.code}`} key={item.code} className={`border-t align-top ${item.code === focusActivity ? "bg-primary/10 ring-2 ring-inset ring-primary" : ""}`}>
                         <td className="p-3">
                           <Badge variant="outline" className="font-mono text-xs">{item.code}</Badge>
                         </td>
@@ -324,7 +339,13 @@ export function ConsolidationActivities({
         ))}
       </div>
 
-      <Sheet open={Boolean(openView)} onOpenChange={(open) => { if (!open) setOpenCode(null); }}>
+      <Sheet open={Boolean(openView)} onOpenChange={(open) => {
+        if (!open) {
+          closedFocus.current = focusActivity || openCode;
+          setOpenCode(null);
+          onDismissFocus?.();
+        }
+      }}>
         <SheetContent side="right" className="w-full sm:!max-w-xl overflow-y-auto">
           {openView && (
             <>
@@ -421,8 +442,8 @@ export function ConsolidationActivities({
                     <p className="text-sm text-muted-foreground">{t.noActivityComments}</p>
                   ) : (
                     <div className="space-y-2">
-                      {comments.map((c) => (
-                        <div key={c.id} className="rounded-lg border bg-muted/30 p-3">
+                      {comments.map((c, index) => (
+                        <div key={c.id} className={`rounded-lg border p-3 ${focusActivity === openCode && index === comments.length - 1 ? "border-primary bg-primary/10" : "bg-muted/30"}`}>
                           <p className="text-xs text-muted-foreground">
                             {c.authorName} · {new Date(c.created_at).toLocaleString()}
                           </p>

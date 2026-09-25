@@ -12,13 +12,38 @@ type NotifStrings = {
   notifSubmittedTitle: string;
   notifReturnedTitle: string;
   notifCommentTitle: string;
+  notifConsolidationCommentTitle: string;
   notifApprovedTitle: string;
   notifValidatedTitle: string;
   notifResubmittedTitle: string;
   reminderSent: string;
 };
 
-export function notificationTitle(type: string, t: NotifStrings): string {
+const CONSOLIDATION_FOCUS_KEY = "epic-consolidation-focus";
+let consumedConsolidationFocus: string | null = null;
+
+export function armConsolidationFocus(activityCode: string) {
+  sessionStorage.setItem(CONSOLIDATION_FOCUS_KEY, activityCode);
+  consumedConsolidationFocus = null;
+}
+
+export function takeConsolidationFocus(activityCode: string) {
+  if (!activityCode) return false;
+  if (sessionStorage.getItem(CONSOLIDATION_FOCUS_KEY) === activityCode) {
+    sessionStorage.removeItem(CONSOLIDATION_FOCUS_KEY);
+    consumedConsolidationFocus = activityCode;
+    return true;
+  }
+  return consumedConsolidationFocus === activityCode;
+}
+
+export function releaseConsolidationFocus() {
+  consumedConsolidationFocus = null;
+  sessionStorage.removeItem(CONSOLIDATION_FOCUS_KEY);
+}
+
+export function notificationTitle(type: string, t: NotifStrings, reportId?: string | null): string {
+  if (type === "comment_added" && !reportId) return t.notifConsolidationCommentTitle;
   const map: Record<string, string> = {
     report_submitted: t.notifSubmittedTitle,
     report_returned: t.notifReturnedTitle,

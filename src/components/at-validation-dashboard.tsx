@@ -177,8 +177,12 @@ export function AtValidationDashboard() {
   const ReportLine = ({ item }: { item: QueueItem }) => {
     const selected = item.report && selectedReportId === item.report.id;
     const canReview = item.report && ["submitted", "in_review", "returned", "validated"].includes(item.status);
+    const waiting = !selected && ["submitted", "in_review", "returned"].includes(item.status);
     return (
-      <div className={`flex flex-col gap-3 border-b px-4 py-3 last:border-0 sm:flex-row sm:items-center ${selected ? "bg-muted/60" : ""}`}>
+      <div
+        className={`flex flex-col gap-3 border-b px-4 py-3 last:border-0 sm:flex-row sm:items-center ${selected ? "bg-muted/60" : ""} ${waiting ? "report-tick" : ""} ${canReview ? "cursor-pointer" : ""}`}
+        onClick={() => { if (canReview && item.report) loadReview(item.report.id, item.province.name); }}
+      >
         <div className="min-w-0 flex-1">
           <div className="font-medium">{item.province.name}</div>
           <div className="text-sm text-muted-foreground">{item.when}</div>
@@ -195,13 +199,12 @@ export function AtValidationDashboard() {
             <Button
               size="sm"
               variant={item.status === "validated" ? "outline" : "default"}
-              onClick={() => loadReview(item.report!.id, item.province.name)}
             >
               {item.status === "validated" ? t.consult : t.atOpenReview}
             </Button>
           )}
           {!canReview && (
-            <Button size="sm" variant="outline" onClick={() => remind(item.province.id, item.report?.id)}>
+            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); remind(item.province.id, item.report?.id); }}>
               <SendHorizonal className="h-3.5 w-3.5 mr-1" />
               {t.remindProvince}
             </Button>

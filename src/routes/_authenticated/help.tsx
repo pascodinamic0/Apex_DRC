@@ -28,28 +28,8 @@ function HelpPage() {
   }, [lang, role, query]);
 
   const downloadPdfGuide = async () => {
-    const { default: jsPDF } = await import("jspdf");
-    const doc = new jsPDF();
-    let y = 20;
-    doc.setFontSize(18);
-    doc.text(t.helpTitle, 14, y);
-    y += 12;
-    doc.setFontSize(10);
-    sections.forEach((s) => {
-      if (y > 270) { doc.addPage(); y = 20; }
-      doc.setFontSize(12);
-      doc.text(s.title, 14, y);
-      y += 8;
-      doc.setFontSize(9);
-      s.body.forEach((p) => {
-        const lines = doc.splitTextToSize(p, 180);
-        if (y + lines.length * 5 > 280) { doc.addPage(); y = 20; }
-        doc.text(lines, 14, y);
-        y += lines.length * 5 + 2;
-      });
-      y += 6;
-    });
-    doc.save(`epic-rdc-guide-${lang}.pdf`);
+    const { downloadHelpGuidePdf } = await import("@/lib/export/help-guide-pdf");
+    await downloadHelpGuidePdf(sections, lang, t.helpTitle);
     toast.success(t.guideGenerated);
   };
 
@@ -72,7 +52,15 @@ function HelpPage() {
         <Card key={s.id}>
           <CardHeader><CardTitle className="text-lg">{s.title}</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
-            {s.body.map((p, i) => <p key={i}>{p}</p>)}
+            {s.body.map((p, i) => (
+              /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p) ? (
+                <p key={i}><a className="font-medium text-primary underline" href={`mailto:${p}`}>{p}</a></p>
+              ) : /^\+\d[\d\s()-]{7,}$/.test(p) ? (
+                <p key={i}><a className="font-medium text-primary underline" href={`tel:${p.replace(/\s/g, "")}`}>{p}</a></p>
+              ) : (
+                <p key={i}>{p}</p>
+              )
+            ))}
           </CardContent>
         </Card>
       ))}

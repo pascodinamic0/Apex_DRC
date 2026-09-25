@@ -153,3 +153,27 @@
     letter-spacing: -0.03em;
   }
 }
+
+/* Sharp tick, then a pause. One beat per cycle, not a heartbeat. */
+@keyframes report-tick {
+  0%, 14% {
+    background-color: color-mix(in oklab, var(--primary) 16%, transparent);
+    box-shadow: inset 3px 0 0 0 var(--primary);
+  }
+  15%, 100% {
+    background-color: transparent;
+    box-shadow: inset 3px 0 0 0 transparent;
+  }
+}
+
+.report-tick {
+  animation: report-tick 0.9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .report-tick {
+    animation: none;
+    background-color: color-mix(in oklab, var(--primary) 10%, transparent);
+    box-shadow: inset 3px 0 0 0 var(--primary);
+  }
+}

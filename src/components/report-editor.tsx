@@ -27,6 +27,7 @@ import { loadExtendedReportData } from "@/lib/report-data";
 import { ReportMediaPanel } from "@/components/report-media";
 import { activityTarget, commentMatches, fieldTarget } from "@/components/report-review-panel";
 import { photosForPdf } from "@/lib/report-photos";
+import { narrativeQuestion } from "@/lib/narrative-questions";
 
 export interface ActivityRow {
   id?: string;
@@ -169,6 +170,18 @@ export function ReportEditor({
 
   const notesFor = (target: string) => openNotes.filter((c) => commentMatches(c.section_key, target));
   const showFlags = isProvinceUser && report.status !== "validated";
+  const FlagNotes = ({ target }: { target: string }) => {
+    const notes = showFlags ? notesFor(target) : [];
+    if (!notes.length) return null;
+    return (
+      <div className="mb-3 space-y-1 rounded-md border border-red-500 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-100">
+        <p className="text-xs font-medium text-red-700">{t.fixThisSpot}</p>
+        {notes.map((note) => (
+          <p key={note.id} className="whitespace-pre-wrap">{note.body}</p>
+        ))}
+      </div>
+    );
+  };
   const flaggedCodes = new Set(
     catalog.filter((row) => showFlags && notesFor(activityTarget(row.code)).length).map((row) => row.code),
   );
@@ -179,6 +192,9 @@ export function ReportEditor({
     return (
       <div className={`space-y-2 rounded-md p-2 ${flagged ? "border border-red-500 bg-red-50 dark:bg-red-950/30" : ""}`}>
         <span className={`text-sm font-medium ${flagged ? "text-red-700" : ""}`}>{label}</span>
+        {narrativeQuestion(key, lang) && (
+          <p className="text-sm text-muted-foreground">{narrativeQuestion(key, lang)}</p>
+        )}
         {flagged && <p className="text-xs font-medium text-red-700">{t.fixThisSpot}</p>}
         {notes.map((note) => (
           <p key={note.id} className="text-sm text-red-800 dark:text-red-100">{note.body}</p>
@@ -334,6 +350,7 @@ export function ReportEditor({
           <Card>
             <CardHeader><CardTitle>{t.tabAchievement}</CardTitle></CardHeader>
             <CardContent>
+              <FlagNotes target="achievement" />
               <AchievementTable value={achievement} onChange={setAchievement} readOnly={readOnly} />
             </CardContent>
           </Card>
@@ -400,12 +417,37 @@ export function ReportEditor({
             <CardHeader><CardTitle>{t.tabChallenges}</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">{t.challengesHint}</p>
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="space-y-3 pt-2 border-t first:border-0 first:pt-0">
-                  {renderNarrative(`challenge_${i}`, `${t.challenge} ${i}`)}
-                  {renderNarrative(`response_${i}`, `${t.response} ${i}`)}
-                </div>
-              ))}
+              {[1, 2, 3].map((i) => {
+                const challengeKey = `challenge_${i}`;
+                const responseKey = `response_${i}`;
+                const notes = showFlags
+                  ? [...notesFor(fieldTarget(challengeKey)), ...notesFor(fieldTarget(responseKey))]
+                  : [];
+                const flagged = notes.length > 0;
+                return (
+                  <div key={i} className={`space-y-3 rounded-md p-3 ${flagged ? "border border-red-500 bg-red-50 dark:bg-red-950/30" : "border"}`}>
+                    <p className={`text-sm font-medium ${flagged ? "text-red-700" : ""}`}>{t.challenge} {i}</p>
+                    {flagged && (
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-red-700">{t.fixThisSpot}</p>
+                        {notes.map((note) => (
+                          <p key={note.id} className="text-sm text-red-800 dark:text-red-100">{note.body}</p>
+                        ))}
+                      </div>
+                    )}
+                    <div className="space-y-1">
+                      <p className="text-sm text-foreground">{narrativeQuestion(challengeKey, lang)}</p>
+                      <Textarea
+                        rows={4}
+                        value={narratives[challengeKey] || narratives[responseKey] || ""}
+                        disabled={readOnly}
+                        onChange={(e) => setNarratives({ ...narratives, [challengeKey]: e.target.value, [responseKey]: "" })}
+                        className={flagged ? "border-red-500 bg-background" : ""}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         </TabsContent>
@@ -422,9 +464,10 @@ export function ReportEditor({
         </TabsContent>
 
         <TabsContent value="media">
+          <FlagNotes target="media" />
           <ReportMediaPanel
             reportId={report.id}
-            readOnly={readOnly}
+            readOnly={!(isProvinceUser && report.status !== "validated")}
             zipBaseName={`epic-photos-${provinceLabel || "province"}-${report.year}-${String(report.month).padStart(2, "0")}`}
           />
         </TabsContent>

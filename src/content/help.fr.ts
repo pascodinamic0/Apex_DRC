@@ -86,4 +86,15 @@ export const helpSectionsFr: HelpSection[] = [
       "La langue est aussi accessible depuis le menu utilisateur. Le mot de passe oublié se gère depuis la page de connexion.",
     ],
   },
+  {
+    id: "technical-contact",
+    title: "Support technique",
+    roles: "all",
+    body: [
+      "Pour tout travail ou question technique sur la plateforme, contactez Pascal Digny par e-mail ou par téléphone.",
+      "Pascal@digni-digital-llc.com",
+      "pascodinamic00@gmail.com",
+      "+243 822 378 097",
+    ],
+  },
 ];

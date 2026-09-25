@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
-import { notificationTitle } from "@/lib/notifications";
+import { armConsolidationFocus, notificationTitle } from "@/lib/notifications";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,6 +18,7 @@ interface NotifRow {
   body: string | null;
   read_at: string | null;
   created_at: string;
+  section_key: string | null;
 }
 
 function NotificationsPage() {
@@ -73,12 +74,21 @@ function NotificationsPage() {
             items.map((n) => {
               const content = (
                 <div className={`py-3 ${!n.read_at ? "font-medium" : "text-muted-foreground"}`}>
-                  <div className="text-sm">{notificationTitle(n.type, t)}</div>
+                  <div className="text-sm">{notificationTitle(n.type, t, n.report_id)}</div>
                   {n.body && <div className="text-xs mt-1">{n.body}</div>}
                   <div className="text-xs text-muted-foreground mt-1">{new Date(n.created_at).toLocaleString()}</div>
                 </div>
               );
-              if (!n.report_id) return <div key={n.id}>{content}</div>;
+              if (!n.report_id) {
+                if (n.type === "comment_added") {
+                  return (
+                    <Link key={n.id} to="/consolidation" hash={n.section_key || undefined} onClick={() => { if (n.section_key) armConsolidationFocus(n.section_key); markRead(n.id); }} className="block hover:bg-accent/50 -mx-2 px-2 rounded-md">
+                      {content}
+                    </Link>
+                  );
+                }
+                return <div key={n.id}>{content}</div>;
+              }
               const to =
                 n.type === "report_returned"
                   ? "/reports/$reportId/revisions"

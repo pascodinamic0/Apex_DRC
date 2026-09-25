@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
-import { getUnreadNotificationCount, notificationTitle } from "@/lib/notifications";
+import { armConsolidationFocus, getUnreadNotificationCount, notificationTitle } from "@/lib/notifications";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/lib/auth";
 
@@ -19,6 +19,7 @@ interface NotifRow {
   body: string | null;
   read_at: string | null;
   created_at: string;
+  section_key?: string | null;
 }
 
 interface Props {
@@ -41,7 +42,7 @@ export function NotificationBell({ role }: Props) {
     if (!user?.id) return;
     const { data } = await supabase
       .from("notifications")
-      .select("id, type, report_id, title, body, read_at, created_at")
+      .select("id, type, report_id, title, body, read_at, created_at, section_key")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(8);
@@ -75,7 +76,7 @@ export function NotificationBell({ role }: Props) {
           setUnread((n) => n + 1);
           setItems((prev) => [row, ...prev].slice(0, 8));
           window.dispatchEvent(new Event("epic-notifications-changed"));
-          toast.info(notificationTitle(row.type, t), {
+          toast.info(notificationTitle(row.type, t, row.report_id), {
             description: row.body ?? undefined,
             duration: 6000,
           });
@@ -118,7 +119,7 @@ export function NotificationBell({ role }: Props) {
     return { to, params: { reportId: n.report_id } };
   };
 
-  const displayTitle = (n: NotifRow) => notificationTitle(n.type, t);
+  const displayTitle = (n: NotifRow) => notificationTitle(n.type, t, n.report_id);
 
   const markRead = async (id: string) => {
     await supabase.from("notifications").update({ read_at: new Date().toISOString() } as never).eq("id", id);
@@ -166,6 +167,23 @@ export function NotificationBell({ role }: Props) {
                 </div>
               );
               if (!link) {
+                if (n.type === "comment_added") {
+                  return (
+                    <Link
+                      key={n.id}
+                      to="/consolidation"
+                      hash={n.section_key || undefined}
+                      className="block hover:bg-accent/50"
+                      onClick={() => {
+                        if (n.section_key) armConsolidationFocus(n.section_key);
+                        if (!n.read_at) markRead(n.id);
+                        setOpen(false);
+                      }}
+                    >
+                      {inner}
+                    </Link>
+                  );
+                }
                 return (
                   <button
                     key={n.id}

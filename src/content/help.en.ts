@@ -80,6 +80,17 @@ export const helpSectionsEn: HelpSection[] = [
       "Language is also available from the user menu. Forgotten passwords are reset from the login page.",
     ],
   },
+  {
+    id: "technical-contact",
+    title: "Technical support",
+    roles: "all",
+    body: [
+      "For technical work or questions about the platform, email or call Pascal Digny.",
+      "Pascal@digni-digital-llc.com",
+      "pascodinamic00@gmail.com",
+      "+243 822 378 097",
+    ],
+  },
 ];
 
 export function filterHelpSections(sections: HelpSection[], role: AppRole | null) {

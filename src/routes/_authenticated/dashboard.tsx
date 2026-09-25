@@ -228,7 +228,7 @@ function Dashboard() {
                     key={r.id}
                     to="/reports/$reportId"
                     params={{ reportId: r.id }}
-                    className="flex items-center justify-between p-3 rounded-md border hover:bg-accent"
+                    className={`flex items-center justify-between p-3 rounded-md border hover:bg-accent ${r.status !== "validated" ? "report-tick" : ""}`}
                   >
                     <div className="font-medium">{t.months[r.month - 1]} {r.year}</div>
                     {statusBadge(r.status)}
