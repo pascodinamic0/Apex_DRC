@@ -80,7 +80,6 @@ export function navGroupsForRole(
         label: t.navConsultation,
         items: [
           { to: "/dashboard", icon: LayoutDashboard, label: t.dashboard, exact: true },
-          { to: "/provincial", icon: FileText, label: t.provincialRollupTitle },
           { to: "/reports", icon: FileText, label: t.reports },
         ],
       },
@@ -97,7 +96,6 @@ export function navGroupsForRole(
       items: [
         { to: "/dashboard", icon: LayoutDashboard, label: t.dashboard, exact: true },
         { to: "/reports", icon: FileText, label: t.reports },
-        { to: "/provincial", icon: Layers, label: t.provincialRollupTitle },
         { to: "/history", icon: Archive, label: t.history },
       ],
     },

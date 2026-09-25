@@ -11,7 +11,15 @@ import { DashboardCharts } from "@/components/dashboard-charts";
 import { NationalAnalytics, PeriodFilters, periodFilterLabels } from "@/components/national-analytics";
 import { AtValidationDashboard } from "@/components/at-validation-dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Layers, Users } from "lucide-react";
+import { Download, Layers, Users } from "lucide-react";
+import { toast } from "sonner";
+import { loadCatalog } from "@/lib/report-data";
+import {
+  buildOfficialMonthlyPayload,
+  buildOfficialNationalPayload,
+} from "@/lib/export/epic-official";
+import { exportOfficialDocx } from "@/lib/export/epic-docx";
+import type { AchievementSummary, ActivityResponseFields } from "@/lib/activity-catalog";
 import {
   createDefaultPeriodSelection,
   filterReportsInPeriod,
@@ -34,11 +42,13 @@ interface ReportRow {
   submitted_at: string | null;
   validated_at: string | null;
   submission_deadline: string | null;
+  submitted_by_name: string | null;
 }
 
 function Dashboard() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { role, profile, can } = useAuth();
+  const [exporting, setExporting] = useState(false);
   const [period, setPeriod] = useState<PeriodSelection>(() =>
     createDefaultPeriodSelection(SOURCE_MONTH, SOURCE_YEAR),
   );
@@ -49,6 +59,7 @@ function Dashboard() {
 
   const years = reportingYears();
   const isProvinceUser = role === "province_user";
+  const isReader = role === "read_only";
   const isAt = role === "technical_assistant";
   const isDt = role === "technical_director";
   const showNational = isNationalRole(role) && !isAt;
@@ -57,7 +68,7 @@ function Dashboard() {
     (async () => {
       const [{ data: pv }, { data: rp }, { data: ach }] = await Promise.all([
         supabase.from("provinces").select("*").order("name"),
-        supabase.from("reports").select("id, province_id, month, year, status, submitted_at, validated_at, submission_deadline"),
+        supabase.from("reports").select("id, province_id, month, year, status, submitted_at, validated_at, submission_deadline, submitted_by_name"),
         supabase.from("achievement_summary").select("*"),
       ]);
       setProvinces((pv as ProvinceRow[]) || []);
@@ -88,12 +99,14 @@ function Dashboard() {
   };
 
   const periodLabel = formatPeriodLabel(period, t.months, t.trimesters, t.semesters);
-  const myReports = isProvinceUser
+  const provinceReports = (isProvinceUser || isReader)
     ? filterReportsInPeriod(
         reports.filter((r) => r.province_id === profile?.province_id),
         bounds,
       ).sort((a, b) => b.year - a.year || b.month - a.month)
     : [];
+  const myReports = isReader ? provinceReports.filter((r) => r.status === "validated") : provinceReports;
+  const exportReports = provinceReports.filter((r) => r.status !== "draft");
 
   const statusBadge = (s: string) => {
     const map: Record<string, string> = {
@@ -113,6 +126,77 @@ function Dashboard() {
       missing: t.missing,
     };
     return <Badge variant="outline" className={map[s]}>{lbl[s]}</Badge>;
+  };
+
+  const exportPeriod = async () => {
+    if (!isProvinceUser || !profile?.province_id || exportReports.length === 0) return;
+    setExporting(true);
+    try {
+      const provinceName = provinces.find((p) => p.id === profile.province_id)?.name || "";
+      const catalog = await loadCatalog();
+      const ids = exportReports.map((r) => r.id);
+      const [{ data: ach }, { data: resp }, { data: narr }] = await Promise.all([
+        supabase.from("achievement_summary").select("*").in("report_id", ids),
+        supabase.from("activity_responses").select("*").in("report_id", ids),
+        supabase.from("narratives").select("report_id, section_type, content").in("report_id", ids),
+      ]);
+      const achievementRows = (ach || []) as (AchievementSummary & { report_id: string })[];
+      const responses = (resp || []) as (ActivityResponseFields & { report_id: string })[];
+      const narratives = (narr || []) as { report_id: string; section_type: string; content: string | null }[];
+
+      let payload;
+      if (period.grain === "month" && exportReports.length === 1) {
+        const r = exportReports[0];
+        const achievement = achievementRows.find((a) => a.report_id === r.id) || {
+          total_planned: 0,
+          finalized_approved: 0,
+          finalized_no_report: 0,
+          in_progress: 0,
+          trigger_approved: 0,
+          not_realized: 0,
+        };
+        const nmap: Record<string, string> = {};
+        for (const row of narratives.filter((n) => n.report_id === r.id && n.content)) {
+          nmap[row.section_type] = row.content!;
+        }
+        payload = buildOfficialMonthlyPayload({
+          lang,
+          provinceName,
+          monthLabel: t.months[r.month - 1],
+          year: r.year,
+          submittedBy: r.submitted_by_name,
+          achievement,
+          catalog,
+          responses: responses.filter((x) => x.report_id === r.id),
+          narratives: nmap,
+        });
+      } else {
+        payload = buildOfficialNationalPayload({
+          lang,
+          monthLabel: periodLabel,
+          year: bounds.toYear,
+          catalog,
+          provinces: [{ id: profile.province_id, name: provinceName }],
+          reports: exportReports.map((r) => ({
+            id: r.id,
+            province_id: profile.province_id!,
+            submitted_by_name: r.submitted_by_name,
+          })),
+          achievements: achievementRows,
+          responses,
+          narratives,
+        });
+        payload = { ...payload, kind: "monthly" as const, provinceName };
+      }
+
+      const slug = provinceName.replace(/\s+/g, "-").toLowerCase();
+      await exportOfficialDocx(payload, lang, `epic-${slug}-${periodLabel.replace(/\s+/g, "-")}.docx`);
+      toast.success(t.export);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExporting(false);
+    }
   };
 
   if (isAt) {
@@ -180,10 +264,18 @@ function Dashboard() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">FHI 360</p>
-        <h1 className="text-3xl font-extrabold tracking-tight">{t.dashboard}</h1>
-        <p className="text-muted-foreground">{periodLabel}</p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">FHI 360</p>
+          <h1 className="text-3xl font-extrabold tracking-tight">{t.dashboard}</h1>
+          <p className="text-muted-foreground">{periodLabel}</p>
+        </div>
+        {isProvinceUser && (
+          <Button onClick={exportPeriod} disabled={exporting || exportReports.length === 0}>
+            <Download className="h-4 w-4 mr-1" />
+            {t.extractProvinceReport}
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -215,7 +307,7 @@ function Dashboard() {
         </CardContent>
       </Card>
 
-      {isProvinceUser && (
+      {(isProvinceUser || isReader) && (
         <Card>
           <CardHeader><CardTitle>{t.yourReports}</CardTitle></CardHeader>
           <CardContent>

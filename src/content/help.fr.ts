@@ -55,7 +55,7 @@ export const helpSectionsFr: HelpSection[] = [
     title: "Export Word",
     roles: ["technical_director", "province_user"],
     body: [
-      "Le CP extrait son province via Consultation provinciale (période mois, trimestre, semestre ou année).",
+      "Le CP extrait son province depuis le tableau de bord (période mois, trimestre, semestre ou année).",
       "Le DT exporte la consolidation nationale après validation AT des neuf provinces et approbation DT du mois.",
     ],
   },

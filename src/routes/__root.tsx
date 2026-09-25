@@ -14,6 +14,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { HtmlLang } from "@/components/html-lang";
 import { Toaster } from "@/components/ui/sonner";
 import { registerServiceWorker } from "@/lib/pwa-register";
+import { AppUpdateBanner } from "@/components/app-update-banner";
 
 if (typeof window !== "undefined") registerServiceWorker();
 
@@ -101,6 +102,7 @@ function RootComponent() {
         <HtmlLang />
         <AuthProvider>
           <Outlet />
+          <AppUpdateBanner />
           <Toaster richColors position="top-right" />
         </AuthProvider>
       </I18nProvider>

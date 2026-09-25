@@ -49,7 +49,7 @@ export const helpSectionsEn: HelpSection[] = [
     title: "Word export",
     roles: ["technical_director", "province_user"],
     body: [
-      "CP accounts extract their province from Provincial consultation (month, quarter, semester, or year).",
+      "CP accounts extract their province from the dashboard (month, quarter, semester, or year).",
       "The TD exports the national consolidation after AT validation of all provinces and TD approval for the month.",
     ],
   },
