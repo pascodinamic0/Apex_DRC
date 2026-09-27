@@ -200,12 +200,33 @@
 }
 
 .update-logo-ring {
-  animation: update-ring 0.7s linear infinite;
+  transform-origin: 50% 50%;
+  animation: update-ring 0.9s linear infinite;
+}
+
+@keyframes update-bar {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.update-progress-bar {
+  width: 0%;
+  animation: update-bar 0.68s linear forwards;
+}
+
+.update-progress-bar.is-preview {
+  animation-duration: 1.4s;
+  animation-iteration-count: infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .update-logo,
-  .update-logo-ring {
+  .update-logo-ring,
+  .update-progress-bar {
     animation: none;
+  }
+
+  .update-progress-bar {
+    width: 100%;
   }
 }

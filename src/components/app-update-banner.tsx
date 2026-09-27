@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { BrandArcs, BrandLogo } from "@/components/brand-logo";
@@ -18,9 +19,9 @@ async function remoteBuildId(): Promise<string | null> {
 
 export function AppUpdateBanner() {
   const { t } = useT();
+  const previewing = useRouterState({ select: (s) => s.location.href.includes("updatePreview=1") });
   const [available, setAvailable] = useState(false);
-  const [updating, setUpdating] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [updating, setUpdating] = useState(previewing);
 
   useEffect(() => {
     let stop = false;
@@ -48,13 +49,13 @@ export function AppUpdateBanner() {
   useEffect(() => {
     if (!updating) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const duration = reduce ? 0 : UPDATE_MS;
+    const duration = reduce ? 0 : previewing ? 1400 : UPDATE_MS;
     const start = performance.now();
     let frame = 0;
     const tick = (now: number) => {
-      const next = duration === 0 ? 100 : Math.min(100, ((now - start) / duration) * 100);
-      setProgress(next);
-      if (next < 100) {
+      const elapsed = previewing ? (now - start) % Math.max(duration, 1) : now - start;
+      const next = duration === 0 ? 100 : Math.min(100, (elapsed / duration) * 100);
+      if (previewing || next < 100) {
         frame = requestAnimationFrame(tick);
         return;
       }
@@ -62,7 +63,7 @@ export function AppUpdateBanner() {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [updating]);
+  }, [previewing, updating]);
 
   const applyUpdate = () => {
     setUpdating(true);
@@ -73,13 +74,27 @@ export function AppUpdateBanner() {
       <div className="fixed inset-0 z-[80] flex items-center justify-center bg-background" role="status" aria-live="polite">
         <BrandArcs />
         <div className="relative flex w-72 flex-col items-center gap-6 px-6">
-          <div className="relative flex items-center justify-center">
-            <span className="update-logo-ring absolute -inset-4 rounded-full border-2 border-transparent border-t-primary" />
-            <BrandLogo className="update-logo h-14" />
+          <div className="relative grid size-32 place-items-center">
+            <div className="update-logo-ring absolute inset-0">
+              <svg className="size-full" viewBox="0 0 100 100" aria-hidden>
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="46"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray="250 39"
+                  className="text-primary"
+                />
+              </svg>
+            </div>
+            <BrandLogo className="update-logo relative z-10 h-10" />
           </div>
           <p className="text-sm font-medium text-foreground">{t.updatingApp}</p>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted" aria-hidden>
-            <div className="h-full rounded-full bg-primary transition-[width] duration-75" style={{ width: `${progress}%` }} />
+            <div className={`update-progress-bar h-full rounded-full bg-primary ${previewing ? "is-preview" : ""}`} />
           </div>
         </div>
       </div>

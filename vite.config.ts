@@ -4,10 +4,24 @@
 //     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { nitro } from "nitro/vite";
 
 const appBuildId = new Date().toISOString();
+
+function jsxRuntimeAlias() {
+  const shim = fileURLToPath(new URL("./src/lib/react-jsx-runtime.ts", import.meta.url));
+  return {
+    name: "jsx-runtime-alias",
+    enforce: "pre" as const,
+    resolveId(source: string, importer?: string) {
+      if (source !== "react/jsx-runtime") return null;
+      if (importer?.includes("react-jsx-runtime")) return null;
+      return shim;
+    },
+  };
+}
 
 function appVersionPlugin() {
   const body = JSON.stringify({ id: appBuildId });
@@ -43,6 +57,6 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    plugins: [appVersionPlugin(), nitro()],
+    plugins: [jsxRuntimeAlias(), appVersionPlugin(), nitro()],
   },
 });
