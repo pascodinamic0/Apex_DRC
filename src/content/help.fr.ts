@@ -51,6 +51,17 @@ export const helpSectionsFr: HelpSection[] = [
     ],
   },
   {
+    id: "dt-ai",
+    title: "Résumés IA",
+    roles: ["technical_director"],
+    body: [
+      "Sur Consolidation, pour un mois qui n'est pas encore approuvé, générez le résumé national. Relisez-le, corrigez-le si besoin, puis enregistrez.",
+      "Ouvrez une activité pour générer un résumé à partir des textes provinciaux. Acceptez la version IA ou gardez la version des rapports.",
+      "Le résumé national accepté et les activités dont la version IA est retenue entrent dans l'export Word. Les rapports provinciaux source ne sont pas modifiés.",
+      "Après l'approbation du mois, les résumés sont verrouillés. La génération nécessite OPENAI_API_KEY sur le serveur.",
+    ],
+  },
+  {
     id: "export",
     title: "Export Word",
     roles: ["technical_director", "province_user"],

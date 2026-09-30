@@ -25,10 +25,24 @@ export function aiConfigured(): boolean {
   return Boolean(getOpenAiApiKey() || getAiGatewayApiKey());
 }
 
-export function aiSetupMessage(): string {
+export class AiNotConfiguredError extends Error {
+  constructor(lang: "fr" | "en" = "en") {
+    super(aiSetupMessage(lang));
+    this.name = "AiNotConfiguredError";
+  }
+}
+
+export function aiSetupMessage(lang: "fr" | "en" = "en"): string {
+  if (lang === "fr") {
+    return (
+      "L'IA n'est pas configurée. Ajoutez OPENAI_API_KEY dans l'environnement du serveur " +
+      "(.env en local, ou les variables d'environnement de l'hébergement). " +
+      "Vous pouvez aussi utiliser AI_GATEWAY_API_KEY."
+    );
+  }
   return (
-    "AI is not configured. Add OPENAI_API_KEY to your server environment " +
-    "(.env locally, or Vercel → Project → Settings → Environment Variables). " +
-    "Alternatively, use AI_GATEWAY_API_KEY from Vercel AI Gateway."
+    "AI is not configured. Add OPENAI_API_KEY to the server environment " +
+    "(.env locally, or the host's environment variables). " +
+    "You can also use AI_GATEWAY_API_KEY."
   );
 }

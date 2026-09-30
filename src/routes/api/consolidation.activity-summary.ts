@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireDuty } from "@/lib/auth/director-server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { generateActivitySummary } from "@/lib/ai/consolidation-summary";
+import { aiHttpError, approvedPeriodResponse } from "@/lib/ai/period";
 
 const contributionSchema = z.object({
   provinceName: z.string(),
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/api/consolidation/activity-summary")({
           return new Response("Invalid JSON", { status: 400 });
         }
 
-        const input = z
+        const parsed = z
           .object({
             month: z.number().int().min(1).max(12),
             year: z.number().int().min(2000).max(2100),
@@ -38,7 +39,13 @@ export const Route = createFileRoute("/api/consolidation/activity-summary")({
             period: z.string(),
             contributions: z.array(contributionSchema).min(1),
           })
-          .parse(body);
+          .safeParse(body);
+        if (!parsed.success) {
+          return Response.json({ error: "Invalid request" }, { status: 400 });
+        }
+        const input = parsed.data;
+        const locked = await approvedPeriodResponse(input.month, input.year, input.lang);
+        if (locked) return locked;
 
         try {
           const { summary, model } = await generateActivitySummary({
@@ -91,8 +98,7 @@ export const Route = createFileRoute("/api/consolidation/activity-summary")({
             saved: true,
           });
         } catch (e: unknown) {
-          const message = e instanceof Error ? e.message : "Summary generation failed";
-          const status = message.includes("not configured") ? 503 : 500;
+          const { message, status } = aiHttpError(input.lang, e);
           return Response.json({ error: message }, { status });
         }
       },

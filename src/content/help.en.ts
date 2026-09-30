@@ -45,6 +45,17 @@ export const helpSectionsEn: HelpSection[] = [
     ],
   },
   {
+    id: "dt-ai",
+    title: "AI summaries",
+    roles: ["technical_director"],
+    body: [
+      "On Consolidation, for a month that is not yet approved, generate the national summary. Review it, edit it if needed, then save.",
+      "Open an activity to generate a summary from the provincial texts. Accept the AI version or keep the report version.",
+      "The accepted national summary and any activity set to the AI version are included in the Word export. Provincial source reports are not changed.",
+      "After the month is approved, summaries are locked. Generation requires OPENAI_API_KEY on the server.",
+    ],
+  },
+  {
     id: "export",
     title: "Word export",
     roles: ["technical_director", "province_user"],

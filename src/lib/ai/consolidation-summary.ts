@@ -1,7 +1,7 @@
 import { generateText } from "ai";
 import type { OfficialReportPayload } from "@/lib/export/epic-official";
 import { calcAchievementRate } from "@/lib/activity-catalog";
-import { aiConfigured, aiSetupMessage } from "@/lib/ai/env";
+import { AiNotConfiguredError, aiConfigured } from "@/lib/ai/env";
 import { resolveAiModel } from "@/lib/ai/model";
 
 const MAX_FIELD = 1200;
@@ -97,7 +97,7 @@ export async function generateConsolidationSummary(
   context: ConsolidationAiContext,
 ): Promise<{ summary: string; model: string }> {
   if (!aiConfigured()) {
-    throw new Error(aiSetupMessage());
+    throw new AiNotConfiguredError(context.lang);
   }
 
   const { model, modelId } = resolveAiModel();
@@ -135,7 +135,7 @@ export async function generateActivitySummary(input: {
   }[];
 }): Promise<{ summary: string; model: string }> {
   if (!aiConfigured()) {
-    throw new Error(aiSetupMessage());
+    throw new AiNotConfiguredError(input.lang);
   }
 
   const { model, modelId } = resolveAiModel();

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -76,6 +77,7 @@ function Consolidation() {
   const [generating, setGenerating] = useState(false);
   const [savingSummary, setSavingSummary] = useState(false);
   const [activitySummaries, setActivitySummaries] = useState<ActivitySummaryRow[]>([]);
+  const [aiReady, setAiReady] = useState<boolean | null>(null);
   const onActivitySummariesChange = useCallback((rows: ActivitySummaryRow[]) => {
     setActivitySummaries(rows);
   }, []);
@@ -186,6 +188,25 @@ function Consolidation() {
   useEffect(() => {
     loadSavedSummary();
   }, [loadSavedSummary]);
+
+  useEffect(() => {
+    if (!canWriteSummary) return;
+    let cancelled = false;
+    (async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) return;
+      const res = await fetch("/api/consolidation/summary", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as { configured?: boolean };
+      if (!cancelled) setAiReady(Boolean(data.configured));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [canWriteSummary]);
 
   const payload = useMemo(
     () =>
@@ -344,7 +365,7 @@ function Consolidation() {
             <Button
               variant="secondary"
               onClick={generateSummary}
-              disabled={generating || loading || reports.length === 0}
+              disabled={generating || loading || reports.length === 0 || aiReady === false}
             >
               <Sparkles className="h-4 w-4 mr-1" />
               {hasSummary ? t.regenerateAiSummary : t.generateAiSummary}
@@ -387,6 +408,11 @@ function Consolidation() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">{t.aiSummaryHint}</p>
+            {aiReady === false && (
+              <Alert>
+                <AlertDescription>{t.aiNotConfigured}</AlertDescription>
+              </Alert>
+            )}
             {summaryLoading ? (
               <Skeleton className="h-32 w-full" />
             ) : summaryEditable ? (
@@ -454,7 +480,8 @@ function Consolidation() {
             month={singleMonth ? storageMonth : 0}
             year={singleMonth ? storageYear : 0}
             periodLabel={singleMonth ? t.months[storageMonth - 1] : periodLabel}
-            isDirector={canWriteSummary && singleMonth}
+            isDirector={summaryEditable}
+            aiReady={aiReady !== false}
             focusActivity={focusActivity}
             onDismissFocus={clearFocus}
             onSummariesChange={onActivitySummariesChange}

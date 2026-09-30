@@ -42,6 +42,7 @@ type Props = {
   year: number;
   periodLabel: string;
   isDirector: boolean;
+  aiReady?: boolean;
   focusActivity?: string;
   onDismissFocus?: () => void;
   onSummariesChange: (rows: ActivitySummaryRow[]) => void;
@@ -54,6 +55,7 @@ export function ConsolidationActivities({
   year,
   periodLabel,
   isDirector,
+  aiReady = true,
   focusActivity,
   onDismissFocus,
   onSummariesChange,
@@ -363,7 +365,7 @@ export function ConsolidationActivities({
                 <div className="mt-4 rounded-xl border bg-muted/30 p-3 space-y-3">
                   <Button
                     onClick={generate}
-                    disabled={generating || openView.contributions.length === 0}
+                    disabled={generating || !aiReady || openView.contributions.length === 0}
                     className="w-full"
                   >
                     <Sparkles className="h-4 w-4 mr-1" />
@@ -402,7 +404,7 @@ export function ConsolidationActivities({
                       </p>
                     </>
                   ) : (
-                    <p className="text-xs text-muted-foreground">{t.aiActivityHint}</p>
+                    <p className="text-xs text-muted-foreground">{aiReady ? t.aiActivityHint : t.aiNotConfigured}</p>
                   )}
                 </div>
               )}

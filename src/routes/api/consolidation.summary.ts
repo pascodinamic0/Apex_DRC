@@ -2,10 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { requireDuty } from "@/lib/auth/director-server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { aiConfigured } from "@/lib/ai/env";
 import {
   buildConsolidationAiContext,
   generateConsolidationSummary,
 } from "@/lib/ai/consolidation-summary";
+import { aiHttpError, approvedPeriodResponse } from "@/lib/ai/period";
 import type { OfficialReportPayload } from "@/lib/export/epic-official";
 
 const payloadSchema = z.object({
@@ -63,6 +65,11 @@ const payloadSchema = z.object({
 export const Route = createFileRoute("/api/consolidation/summary")({
   server: {
     handlers: {
+      GET: async ({ request }) => {
+        const uid = await requireDuty(request, "write_national_summary");
+        if (!uid) return new Response("Forbidden", { status: 403 });
+        return Response.json({ configured: aiConfigured() });
+      },
       POST: async ({ request }) => {
         const uid = await requireDuty(request, "write_national_summary");
         if (!uid) return new Response("Forbidden", { status: 403 });
@@ -74,7 +81,7 @@ export const Route = createFileRoute("/api/consolidation/summary")({
           return new Response("Invalid JSON", { status: 400 });
         }
 
-        const input = z
+        const parsed = z
           .object({
             month: z.number().int().min(1).max(12),
             year: z.number().int().min(2000).max(2100),
@@ -82,7 +89,13 @@ export const Route = createFileRoute("/api/consolidation/summary")({
             sourceReportIds: z.array(z.string().uuid()),
             payload: payloadSchema,
           })
-          .parse(body);
+          .safeParse(body);
+        if (!parsed.success) {
+          return Response.json({ error: "Invalid request" }, { status: 400 });
+        }
+        const input = parsed.data;
+        const locked = await approvedPeriodResponse(input.month, input.year, input.lang);
+        if (locked) return locked;
 
         const officialPayload = input.payload as OfficialReportPayload;
         const context = buildConsolidationAiContext(officialPayload, {
@@ -129,9 +142,8 @@ export const Route = createFileRoute("/api/consolidation/summary")({
             saved: true,
           });
         } catch (e: unknown) {
-          const message = e instanceof Error ? e.message : "Summary generation failed";
-          const status = message.includes("not configured") ? 503 : 500;
-          return Response.json({ error: message }, { status });
+          const { message, status } = aiHttpError(input.lang, e);
+          return Response.json({ error: message, configured: status !== 503 }, { status });
         }
       },
     },
