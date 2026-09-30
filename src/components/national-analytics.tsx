@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,7 +15,10 @@ import {
   type PeriodGrain,
   type PeriodSelection,
 } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 import { CheckCircle2, ClipboardList, MapPin, Target } from "lucide-react";
+
+type FilterVariant = "default" | "toolbar";
 
 function rateTone(rate: number) {
   if (rate >= 80) return { bar: "bg-emerald-500", badge: "border-emerald-500/20 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300" };
@@ -33,6 +37,25 @@ type Props = {
   loading?: boolean;
 };
 
+function FilterField({
+  label,
+  variant,
+  className,
+  children,
+}: {
+  label: string;
+  variant: FilterVariant;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className={cn("min-w-0", variant === "default" && "space-y-1.5", className)}>
+      <Label className={variant === "toolbar" ? "sr-only" : "text-xs"}>{label}</Label>
+      {children}
+    </div>
+  );
+}
+
 function MonthYearSelect({
   month,
   year,
@@ -40,6 +63,7 @@ function MonthYearSelect({
   months,
   monthLabel,
   yearLabel,
+  variant,
   onMonthChange,
   onYearChange,
 }: {
@@ -49,33 +73,39 @@ function MonthYearSelect({
   months: string[];
   monthLabel: string;
   yearLabel: string;
+  variant: FilterVariant;
   onMonthChange: (m: number) => void;
   onYearChange: (y: number) => void;
 }) {
+  const trigger = variant === "toolbar"
+    ? "h-9 w-[8.5rem] bg-background"
+    : "h-9 w-full sm:w-40";
+  const yearTrigger = variant === "toolbar"
+    ? "h-9 w-[5.5rem] bg-background"
+    : "h-9 w-full sm:w-28";
+
   return (
     <>
-      <div className="space-y-1.5">
-        <Label className="text-xs">{monthLabel}</Label>
+      <FilterField label={monthLabel} variant={variant}>
         <Select value={String(month)} onValueChange={(v) => onMonthChange(Number(v))}>
-          <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
+          <SelectTrigger className={trigger}><SelectValue /></SelectTrigger>
           <SelectContent>
             {months.map((m, i) => (
               <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs">{yearLabel}</Label>
+      </FilterField>
+      <FilterField label={yearLabel} variant={variant}>
         <Select value={String(year)} onValueChange={(v) => onYearChange(Number(v))}>
-          <SelectTrigger className="h-9 w-28"><SelectValue /></SelectTrigger>
+          <SelectTrigger className={yearTrigger}><SelectValue /></SelectTrigger>
           <SelectContent>
             {years.map((y) => (
               <SelectItem key={y} value={String(y)}>{y}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </FilterField>
     </>
   );
 }
@@ -107,6 +137,7 @@ export function PeriodFilters({
   semesters = ["S1", "S2"],
   allowedGrains,
   labels,
+  variant = "default",
   onPeriodChange,
 }: {
   period: PeriodSelection;
@@ -115,6 +146,7 @@ export function PeriodFilters({
   trimesters: string[];
   semesters?: string[];
   allowedGrains?: PeriodGrain[];
+  variant?: FilterVariant;
   labels: {
     periodType: string;
     month: string;
@@ -138,22 +170,37 @@ export function PeriodFilters({
     ? allGrains.filter((g) => allowedGrains.includes(g.value))
     : allGrains;
 
+  const grainTrigger = variant === "toolbar"
+    ? "h-9 w-[8.5rem] bg-background"
+    : "h-9 w-full sm:w-40";
+  const midTrigger = variant === "toolbar"
+    ? "h-9 w-[8.5rem] bg-background"
+    : "h-9 w-full sm:w-40";
+  const yearTrigger = variant === "toolbar"
+    ? "h-9 w-[5.5rem] bg-background"
+    : "h-9 w-full sm:w-28";
+
   return (
-    <div className="flex flex-wrap items-end gap-3">
-      <div className="space-y-1.5">
-        <Label className="text-xs">{labels.periodType}</Label>
+    <div
+      className={cn(
+        variant === "toolbar"
+          ? "flex flex-wrap items-center gap-2"
+          : "grid grid-cols-2 items-end gap-3 sm:flex sm:flex-wrap",
+      )}
+    >
+      <FilterField label={labels.periodType} variant={variant}>
         <Select
           value={period.grain}
           onValueChange={(v) => onPeriodChange(mapPeriodToGrain(period, v as PeriodGrain))}
         >
-          <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
+          <SelectTrigger className={grainTrigger}><SelectValue /></SelectTrigger>
           <SelectContent>
             {grainOptions.map((g) => (
               <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </FilterField>
 
       {period.grain === "month" && (
         <MonthYearSelect
@@ -163,6 +210,7 @@ export function PeriodFilters({
           months={months}
           monthLabel={labels.month}
           yearLabel={labels.year}
+          variant={variant}
           onMonthChange={(month) => onPeriodChange({ ...period, month })}
           onYearChange={(year) => onPeriodChange({ ...period, year })}
         />
@@ -170,85 +218,80 @@ export function PeriodFilters({
 
       {period.grain === "semester" && (
         <>
-          <div className="space-y-1.5">
-            <Label className="text-xs">{labels.semester ?? "Semester"}</Label>
+          <FilterField label={labels.semester ?? "Semester"} variant={variant}>
             <Select
               value={String(period.semester)}
               onValueChange={(v) => onPeriodChange({ ...period, semester: Number(v) })}
             >
-              <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
+              <SelectTrigger className={midTrigger}><SelectValue /></SelectTrigger>
               <SelectContent>
                 {semesters.map((s, i) => (
                   <SelectItem key={i} value={String(i + 1)}>{s}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">{labels.year}</Label>
+          </FilterField>
+          <FilterField label={labels.year} variant={variant}>
             <Select
               value={String(period.year)}
               onValueChange={(v) => onPeriodChange({ ...period, year: Number(v) })}
             >
-              <SelectTrigger className="h-9 w-28"><SelectValue /></SelectTrigger>
+              <SelectTrigger className={yearTrigger}><SelectValue /></SelectTrigger>
               <SelectContent>
                 {years.map((y) => (
                   <SelectItem key={y} value={String(y)}>{y}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FilterField>
         </>
       )}
 
       {period.grain === "trimester" && (
         <>
-          <div className="space-y-1.5">
-            <Label className="text-xs">{labels.trimester}</Label>
+          <FilterField label={labels.trimester} variant={variant}>
             <Select
               value={String(period.trimester)}
               onValueChange={(v) => onPeriodChange({ ...period, trimester: Number(v) })}
             >
-              <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
+              <SelectTrigger className={midTrigger}><SelectValue /></SelectTrigger>
               <SelectContent>
                 {trimesters.map((t, i) => (
                   <SelectItem key={i} value={String(i + 1)}>{t}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">{labels.year}</Label>
+          </FilterField>
+          <FilterField label={labels.year} variant={variant}>
             <Select
               value={String(period.year)}
               onValueChange={(v) => onPeriodChange({ ...period, year: Number(v) })}
             >
-              <SelectTrigger className="h-9 w-28"><SelectValue /></SelectTrigger>
+              <SelectTrigger className={yearTrigger}><SelectValue /></SelectTrigger>
               <SelectContent>
                 {years.map((y) => (
                   <SelectItem key={y} value={String(y)}>{y}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FilterField>
         </>
       )}
 
       {period.grain === "year" && (
-        <div className="space-y-1.5">
-          <Label className="text-xs">{labels.year}</Label>
+        <FilterField label={labels.year} variant={variant}>
           <Select
             value={String(period.year)}
             onValueChange={(v) => onPeriodChange({ ...period, year: Number(v) })}
           >
-            <SelectTrigger className="h-9 w-28"><SelectValue /></SelectTrigger>
+            <SelectTrigger className={yearTrigger}><SelectValue /></SelectTrigger>
             <SelectContent>
               {years.map((y) => (
                 <SelectItem key={y} value={String(y)}>{y}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </FilterField>
       )}
 
       {period.grain === "custom" && (
@@ -260,6 +303,7 @@ export function PeriodFilters({
             months={months}
             monthLabel={labels.from}
             yearLabel={labels.year}
+            variant={variant}
             onMonthChange={(fromMonth) => onPeriodChange({ ...period, fromMonth })}
             onYearChange={(fromYear) => onPeriodChange({ ...period, fromYear })}
           />
@@ -270,6 +314,7 @@ export function PeriodFilters({
             months={months}
             monthLabel={labels.to}
             yearLabel={labels.year}
+            variant={variant}
             onMonthChange={(toMonth) => onPeriodChange({ ...period, toMonth })}
             onYearChange={(toYear) => onPeriodChange({ ...period, toYear })}
           />
@@ -314,11 +359,8 @@ export function NationalAnalytics({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">{t.nationalAnalytics}</h2>
-          <p className="text-sm text-muted-foreground">{t.reportingPeriod} · {periodLabel}</p>
-        </div>
+      <div className="flex flex-col gap-3 border-b pb-5 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-lg font-semibold tracking-tight">{t.nationalAnalytics}</h2>
         <PeriodFilters
           period={period}
           years={years}
@@ -326,6 +368,7 @@ export function NationalAnalytics({
           trimesters={t.trimesters}
           semesters={t.semesters}
           labels={periodFilterLabels(t)}
+          variant="toolbar"
           onPeriodChange={onPeriodChange}
         />
       </div>
