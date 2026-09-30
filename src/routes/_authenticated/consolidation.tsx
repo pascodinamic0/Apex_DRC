@@ -359,7 +359,10 @@ function Consolidation() {
         </div>
         <div className="flex gap-2 flex-wrap items-center">
           {periodApproved && (
-            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{t.consolidationApprovedBadge}</span>
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+              <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+              {t.consolidationApprovedBadge}
+            </span>
           )}
           {summaryEditable && (
             <Button
