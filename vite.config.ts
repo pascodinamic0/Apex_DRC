@@ -10,11 +10,14 @@ import { nitro } from "nitro/vite";
 
 const appBuildId = new Date().toISOString();
 
+/** Lovable/dev-only: map jsx-runtime → jsxDEV. Must NOT run in production builds
+ *  or SSR crashes with `jsxDEV is not a function`. */
 function jsxRuntimeAlias() {
   const shim = fileURLToPath(new URL("./src/lib/react-jsx-runtime.ts", import.meta.url));
   return {
     name: "jsx-runtime-alias",
     enforce: "pre" as const,
+    apply: "serve" as const,
     resolveId(source: string, importer?: string) {
       if (source !== "react/jsx-runtime") return null;
       if (importer?.includes("react-jsx-runtime")) return null;
