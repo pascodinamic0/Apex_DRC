@@ -92,7 +92,7 @@ export function ReportReviewPanel({ reportId, reportStatus, submission, mode, on
       supabase.from("narratives").select("section_type, content").eq("report_id", reportId),
     ]);
     const rows = (cm || []) as CommentRow[];
-    const authorIds = [...new Set(rows.map((c) => c.author_id))];
+    const authorIds = [...new Set(rows.map((c) => c.author_id).filter((id): id is string => Boolean(id)))];
     const { data: profs } = authorIds.length
       ? await supabase.from("profiles").select("id, full_name").in("id", authorIds)
       : { data: [] };

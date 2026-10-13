@@ -296,7 +296,7 @@ export type Database = {
       consolidation_approvals: {
         Row: {
           approved_at: string
-          approved_by: string
+          approved_by: string | null
           id: string
           month: number
           year: number
@@ -416,7 +416,7 @@ export type Database = {
           month: number
           year: number
           activity_code: string
-          author_id: string
+          author_id: string | null
           body: string
           created_at: string
         }

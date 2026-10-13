@@ -116,7 +116,7 @@ export function ConsolidationActivities({
           return;
         }
         const rows = (data || []) as Omit<CommentRow, "authorName">[];
-        const ids = [...new Set(rows.map((r) => r.author_id))];
+        const ids = [...new Set(rows.map((r) => r.author_id).filter((id): id is string => Boolean(id)))];
         const { data: profs } = ids.length
           ? await supabase.from("profiles").select("id, full_name").in("id", ids)
           : { data: [] };
