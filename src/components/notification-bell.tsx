@@ -113,9 +113,11 @@ export function NotificationBell({ role }: Props) {
   const reportLink = (n: NotifRow) => {
     if (!n.report_id) return null;
     const to =
-      n.type === "report_returned" || role === "province_user"
+      n.type === "report_returned"
         ? "/reports/$reportId/revisions"
-        : "/reports/$reportId/review";
+        : role === "province_user"
+          ? "/reports/$reportId"
+          : "/reports/$reportId/review";
     return { to, params: { reportId: n.report_id } };
   };
 

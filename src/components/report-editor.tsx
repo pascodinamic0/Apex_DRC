@@ -151,7 +151,7 @@ export function ReportEditor({
         }
         if (!silent) {
           if (result?.offline) toast.success(t.offline + " — " + t.pendingSync);
-          else if (["submitted", "returned"].includes(report.status) && isProvinceUser) toast.success(t.changesSavedAwaiting);
+          else if (["submitted", "in_review", "returned"].includes(report.status) && isProvinceUser) toast.success(t.changesSavedAwaiting);
           else toast.success(t.saved);
         }
       } catch (e: unknown) {
@@ -328,7 +328,7 @@ export function ReportEditor({
             <Button size="sm" variant="outline" asChild>
               <Link to="/reports/$reportId/revisions" params={{ reportId: report.id }}>{t.viewComments}</Link>
             </Button>
-            {readOnly && (
+            {readOnly && report.status !== "validated" && (
               <Button size="sm" asChild>
                 <Link to="/reports/$reportId/edit" params={{ reportId: report.id }}>{t.editReportAgain}</Link>
               </Button>
@@ -337,10 +337,17 @@ export function ReportEditor({
         </Alert>
       )}
 
-      {isProvinceUser && report.status === "submitted" && (
+      {isProvinceUser && (report.status === "submitted" || report.status === "in_review") && (
         <Alert>
           <AlertTitle>{t.awaitingValidation}</AlertTitle>
-          <AlertDescription>{t.awaitingValidationDesc}</AlertDescription>
+          <AlertDescription className="flex flex-wrap items-center gap-2">
+            <span>{t.awaitingValidationDesc}</span>
+            {readOnly && (
+              <Button size="sm" asChild>
+                <Link to="/reports/$reportId/edit" params={{ reportId: report.id }}>{t.editReportAgain}</Link>
+              </Button>
+            )}
+          </AlertDescription>
         </Alert>
       )}
 

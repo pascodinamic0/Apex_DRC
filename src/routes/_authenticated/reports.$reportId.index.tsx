@@ -45,6 +45,7 @@ function ViewPage() {
   const isMine = role === "province_user" && report.province_id === profile?.province_id;
   const canExport =
     (isMine && role === "province_user") || role === "technical_director";
+  const readOnly = !(isMine && report.status !== "validated");
 
   return (
     <ReportEditor
@@ -54,7 +55,7 @@ function ViewPage() {
       initialAchievement={achievement}
       initialActivityResponses={activityResponses}
       initialCatalog={catalog}
-      readOnly={true}
+      readOnly={readOnly}
       isProvinceUser={isMine}
       canValidateReports={canValidate}
       showExport={canExport}

@@ -93,7 +93,7 @@ function NotificationsPage() {
                 n.type === "report_returned"
                   ? "/reports/$reportId/revisions"
                   : role === "province_user"
-                    ? "/reports/$reportId/revisions"
+                    ? "/reports/$reportId"
                     : "/reports/$reportId/review";
               return (
                 <Link

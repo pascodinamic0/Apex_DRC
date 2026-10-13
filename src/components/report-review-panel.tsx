@@ -118,6 +118,7 @@ export function ReportReviewPanel({ reportId, reportStatus, submission, mode, on
   const canMark = mode === "dt" && canValidate && reportStatus !== "validated";
   const canReply = mode === "cp" && reportStatus === "returned";
   const canAnswer = mode === "cp" && reportStatus !== "validated";
+  const showCpEdit = mode === "cp" && reportStatus !== "validated";
 
   const saveNarrative = async (key: string, content: string) => {
     const { error } = await supabase.from("narratives").upsert(
@@ -345,13 +346,13 @@ export function ReportReviewPanel({ reportId, reportStatus, submission, mode, on
       </Accordion>
 
       <div className="sticky bottom-0 z-10 -mx-1 flex flex-col gap-2 border-t bg-card/95 px-1 py-3 backdrop-blur sm:flex-row sm:flex-wrap sm:justify-end">
+        {showCpEdit && (
+          <Button variant="outline" asChild>
+            <Link to="/reports/$reportId/edit" params={{ reportId }}>{t.editReportAgain}</Link>
+          </Button>
+        )}
         {mode === "cp" && reportStatus === "returned" && (
-          <>
-            <Button variant="outline" asChild>
-              <Link to="/reports/$reportId/edit" params={{ reportId }}>{t.editReportAgain}</Link>
-            </Button>
-            <Button onClick={resubmit}>{t.resubmitToDt}</Button>
-          </>
+          <Button onClick={resubmit}>{t.resubmitToDt}</Button>
         )}
         {mode === "dt" && canValidate && (reportStatus === "submitted" || reportStatus === "in_review") && (
           <>
