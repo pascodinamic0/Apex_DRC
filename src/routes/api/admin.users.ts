@@ -43,6 +43,7 @@ const patchSchema = z.object({
   accessLevel: accessLevelSchema.optional(),
   duties: z.array(dutySchema).optional(),
   accessBlocked: z.boolean().optional(),
+  bulkImportGranted: z.boolean().optional(),
 });
 
 function publicOrigin(request: Request): string {
@@ -130,7 +131,11 @@ export const Route = createFileRoute("/api/admin/users")({
         const admin = await requireUserAdmin(request);
         if (!admin) return new Response("Forbidden", { status: 403 });
         const [{ data: profiles }, { data: roles }, { data: dutyRows }, { data: provinces }] = await Promise.all([
-          supabaseAdmin.from("profiles").select("id, email, full_name, province_id, job_title, access_level, access_blocked"),
+          supabaseAdmin
+            .from("profiles")
+            .select(
+              "id, email, full_name, province_id, job_title, access_level, access_blocked, bulk_import_granted",
+            ),
           supabaseAdmin.from("user_roles").select("user_id, role"),
           supabaseAdmin.from("user_duties").select("user_id, duty"),
           supabaseAdmin.from("provinces").select("id, name, code").order("name"),
@@ -198,6 +203,27 @@ export const Route = createFileRoute("/api/admin/users")({
         const actorId = admin.userId;
         const body = await request.json();
         const input = patchSchema.parse(body);
+
+        if (input.bulkImportGranted !== undefined) {
+          if (admin.scope !== "full") return new Response("Forbidden", { status: 403 });
+          const grantPatch: Database["public"]["Tables"]["profiles"]["Update"] = {
+            bulk_import_granted: input.bulkImportGranted,
+            bulk_import_granted_by: input.bulkImportGranted ? actorId : null,
+            bulk_import_granted_at: input.bulkImportGranted ? new Date().toISOString() : null,
+          };
+          await supabaseAdmin.from("profiles").update(grantPatch).eq("id", input.userId);
+          if (
+            input.fullName === undefined &&
+            input.role === undefined &&
+            input.provinceId === undefined &&
+            input.duties === undefined &&
+            input.accessLevel === undefined &&
+            input.jobTitle === undefined &&
+            input.accessBlocked === undefined
+          ) {
+            return Response.json({ ok: true });
+          }
+        }
 
         if (input.accessBlocked !== undefined) {
           if (admin.scope !== "full") return new Response("Forbidden", { status: 403 });

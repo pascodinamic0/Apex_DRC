@@ -93,11 +93,86 @@ export type Database = {
           },
         ]
       }
+      import_batches: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      import_files: {
+        Row: {
+          applied_at: string | null
+          applied_report_id: string | null
+          batch_id: string
+          created_at: string
+          detected_month: number | null
+          detected_province_id: string | null
+          detected_year: number | null
+          error_message: string | null
+          extracted: Json | null
+          file_name: string
+          file_size: number
+          id: string
+          status: Database["public"]["Enums"]["import_file_status"]
+          storage_path: string
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_report_id?: string | null
+          batch_id: string
+          created_at?: string
+          detected_month?: number | null
+          detected_province_id?: string | null
+          detected_year?: number | null
+          error_message?: string | null
+          extracted?: Json | null
+          file_name: string
+          file_size?: number
+          id?: string
+          status?: Database["public"]["Enums"]["import_file_status"]
+          storage_path: string
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_report_id?: string | null
+          batch_id?: string
+          created_at?: string
+          detected_month?: number | null
+          detected_province_id?: string | null
+          detected_year?: number | null
+          error_message?: string | null
+          extracted?: Json | null
+          file_name?: string
+          file_size?: number
+          id?: string
+          status?: Database["public"]["Enums"]["import_file_status"]
+          storage_path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           access_blocked: boolean
           access_level: Database["public"]["Enums"]["access_level"]
           address: string | null
+          bulk_import_granted: boolean
+          bulk_import_granted_at: string | null
+          bulk_import_granted_by: string | null
           created_at: string
           email: string | null
           full_name: string | null
@@ -112,6 +187,9 @@ export type Database = {
           access_blocked?: boolean
           access_level?: Database["public"]["Enums"]["access_level"]
           address?: string | null
+          bulk_import_granted?: boolean
+          bulk_import_granted_at?: string | null
+          bulk_import_granted_by?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -126,6 +204,9 @@ export type Database = {
           access_blocked?: boolean
           access_level?: Database["public"]["Enums"]["access_level"]
           address?: string | null
+          bulk_import_granted?: boolean
+          bulk_import_granted_at?: string | null
+          bulk_import_granted_by?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -496,8 +577,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      user_can_bulk_import: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
+      import_file_status: "pending" | "extracting" | "ready" | "failed" | "applied"
       access_level: "edit" | "view"
       app_duty:
         | "edit_reports"

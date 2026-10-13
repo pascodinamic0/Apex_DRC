@@ -91,6 +91,13 @@ export function ReportEditor({
   });
   const [savingState, setSavingState] = useState<"idle" | "saving" | "saved">("idle");
   const dirtyRef = useRef(false);
+  const editGen = useRef(0);
+  const hydratedRef = useRef(false);
+  const mountedRef = useRef(true);
+  const saveTimer = useRef<number | null>(null);
+  const saveChain = useRef(Promise.resolve());
+  const payloadRef = useRef({ narratives, achievement, activityResponses, meta });
+  payloadRef.current = { narratives, achievement, activityResponses, meta };
 
   useEffect(() => {
     if (!initialCatalog?.length) {
@@ -98,50 +105,105 @@ export function ReportEditor({
     }
   }, [initialCatalog]);
 
-  useEffect(() => { dirtyRef.current = true; }, [narratives, achievement, activityResponses, meta]);
-
-  useEffect(() => {
-    if (readOnly) return;
-    const id = setInterval(() => { if (dirtyRef.current) saveDraft(true); }, 30000);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [narratives, achievement, activityResponses, meta]);
-
   const persistDraft = async () => {
-    const payload = { narratives, achievement, activityResponses, meta };
+    const snap = payloadRef.current;
+    const payload = {
+      narratives: snap.narratives,
+      achievement: snap.achievement,
+      activityResponses: snap.activityResponses,
+      meta: snap.meta,
+    };
     if (!navigator.onLine) {
       await queueDraft({
         reportId: report.id,
-        payload: { activities: initialActivities, narratives, achievement, activityResponses, meta },
+        payload: { activities: initialActivities, ...payload },
         queuedAt: new Date().toISOString(),
       });
-      return { offline: true };
+      return { offline: true as const };
     }
     await supabase.from("report_drafts").upsert(
       { report_id: report.id, payload: payload as never, updated_at: new Date().toISOString() },
       { onConflict: "report_id" },
     );
-    await persistExtendedReport(report.id, { narratives, achievement, activityResponses, meta });
+    await persistExtendedReport(report.id, payload);
     return {};
   };
 
   const saveDraft = async (silent = false) => {
-    setSavingState("saving");
-    try {
-      const result = await persistDraft();
-      dirtyRef.current = false;
-      setSavingState("saved");
-      if (!silent) {
-        if (result?.offline) toast.success(t.offline + " — " + t.pendingSync);
-        else if (["submitted", "returned"].includes(report.status) && isProvinceUser) toast.success(t.changesSavedAwaiting);
-        else toast.success(t.saved);
+    const run = async () => {
+      if (readOnly) return;
+      if (silent && !dirtyRef.current) return;
+      if (saveTimer.current) {
+        window.clearTimeout(saveTimer.current);
+        saveTimer.current = null;
       }
-      setTimeout(() => setSavingState("idle"), 2000);
-    } catch (e: unknown) {
-      setSavingState("idle");
-      toast.error(e instanceof Error ? e.message : t.error);
-    }
+      const gen = editGen.current;
+      if (mountedRef.current) setSavingState("saving");
+      try {
+        const result = await persistDraft();
+        if (editGen.current === gen) dirtyRef.current = false;
+        if (mountedRef.current) {
+          setSavingState("saved");
+          window.setTimeout(() => {
+            if (mountedRef.current) setSavingState((s) => (s === "saved" ? "idle" : s));
+          }, 2000);
+        }
+        if (!silent) {
+          if (result?.offline) toast.success(t.offline + " — " + t.pendingSync);
+          else if (["submitted", "returned"].includes(report.status) && isProvinceUser) toast.success(t.changesSavedAwaiting);
+          else toast.success(t.saved);
+        }
+      } catch (e: unknown) {
+        dirtyRef.current = true;
+        if (mountedRef.current) setSavingState("idle");
+        toast.error(e instanceof Error ? e.message : t.error);
+      }
+    };
+    const job = saveChain.current.then(run, run);
+    saveChain.current = job.then(() => undefined, () => undefined);
+    return job;
   };
+
+  const saveDraftRef = useRef(saveDraft);
+  saveDraftRef.current = saveDraft;
+
+  useEffect(() => {
+    if (!hydratedRef.current) {
+      hydratedRef.current = true;
+      return;
+    }
+    editGen.current += 1;
+    dirtyRef.current = true;
+    if (readOnly) return;
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      saveTimer.current = null;
+      void saveDraftRef.current(true);
+    }, 1000);
+  }, [narratives, achievement, activityResponses, meta, readOnly]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    if (readOnly) return;
+    const flush = () => {
+      if (saveTimer.current) {
+        window.clearTimeout(saveTimer.current);
+        saveTimer.current = null;
+      }
+      if (dirtyRef.current) void saveDraftRef.current(true);
+    };
+    const onHide = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", flush);
+      flush();
+      mountedRef.current = false;
+    };
+  }, [readOnly, report.id]);
 
   const submit = async () => {
     await saveDraft(true);

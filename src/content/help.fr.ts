@@ -24,7 +24,7 @@ export const helpSectionsFr: HelpSection[] = [
     body: [
       "Créez un rapport via Rapports → Nouveau rapport (mois et année).",
       "Remplissez les onglets, y compris Média pour les photos de mise en œuvre (Annexe B).",
-      "Enregistrez le brouillon (autosauvegarde toutes les 30 s) puis Soumettre.",
+      "Le brouillon s'enregistre automatiquement pendant la saisie. Soumettez quand il est prêt.",
       "Après soumission, le statut devient « En attente de validation ». Vous pouvez encore modifier le rapport jusqu'à validation par l'AT.",
     ],
   },

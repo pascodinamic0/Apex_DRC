@@ -5,6 +5,7 @@ import {
   CircleHelp,
   ClipboardCheck,
   Database,
+  FileStack,
   FileText,
   Layers,
   LayoutDashboard,
@@ -22,7 +23,9 @@ export function navGroupsForRole(
   role: AppRole | null,
   can: (duty: AppDuty) => boolean,
   t: Dict,
+  opts?: { bulkImport?: boolean },
 ): NavGroup[] {
+  const bulkImport = opts?.bulkImport ?? false;
   if (role === "technical_assistant") {
     return [
       {
@@ -41,6 +44,7 @@ export function navGroupsForRole(
           ...(can("manage_provincial_users")
             ? [{ to: "/users", icon: Users, label: t.users }]
             : []),
+          ...(bulkImport ? [{ to: "/imports", icon: FileStack, label: t.bulkImportNav }] : []),
         ],
       },
       {
@@ -64,6 +68,7 @@ export function navGroupsForRole(
         label: t.dtNavAdmin,
         items: [
           ...(can("manage_users") ? [{ to: "/users", icon: Users, label: t.users }] : []),
+          ...(bulkImport ? [{ to: "/imports", icon: FileStack, label: t.bulkImportNav }] : []),
           { to: "/history", icon: Archive, label: t.history },
         ],
       },
@@ -81,6 +86,7 @@ export function navGroupsForRole(
         items: [
           { to: "/dashboard", icon: LayoutDashboard, label: t.dashboard, exact: true },
           { to: "/reports", icon: FileText, label: t.reports },
+          ...(bulkImport ? [{ to: "/imports", icon: FileStack, label: t.bulkImportNav }] : []),
         ],
       },
       {
@@ -97,6 +103,7 @@ export function navGroupsForRole(
         { to: "/dashboard", icon: LayoutDashboard, label: t.dashboard, exact: true },
         { to: "/reports", icon: FileText, label: t.reports },
         { to: "/history", icon: Archive, label: t.history },
+        ...(bulkImport ? [{ to: "/imports", icon: FileStack, label: t.bulkImportNav }] : []),
       ],
     },
     {

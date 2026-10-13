@@ -47,6 +47,7 @@ interface UserRow {
   access_level: AccessLevel;
   access_blocked?: boolean;
   duties: AppDuty[];
+  bulk_import_granted?: boolean;
 }
 
 interface ProvinceRow {
@@ -176,6 +177,7 @@ function UsersPage() {
       role: (u.role as AppRole) || "province_user",
       accessLevel: u.access_level || "edit",
       duties: u.duties?.length ? u.duties : defaultDutiesForRole((u.role as AppRole) || "province_user"),
+      bulkImportGranted: Boolean(u.bulk_import_granted),
     });
   };
 
@@ -197,6 +199,7 @@ function UsersPage() {
           jobTitle: editForm.jobTitle || null,
           accessLevel: editForm.accessLevel,
           duties: editForm.accessLevel === "edit" ? editForm.duties : [],
+          bulkImportGranted: canManageFull ? Boolean(editForm.bulkImportGranted) : undefined,
         }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -438,6 +441,7 @@ function UsersPage() {
               showEmail={false}
               idPrefix="edit"
               allowedRoles={allowedInviteRoles}
+              showBulkImportGrant={canManageFull}
             />
           )}
           <DialogFooter>

@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { AppDuty } from "@/lib/auth/duties";
+import type { AppRole } from "@/lib/auth";
+import { canBulkImport } from "@/lib/auth/bulk-import";
 
 export type UserAdminScope = "full" | "provincial";
 
@@ -55,4 +57,27 @@ export async function requireUserAdmin(
 /** @deprecated Use requireDuty(request, 'manage_users') for admin routes. */
 export async function getDirectorUserId(request: Request): Promise<string | null> {
   return requireDuty(request, "manage_users");
+}
+
+/** Bulk PDF import — Technical Director or explicitly granted profile. */
+export async function requireBulkImport(request: Request): Promise<string | null> {
+  const uid = await getAuthenticatedUserId(request);
+  if (!uid) return null;
+
+  const [{ data: profile }, { data: roleRow }] = await Promise.all([
+    supabaseAdmin
+      .from("profiles")
+      .select("access_level, access_blocked, bulk_import_granted")
+      .eq("id", uid)
+      .maybeSingle(),
+    supabaseAdmin.from("user_roles").select("role").eq("user_id", uid).maybeSingle(),
+  ]);
+
+  if (!profile) return null;
+  const ok = canBulkImport((roleRow?.role as AppRole) ?? null, {
+    bulkImportGranted: Boolean(profile.bulk_import_granted),
+    accessLevel: profile.access_level as "edit" | "view",
+    accessBlocked: Boolean(profile.access_blocked),
+  });
+  return ok ? uid : null;
 }

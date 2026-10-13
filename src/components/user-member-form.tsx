@@ -20,6 +20,7 @@ export interface MemberFormState {
   role: AppRole;
   accessLevel: AccessLevel;
   duties: AppDuty[];
+  bulkImportGranted?: boolean;
 }
 
 interface ProvinceRow {
@@ -34,6 +35,8 @@ interface UserMemberFormProps {
   showEmail?: boolean;
   idPrefix?: string;
   allowedRoles?: AppRole[];
+  /** DT full admin only — separate from duties checklist */
+  showBulkImportGrant?: boolean;
 }
 
 const DUTY_LABEL_KEYS: Record<AppDuty, string> = {
@@ -56,6 +59,7 @@ export function UserMemberForm({
   showEmail = true,
   idPrefix = "member",
   allowedRoles = ALL_ROLES,
+  showBulkImportGrant = false,
 }: UserMemberFormProps) {
   const { t } = useT();
   const availableDuties = dutiesForRole(form.role);
@@ -197,6 +201,20 @@ export function UserMemberForm({
         </div>
         )}
       </div>
+      {showBulkImportGrant && form.role !== "technical_director" && (
+        <div className="space-y-2 sm:col-span-2 rounded-lg border border-dashed p-3">
+          <Label>{t.bulkImportGrantLabel}</Label>
+          <p className="text-xs text-muted-foreground">{t.bulkImportGrantHint}</p>
+          <label className="flex cursor-pointer items-start gap-2 text-sm">
+            <Checkbox
+              checked={Boolean(form.bulkImportGranted)}
+              disabled={dutiesDisabled}
+              onCheckedChange={(c) => setForm({ ...form, bulkImportGranted: c === true })}
+            />
+            <span>{t.bulkImportGrantEnable}</span>
+          </label>
+        </div>
+      )}
     </div>
   );
 }

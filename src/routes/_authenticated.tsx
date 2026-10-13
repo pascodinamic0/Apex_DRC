@@ -31,7 +31,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated")({ component: Layout });
 
 function Layout() {
-  const { user, loading, profile, role, can } = useAuth();
+  const { user, loading, profile, role, can, canBulkImport } = useAuth();
   const { t } = useT();
   const nav = useNavigate();
   const loc = useLocation();
@@ -125,7 +125,7 @@ function Layout() {
   }
 
   const isAt = role === "technical_assistant";
-  const navGroups = navGroupsForRole(role, can, t);
+  const navGroups = navGroupsForRole(role, can, t, { bulkImport: canBulkImport });
 
   const roleLabel =
     role === "technical_director"

@@ -14,11 +14,13 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiImportsRouteImport } from './routes/api/imports'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedProvincialRouteImport } from './routes/_authenticated/provincial'
 import { Route as AuthenticatedProgramRouteImport } from './routes/_authenticated/program'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedImportsRouteImport } from './routes/_authenticated/imports'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
 import { Route as AuthenticatedDeskRouteImport } from './routes/_authenticated/desk'
@@ -26,6 +28,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedConsolidationRouteImport } from './routes/_authenticated/consolidation'
 import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports.index'
 import { Route as ApiOnboardingCompleteRouteImport } from './routes/api/onboarding.complete'
+import { Route as ApiImportsBatchIdRouteImport } from './routes/api/imports.$batchId'
 import { Route as ApiConsolidationSummaryRouteImport } from './routes/api/consolidation.summary'
 import { Route as ApiConsolidationActivitySummaryRouteImport } from './routes/api/consolidation.activity-summary'
 import { Route as ApiAdminUsersRouteImport } from './routes/api/admin.users'
@@ -59,6 +62,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiImportsRoute = ApiImportsRouteImport.update({
+  id: '/api/imports',
+  path: '/api/imports',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -85,6 +93,11 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedImportsRoute = AuthenticatedImportsRouteImport.update({
+  id: '/imports',
+  path: '/imports',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
   id: '/history',
   path: '/history',
@@ -121,6 +134,11 @@ const ApiOnboardingCompleteRoute = ApiOnboardingCompleteRouteImport.update({
   id: '/api/onboarding/complete',
   path: '/api/onboarding/complete',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiImportsBatchIdRoute = ApiImportsBatchIdRouteImport.update({
+  id: '/$batchId',
+  path: '/$batchId',
+  getParentRoute: () => ApiImportsRoute,
 } as any)
 const ApiConsolidationSummaryRoute = ApiConsolidationSummaryRouteImport.update({
   id: '/api/consolidation/summary',
@@ -178,15 +196,18 @@ export interface FileRoutesByFullPath {
   '/desk': typeof AuthenticatedDeskRoute
   '/help': typeof AuthenticatedHelpRoute
   '/history': typeof AuthenticatedHistoryRoute
+  '/imports': typeof AuthenticatedImportsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/program': typeof AuthenticatedProgramRoute
   '/provincial': typeof AuthenticatedProvincialRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/api/imports': typeof ApiImportsRouteWithChildren
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/consolidation/activity-summary': typeof ApiConsolidationActivitySummaryRoute
   '/api/consolidation/summary': typeof ApiConsolidationSummaryRoute
+  '/api/imports/$batchId': typeof ApiImportsBatchIdRoute
   '/api/onboarding/complete': typeof ApiOnboardingCompleteRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
@@ -204,15 +225,18 @@ export interface FileRoutesByTo {
   '/desk': typeof AuthenticatedDeskRoute
   '/help': typeof AuthenticatedHelpRoute
   '/history': typeof AuthenticatedHistoryRoute
+  '/imports': typeof AuthenticatedImportsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/program': typeof AuthenticatedProgramRoute
   '/provincial': typeof AuthenticatedProvincialRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/api/imports': typeof ApiImportsRouteWithChildren
   '/reports/new': typeof AuthenticatedReportsNewRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/consolidation/activity-summary': typeof ApiConsolidationActivitySummaryRoute
   '/api/consolidation/summary': typeof ApiConsolidationSummaryRoute
+  '/api/imports/$batchId': typeof ApiImportsBatchIdRoute
   '/api/onboarding/complete': typeof ApiOnboardingCompleteRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
   '/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
@@ -232,15 +256,18 @@ export interface FileRoutesById {
   '/_authenticated/desk': typeof AuthenticatedDeskRoute
   '/_authenticated/help': typeof AuthenticatedHelpRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/imports': typeof AuthenticatedImportsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/program': typeof AuthenticatedProgramRoute
   '/_authenticated/provincial': typeof AuthenticatedProvincialRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/api/imports': typeof ApiImportsRouteWithChildren
   '/_authenticated/reports/new': typeof AuthenticatedReportsNewRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/consolidation/activity-summary': typeof ApiConsolidationActivitySummaryRoute
   '/api/consolidation/summary': typeof ApiConsolidationSummaryRoute
+  '/api/imports/$batchId': typeof ApiImportsBatchIdRoute
   '/api/onboarding/complete': typeof ApiOnboardingCompleteRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/reports/$reportId/edit': typeof AuthenticatedReportsReportIdEditRoute
@@ -260,15 +287,18 @@ export interface FileRouteTypes {
     | '/desk'
     | '/help'
     | '/history'
+    | '/imports'
     | '/notifications'
     | '/profile'
     | '/program'
     | '/provincial'
     | '/users'
+    | '/api/imports'
     | '/reports/new'
     | '/api/admin/users'
     | '/api/consolidation/activity-summary'
     | '/api/consolidation/summary'
+    | '/api/imports/$batchId'
     | '/api/onboarding/complete'
     | '/reports/'
     | '/reports/$reportId/edit'
@@ -286,15 +316,18 @@ export interface FileRouteTypes {
     | '/desk'
     | '/help'
     | '/history'
+    | '/imports'
     | '/notifications'
     | '/profile'
     | '/program'
     | '/provincial'
     | '/users'
+    | '/api/imports'
     | '/reports/new'
     | '/api/admin/users'
     | '/api/consolidation/activity-summary'
     | '/api/consolidation/summary'
+    | '/api/imports/$batchId'
     | '/api/onboarding/complete'
     | '/reports'
     | '/reports/$reportId/edit'
@@ -313,15 +346,18 @@ export interface FileRouteTypes {
     | '/_authenticated/desk'
     | '/_authenticated/help'
     | '/_authenticated/history'
+    | '/_authenticated/imports'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/program'
     | '/_authenticated/provincial'
     | '/_authenticated/users'
+    | '/api/imports'
     | '/_authenticated/reports/new'
     | '/api/admin/users'
     | '/api/consolidation/activity-summary'
     | '/api/consolidation/summary'
+    | '/api/imports/$batchId'
     | '/api/onboarding/complete'
     | '/_authenticated/reports/'
     | '/_authenticated/reports/$reportId/edit'
@@ -336,6 +372,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiImportsRoute: typeof ApiImportsRouteWithChildren
   ApiAdminUsersRoute: typeof ApiAdminUsersRoute
   ApiConsolidationActivitySummaryRoute: typeof ApiConsolidationActivitySummaryRoute
   ApiConsolidationSummaryRoute: typeof ApiConsolidationSummaryRoute
@@ -379,6 +416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/imports': {
+      id: '/api/imports'
+      path: '/api/imports'
+      fullPath: '/api/imports'
+      preLoaderRoute: typeof ApiImportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/users': {
       id: '/_authenticated/users'
       path: '/users'
@@ -412,6 +456,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/imports': {
+      id: '/_authenticated/imports'
+      path: '/imports'
+      fullPath: '/imports'
+      preLoaderRoute: typeof AuthenticatedImportsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/history': {
@@ -462,6 +513,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/onboarding/complete'
       preLoaderRoute: typeof ApiOnboardingCompleteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/imports/$batchId': {
+      id: '/api/imports/$batchId'
+      path: '/$batchId'
+      fullPath: '/api/imports/$batchId'
+      preLoaderRoute: typeof ApiImportsBatchIdRouteImport
+      parentRoute: typeof ApiImportsRoute
     }
     '/api/consolidation/summary': {
       id: '/api/consolidation/summary'
@@ -528,6 +586,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDeskRoute: typeof AuthenticatedDeskRoute
   AuthenticatedHelpRoute: typeof AuthenticatedHelpRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedImportsRoute: typeof AuthenticatedImportsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedProgramRoute: typeof AuthenticatedProgramRoute
@@ -547,6 +606,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDeskRoute: AuthenticatedDeskRoute,
   AuthenticatedHelpRoute: AuthenticatedHelpRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedImportsRoute: AuthenticatedImportsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedProgramRoute: AuthenticatedProgramRoute,
@@ -567,12 +627,25 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface ApiImportsRouteChildren {
+  ApiImportsBatchIdRoute: typeof ApiImportsBatchIdRoute
+}
+
+const ApiImportsRouteChildren: ApiImportsRouteChildren = {
+  ApiImportsBatchIdRoute: ApiImportsBatchIdRoute,
+}
+
+const ApiImportsRouteWithChildren = ApiImportsRoute._addFileChildren(
+  ApiImportsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiImportsRoute: ApiImportsRouteWithChildren,
   ApiAdminUsersRoute: ApiAdminUsersRoute,
   ApiConsolidationActivitySummaryRoute: ApiConsolidationActivitySummaryRoute,
   ApiConsolidationSummaryRoute: ApiConsolidationSummaryRoute,

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -304,29 +304,59 @@ function Consolidation() {
     }
   };
 
-  const saveSummary = async () => {
-    if (!canWriteSummary || !singleMonth || !user) return;
-    setSavingSummary(true);
-    const { error } = await supabase.from("consolidation_summaries").upsert(
-      {
-        month: storageMonth,
-        year: storageYear,
-        lang,
-        content: aiSummary,
-        source_report_ids: reports.map((r) => r.id),
-        updated_by: user.id,
-        updated_at: new Date().toISOString(),
-      } as never,
-      { onConflict: "month,year,lang" },
-    );
-    setSavingSummary(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    setAiSummaryDirty(false);
-    toast.success(t.aiSummarySaved);
+  const summaryRef = useRef(aiSummary);
+  summaryRef.current = aiSummary;
+  const summaryDirtyRef = useRef(aiSummaryDirty);
+  summaryDirtyRef.current = aiSummaryDirty;
+  const summaryChain = useRef(Promise.resolve());
+
+  const saveSummary = async (silent = false) => {
+    const run = async () => {
+      if (!canWriteSummary || !singleMonth || !user) return;
+      if (silent && !summaryDirtyRef.current) return;
+      const content = summaryRef.current;
+      setSavingSummary(true);
+      const { error } = await supabase.from("consolidation_summaries").upsert(
+        {
+          month: storageMonth,
+          year: storageYear,
+          lang,
+          content,
+          source_report_ids: reports.map((r) => r.id),
+          updated_by: user.id,
+          updated_at: new Date().toISOString(),
+        } as never,
+        { onConflict: "month,year,lang" },
+      );
+      setSavingSummary(false);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      if (summaryRef.current === content) setAiSummaryDirty(false);
+      if (!silent) toast.success(t.aiSummarySaved);
+    };
+    const job = summaryChain.current.then(run, run);
+    summaryChain.current = job.then(() => undefined, () => undefined);
+    return job;
   };
+
+  const saveSummaryRef = useRef(saveSummary);
+  saveSummaryRef.current = saveSummary;
+
+  useEffect(() => {
+    if (!aiSummaryDirty || !canWriteSummary || !singleMonth || periodApproved || !user) return;
+    const id = window.setTimeout(() => {
+      void saveSummaryRef.current(true);
+    }, 1000);
+    return () => window.clearTimeout(id);
+  }, [aiSummary, aiSummaryDirty, canWriteSummary, singleMonth, periodApproved, user]);
+
+  useEffect(() => {
+    return () => {
+      if (summaryDirtyRef.current) void saveSummaryRef.current(true);
+    };
+  }, []);
 
   if (role === "province_user" || role === "read_only") {
     return <div className="text-muted-foreground">{t.noAccess}</div>;
@@ -403,10 +433,15 @@ function Consolidation() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 flex-wrap">
             <CardTitle>{t.aiSummaryTitle}</CardTitle>
-            {summaryEditable && aiSummaryDirty && (
-              <Button size="sm" variant="outline" onClick={saveSummary} disabled={savingSummary}>
-                {t.saveAiSummary}
-              </Button>
+            {summaryEditable && (savingSummary || aiSummaryDirty) && (
+              <div className="flex items-center gap-2">
+                {savingSummary && <span className="text-xs text-muted-foreground">{t.saving}</span>}
+                {aiSummaryDirty && (
+                  <Button size="sm" variant="outline" onClick={() => saveSummary()} disabled={savingSummary}>
+                    {t.saveAiSummary}
+                  </Button>
+                )}
+              </div>
             )}
           </CardHeader>
           <CardContent className="space-y-3">

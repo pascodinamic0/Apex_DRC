@@ -18,7 +18,7 @@ export const helpSectionsEn: HelpSection[] = [
     body: [
       "Create a report via Reports → New report (month and year).",
       "Complete the tabs, including Media for implementation photos (Annex B).",
-      "Save draft (auto-saves every 30s) then Submit.",
+      "The draft saves automatically as you type. Submit when it is ready.",
       "After submission, status becomes Awaiting validation. You can still edit until the TA validates.",
     ],
   },

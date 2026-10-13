@@ -3,6 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Lang } from "@/lib/i18n";
 import { canWithDuties, type AccessLevel, type AppDuty } from "@/lib/auth/duties";
+import { canBulkImport } from "@/lib/auth/bulk-import";
 
 export type AppRole = "province_user" | "technical_director" | "technical_assistant" | "read_only";
 
@@ -18,6 +19,7 @@ export interface Profile {
   onboarding_completed: boolean;
   access_level: AccessLevel;
   access_blocked: boolean;
+  bulk_import_granted: boolean;
 }
 
 /** True when an invited account still has to set a password and identity before the app opens. */
@@ -38,6 +40,7 @@ interface AuthState {
   loading: boolean;
   isViewOnly: boolean;
   can: (duty: AppDuty) => boolean;
+  canBulkImport: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signInWithGoogle: () => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
@@ -55,6 +58,7 @@ const Ctx = createContext<AuthState>({
   loading: true,
   isViewOnly: false,
   can: () => false,
+  canBulkImport: false,
   signIn: async () => ({}),
   signInWithGoogle: async () => ({}),
   signOut: async () => {},
@@ -87,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             address: prof.address ?? null,
             onboarding_completed: prof.onboarding_completed !== false,
             access_blocked: Boolean((prof as Profile).access_blocked),
+            bulk_import_granted: Boolean((prof as Profile & { bulk_import_granted?: boolean }).bulk_import_granted),
           }
         : null,
     );
@@ -156,6 +161,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isViewOnly = accessLevel === "view";
   const can = (duty: AppDuty) => canWithDuties(duties, accessLevel, duty);
+  const bulkImportAccess = canBulkImport(role, {
+    bulkImportGranted: profile?.bulk_import_granted ?? false,
+    accessLevel,
+    accessBlocked: profile?.access_blocked ?? false,
+  });
 
   return (
     <Ctx.Provider
@@ -169,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         isViewOnly,
         can,
+        canBulkImport: bulkImportAccess,
         signIn,
         signInWithGoogle,
         signOut,
