@@ -149,6 +149,10 @@ export async function seedReportExtensions(reportId: string) {
   );
 }
 
+function throwIfError(error: { message: string } | null) {
+  if (error) throw new Error(error.message);
+}
+
 export async function persistExtendedReport(
   reportId: string,
   payload: {
@@ -158,12 +162,15 @@ export async function persistExtendedReport(
     meta?: Partial<ReportMeta>;
   },
 ) {
-  await supabase.from("achievement_summary").upsert(
-    { report_id: reportId, ...payload.achievement, updated_at: new Date().toISOString() } as never,
+  const updatedAt = new Date().toISOString();
+  const { error: achievementError } = await supabase.from("achievement_summary").upsert(
+    { report_id: reportId, ...payload.achievement, updated_at: updatedAt } as never,
     { onConflict: "report_id" },
   );
+  throwIfError(achievementError);
+
   if (payload.activityResponses.length) {
-    await supabase.from("activity_responses").upsert(
+    const { error: activityError } = await supabase.from("activity_responses").upsert(
       payload.activityResponses.map((r) => ({
         report_id: reportId,
         catalog_code: r.catalog_code,
@@ -173,21 +180,31 @@ export async function persistExtendedReport(
         solutions: r.solutions,
         priorities: r.priorities,
         partners: r.partners,
-        updated_at: new Date().toISOString(),
+        updated_at: updatedAt,
       })) as never[],
       { onConflict: "report_id,catalog_code" },
     );
+    throwIfError(activityError);
   }
-  for (const [section_type, content] of Object.entries(payload.narratives)) {
-    if (!content && !EXTENDED_NARRATIVE_KEYS.includes(section_type as never)) continue;
-    const { error } = await supabase.from("narratives").upsert(
-      { report_id: reportId, section_type, content: content || "" } as never,
+
+  const narrativeRows = Object.entries(payload.narratives)
+    .filter(([section_type, content]) => content || EXTENDED_NARRATIVE_KEYS.includes(section_type as never))
+    .map(([section_type, content]) => ({
+      report_id: reportId,
+      section_type,
+      content: content || "",
+    }));
+  if (narrativeRows.length) {
+    const { error: narrativeError } = await supabase.from("narratives").upsert(
+      narrativeRows as never[],
       { onConflict: "report_id,section_type" },
     );
-    if (error) throw new Error(error.message);
+    throwIfError(narrativeError);
   }
+
   if (payload.meta) {
-    await supabase.from("reports").update(payload.meta as never).eq("id", reportId);
+    const { error: metaError } = await supabase.from("reports").update(payload.meta as never).eq("id", reportId);
+    throwIfError(metaError);
   }
 }
 

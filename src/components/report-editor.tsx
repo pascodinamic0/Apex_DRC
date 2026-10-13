@@ -121,10 +121,11 @@ export function ReportEditor({
       });
       return { offline: true as const };
     }
-    await supabase.from("report_drafts").upsert(
+    const { error: draftError } = await supabase.from("report_drafts").upsert(
       { report_id: report.id, payload: payload as never, updated_at: new Date().toISOString() },
       { onConflict: "report_id" },
     );
+    if (draftError) throw new Error(draftError.message);
     await persistExtendedReport(report.id, payload);
     return {};
   };
@@ -220,9 +221,12 @@ export function ReportEditor({
   };
 
   const updateResponse = (code: string, field: keyof Omit<ActivityResponseFields, "catalog_code">, value: string) => {
-    setActivityResponses((arr) =>
-      arr.map((r) => (r.catalog_code === code ? { ...r, [field]: value } : r)),
-    );
+    setActivityResponses((arr) => {
+      if (!arr.some((r) => r.catalog_code === code)) {
+        return [...arr, { catalog_code: code, realized: "", progress: "", challenges: "", solutions: "", priorities: "", partners: "", [field]: value }];
+      }
+      return arr.map((r) => (r.catalog_code === code ? { ...r, [field]: value } : r));
+    });
   };
 
   useEffect(() => {
