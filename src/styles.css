@@ -219,6 +219,26 @@
   animation-iteration-count: infinite;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
+}
+
+.pb-tabbar {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .pb-tabbar {
+    padding-bottom: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .update-logo,
   .update-logo-ring,

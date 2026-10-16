@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/auth/director-server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { logAppActivity } from "@/lib/activity-log.server";
 
 const bodySchema = z.object({
   password: z.string().min(8),
@@ -44,6 +45,15 @@ export const Route = createFileRoute("/api/onboarding/complete")({
           })
           .eq("id", user.id);
         if (profileError) return new Response(profileError.message, { status: 400 });
+
+        await logAppActivity({
+          actorId: user.id,
+          action: "account.onboarded",
+          summary: "Completed onboarding",
+          entityType: "user",
+          entityId: user.id,
+          metadata: { name: input.fullName },
+        });
 
         return Response.json({ ok: true });
       },

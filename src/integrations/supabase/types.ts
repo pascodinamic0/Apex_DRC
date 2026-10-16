@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_activity_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          metadata: Json
+          summary: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json
+          summary: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json
+          summary?: string
+        }
+        Relationships: []
+      }
       activities: {
         Row: {
           achieved: number | null
@@ -563,6 +596,16 @@ export type Database = {
     }
     Functions: {
       get_user_province: { Args: { _user_id: string }; Returns: string }
+      record_app_activity: {
+        Args: {
+          _action: string
+          _entity_id: string | null
+          _entity_type: string | null
+          _metadata: Json
+          _summary: string
+        }
+        Returns: string
+      }
       has_duty: {
         Args: {
           _duty: Database["public"]["Enums"]["app_duty"]

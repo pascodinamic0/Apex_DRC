@@ -34,6 +34,7 @@ import { UserMemberForm, type MemberFormState } from "@/components/user-member-f
 import { toast } from "sonner";
 import { ChevronDown, MapPin, Pencil, Plus, Search, Trash2, UserPlus } from "lucide-react";
 import type { AppRole } from "@/lib/auth";
+import { activityLabel, formatActivityTime, latestByActor, loadActivity, type ActivityEvent } from "@/lib/activity-log";
 
 export const Route = createFileRoute("/_authenticated/users")({ component: UsersPage });
 
@@ -90,7 +91,7 @@ function initials(name: string | null, email: string | null) {
 }
 
 function UsersPage() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { can, user: currentUser } = useAuth();
   const nav = useNavigate();
   const canManageFull = can("manage_users");
@@ -107,6 +108,7 @@ function UsersPage() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [lastActivity, setLastActivity] = useState<Map<string, ActivityEvent>>(new Map());
 
   useEffect(() => {
     if (!canManage) nav({ to: "/dashboard" });
@@ -127,7 +129,10 @@ function UsersPage() {
   };
 
   const refresh = async () => {
-    await Promise.all([refreshProvinces(), refreshUsers()]);
+    const activity = loadActivity(300)
+      .then((events) => setLastActivity(latestByActor(events)))
+      .catch(() => setLastActivity(new Map()));
+    await Promise.all([refreshProvinces(), refreshUsers(), activity]);
     setLoading(false);
   };
 
@@ -349,7 +354,7 @@ function UsersPage() {
                   const accessBadge =
                     u.access_level === "view" ? t.accessLevelView : t.accessLevelEdit;
                   return (
-                    <li key={u.id} className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
+                    <li key={u.id} className="flex flex-wrap items-start gap-3 px-4 py-3.5 sm:px-5">
                       <Avatar className="h-10 w-10 border border-border/60">
                         <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
                           {initials(u.full_name, u.email)}
@@ -366,8 +371,17 @@ function UsersPage() {
                             </>
                           )}
                         </div>
+                        <button
+                          type="button"
+                          className="mt-0.5 block max-w-full truncate text-left text-xs text-muted-foreground hover:text-foreground"
+                          onClick={() => nav({ to: "/activity", search: { user: u.id } })}
+                        >
+                          {lastActivity.get(u.id)
+                            ? `${activityLabel(lastActivity.get(u.id)!, t)} · ${formatActivityTime(lastActivity.get(u.id)!.created_at, lang)}`
+                            : t.activityNone}
+                        </button>
                       </div>
-                      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                      <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
                         <Badge variant="outline" className={roleClass(u.role)}>
                           {roleLabel(u.role)}
                         </Badge>

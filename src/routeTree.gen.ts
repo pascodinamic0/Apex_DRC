@@ -9,43 +9,43 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiImportsRouteImport } from './routes/api/imports'
-import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
-import { Route as AuthenticatedProvincialRouteImport } from './routes/_authenticated/provincial'
-import { Route as AuthenticatedProgramRouteImport } from './routes/_authenticated/program'
-import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
-import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
-import { Route as AuthenticatedImportsRouteImport } from './routes/_authenticated/imports'
-import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
-import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
-import { Route as AuthenticatedDeskRouteImport } from './routes/_authenticated/desk'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as AuthenticatedConsolidationRouteImport } from './routes/_authenticated/consolidation'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDeskRouteImport } from './routes/_authenticated/desk'
+import { Route as AuthenticatedHelpRouteImport } from './routes/_authenticated/help'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
+import { Route as AuthenticatedImportsRouteImport } from './routes/_authenticated/imports'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedProgramRouteImport } from './routes/_authenticated/program'
+import { Route as AuthenticatedProvincialRouteImport } from './routes/_authenticated/provincial'
+import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as ApiImportsRouteImport } from './routes/api/imports'
 import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports.index'
-import { Route as ApiOnboardingCompleteRouteImport } from './routes/api/onboarding.complete'
-import { Route as ApiImportsBatchIdRouteImport } from './routes/api/imports.$batchId'
-import { Route as ApiConsolidationSummaryRouteImport } from './routes/api/consolidation.summary'
-import { Route as ApiConsolidationActivitySummaryRouteImport } from './routes/api/consolidation.activity-summary'
-import { Route as ApiAdminUsersRouteImport } from './routes/api/admin.users'
 import { Route as AuthenticatedReportsNewRouteImport } from './routes/_authenticated/reports.new'
+import { Route as ApiAdminUsersRouteImport } from './routes/api/admin.users'
+import { Route as ApiConsolidationActivitySummaryRouteImport } from './routes/api/consolidation.activity-summary'
+import { Route as ApiConsolidationSummaryRouteImport } from './routes/api/consolidation.summary'
+import { Route as ApiImportsBatchIdRouteImport } from './routes/api/imports.$batchId'
+import { Route as ApiOnboardingCompleteRouteImport } from './routes/api/onboarding.complete'
 import { Route as AuthenticatedReportsReportIdIndexRouteImport } from './routes/_authenticated/reports.$reportId.index'
-import { Route as AuthenticatedReportsReportIdRevisionsRouteImport } from './routes/_authenticated/reports.$reportId.revisions'
-import { Route as AuthenticatedReportsReportIdReviewRouteImport } from './routes/_authenticated/reports.$reportId.review'
 import { Route as AuthenticatedReportsReportIdEditRouteImport } from './routes/_authenticated/reports.$reportId.edit'
+import { Route as AuthenticatedReportsReportIdReviewRouteImport } from './routes/_authenticated/reports.$reportId.review'
+import { Route as AuthenticatedReportsReportIdRevisionsRouteImport } from './routes/_authenticated/reports.$reportId.revisions'
 
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -53,69 +53,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiImportsRoute = ApiImportsRouteImport.update({
-  id: '/api/imports',
-  path: '/api/imports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedProvincialRoute = AuthenticatedProvincialRouteImport.update({
-  id: '/provincial',
-  path: '/provincial',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedProgramRoute = AuthenticatedProgramRouteImport.update({
-  id: '/program',
-  path: '/program',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedNotificationsRoute =
-  AuthenticatedNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedImportsRoute = AuthenticatedImportsRouteImport.update({
-  id: '/imports',
-  path: '/imports',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
-  id: '/history',
-  path: '/history',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
-  id: '/help',
-  path: '/help',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedDeskRoute = AuthenticatedDeskRouteImport.update({
-  id: '/desk',
-  path: '/desk',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedConsolidationRoute =
@@ -124,25 +74,76 @@ const AuthenticatedConsolidationRoute =
     path: '/consolidation',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDeskRoute = AuthenticatedDeskRouteImport.update({
+  id: '/desk',
+  path: '/desk',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedHelpRoute = AuthenticatedHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedImportsRoute = AuthenticatedImportsRouteImport.update({
+  id: '/imports',
+  path: '/imports',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedProgramRoute = AuthenticatedProgramRouteImport.update({
+  id: '/program',
+  path: '/program',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedProvincialRoute = AuthenticatedProvincialRouteImport.update({
+  id: '/provincial',
+  path: '/provincial',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const ApiImportsRoute = ApiImportsRouteImport.update({
+  id: '/api/imports',
+  path: '/api/imports',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedReportsIndexRoute =
   AuthenticatedReportsIndexRouteImport.update({
     id: '/reports/',
     path: '/reports/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const ApiOnboardingCompleteRoute = ApiOnboardingCompleteRouteImport.update({
-  id: '/api/onboarding/complete',
-  path: '/api/onboarding/complete',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedReportsNewRoute = AuthenticatedReportsNewRouteImport.update({
+  id: '/reports/new',
+  path: '/reports/new',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
-const ApiImportsBatchIdRoute = ApiImportsBatchIdRouteImport.update({
-  id: '/$batchId',
-  path: '/$batchId',
-  getParentRoute: () => ApiImportsRoute,
-} as any)
-const ApiConsolidationSummaryRoute = ApiConsolidationSummaryRouteImport.update({
-  id: '/api/consolidation/summary',
-  path: '/api/consolidation/summary',
+const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
+  id: '/api/admin/users',
+  path: '/api/admin/users',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiConsolidationActivitySummaryRoute =
@@ -151,32 +152,25 @@ const ApiConsolidationActivitySummaryRoute =
     path: '/api/consolidation/activity-summary',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
-  id: '/api/admin/users',
-  path: '/api/admin/users',
+const ApiConsolidationSummaryRoute = ApiConsolidationSummaryRouteImport.update({
+  id: '/api/consolidation/summary',
+  path: '/api/consolidation/summary',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedReportsNewRoute = AuthenticatedReportsNewRouteImport.update({
-  id: '/reports/new',
-  path: '/reports/new',
-  getParentRoute: () => AuthenticatedRoute,
+const ApiImportsBatchIdRoute = ApiImportsBatchIdRouteImport.update({
+  id: '/$batchId',
+  path: '/$batchId',
+  getParentRoute: () => ApiImportsRoute,
+} as any)
+const ApiOnboardingCompleteRoute = ApiOnboardingCompleteRouteImport.update({
+  id: '/api/onboarding/complete',
+  path: '/api/onboarding/complete',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedReportsReportIdIndexRoute =
   AuthenticatedReportsReportIdIndexRouteImport.update({
     id: '/reports/$reportId/',
     path: '/reports/$reportId/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedReportsReportIdRevisionsRoute =
-  AuthenticatedReportsReportIdRevisionsRouteImport.update({
-    id: '/reports/$reportId/revisions',
-    path: '/reports/$reportId/revisions',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedReportsReportIdReviewRoute =
-  AuthenticatedReportsReportIdReviewRouteImport.update({
-    id: '/reports/$reportId/review',
-    path: '/reports/$reportId/review',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedReportsReportIdEditRoute =
@@ -185,12 +179,25 @@ const AuthenticatedReportsReportIdEditRoute =
     path: '/reports/$reportId/edit',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedReportsReportIdReviewRoute =
+  AuthenticatedReportsReportIdReviewRouteImport.update({
+    id: '/reports/$reportId/review',
+    path: '/reports/$reportId/review',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedReportsReportIdRevisionsRoute =
+  AuthenticatedReportsReportIdRevisionsRouteImport.update({
+    id: '/reports/$reportId/revisions',
+    path: '/reports/$reportId/revisions',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/activity': typeof AuthenticatedActivityRoute
   '/consolidation': typeof AuthenticatedConsolidationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/desk': typeof AuthenticatedDeskRoute
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/activity': typeof AuthenticatedActivityRoute
   '/consolidation': typeof AuthenticatedConsolidationRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/desk': typeof AuthenticatedDeskRoute
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/consolidation': typeof AuthenticatedConsolidationRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/desk': typeof AuthenticatedDeskRoute
@@ -282,6 +291,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/reset-password'
+    | '/activity'
     | '/consolidation'
     | '/dashboard'
     | '/desk'
@@ -311,6 +321,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/reset-password'
+    | '/activity'
     | '/consolidation'
     | '/dashboard'
     | '/desk'
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/reset-password'
+    | '/_authenticated/activity'
     | '/_authenticated/consolidation'
     | '/_authenticated/dashboard'
     | '/_authenticated/desk'
@@ -381,25 +393,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -409,88 +407,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/imports': {
-      id: '/api/imports'
-      path: '/api/imports'
-      fullPath: '/api/imports'
-      preLoaderRoute: typeof ApiImportsRouteImport
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/users': {
-      id: '/_authenticated/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof AuthenticatedUsersRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/provincial': {
-      id: '/_authenticated/provincial'
-      path: '/provincial'
-      fullPath: '/provincial'
-      preLoaderRoute: typeof AuthenticatedProvincialRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/program': {
-      id: '/_authenticated/program'
-      path: '/program'
-      fullPath: '/program'
-      preLoaderRoute: typeof AuthenticatedProgramRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/profile': {
-      id: '/_authenticated/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AuthenticatedProfileRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/notifications': {
-      id: '/_authenticated/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/imports': {
-      id: '/_authenticated/imports'
-      path: '/imports'
-      fullPath: '/imports'
-      preLoaderRoute: typeof AuthenticatedImportsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/history': {
-      id: '/_authenticated/history'
-      path: '/history'
-      fullPath: '/history'
-      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/help': {
-      id: '/_authenticated/help'
-      path: '/help'
-      fullPath: '/help'
-      preLoaderRoute: typeof AuthenticatedHelpRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/desk': {
-      id: '/_authenticated/desk'
-      path: '/desk'
-      fullPath: '/desk'
-      preLoaderRoute: typeof AuthenticatedDeskRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+    '/_authenticated/activity': {
+      id: '/_authenticated/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/consolidation': {
@@ -500,6 +442,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConsolidationRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/desk': {
+      id: '/_authenticated/desk'
+      path: '/desk'
+      fullPath: '/desk'
+      preLoaderRoute: typeof AuthenticatedDeskRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/help': {
+      id: '/_authenticated/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof AuthenticatedHelpRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/imports': {
+      id: '/_authenticated/imports'
+      path: '/imports'
+      fullPath: '/imports'
+      preLoaderRoute: typeof AuthenticatedImportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/program': {
+      id: '/_authenticated/program'
+      path: '/program'
+      fullPath: '/program'
+      preLoaderRoute: typeof AuthenticatedProgramRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/provincial': {
+      id: '/_authenticated/provincial'
+      path: '/provincial'
+      fullPath: '/provincial'
+      preLoaderRoute: typeof AuthenticatedProvincialRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/users': {
+      id: '/_authenticated/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AuthenticatedUsersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/imports': {
+      id: '/api/imports'
+      path: '/api/imports'
+      fullPath: '/api/imports'
+      preLoaderRoute: typeof ApiImportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/reports/': {
       id: '/_authenticated/reports/'
       path: '/reports'
@@ -507,25 +526,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/api/onboarding/complete': {
-      id: '/api/onboarding/complete'
-      path: '/api/onboarding/complete'
-      fullPath: '/api/onboarding/complete'
-      preLoaderRoute: typeof ApiOnboardingCompleteRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/reports/new': {
+      id: '/_authenticated/reports/new'
+      path: '/reports/new'
+      fullPath: '/reports/new'
+      preLoaderRoute: typeof AuthenticatedReportsNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/api/imports/$batchId': {
-      id: '/api/imports/$batchId'
-      path: '/$batchId'
-      fullPath: '/api/imports/$batchId'
-      preLoaderRoute: typeof ApiImportsBatchIdRouteImport
-      parentRoute: typeof ApiImportsRoute
-    }
-    '/api/consolidation/summary': {
-      id: '/api/consolidation/summary'
-      path: '/api/consolidation/summary'
-      fullPath: '/api/consolidation/summary'
-      preLoaderRoute: typeof ApiConsolidationSummaryRouteImport
+    '/api/admin/users': {
+      id: '/api/admin/users'
+      path: '/api/admin/users'
+      fullPath: '/api/admin/users'
+      preLoaderRoute: typeof ApiAdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/consolidation/activity-summary': {
@@ -535,39 +547,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiConsolidationActivitySummaryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/admin/users': {
-      id: '/api/admin/users'
-      path: '/api/admin/users'
-      fullPath: '/api/admin/users'
-      preLoaderRoute: typeof ApiAdminUsersRouteImport
+    '/api/consolidation/summary': {
+      id: '/api/consolidation/summary'
+      path: '/api/consolidation/summary'
+      fullPath: '/api/consolidation/summary'
+      preLoaderRoute: typeof ApiConsolidationSummaryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/reports/new': {
-      id: '/_authenticated/reports/new'
-      path: '/reports/new'
-      fullPath: '/reports/new'
-      preLoaderRoute: typeof AuthenticatedReportsNewRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/api/imports/$batchId': {
+      id: '/api/imports/$batchId'
+      path: '/$batchId'
+      fullPath: '/api/imports/$batchId'
+      preLoaderRoute: typeof ApiImportsBatchIdRouteImport
+      parentRoute: typeof ApiImportsRoute
+    }
+    '/api/onboarding/complete': {
+      id: '/api/onboarding/complete'
+      path: '/api/onboarding/complete'
+      fullPath: '/api/onboarding/complete'
+      preLoaderRoute: typeof ApiOnboardingCompleteRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/reports/$reportId/': {
       id: '/_authenticated/reports/$reportId/'
       path: '/reports/$reportId'
       fullPath: '/reports/$reportId/'
       preLoaderRoute: typeof AuthenticatedReportsReportIdIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/reports/$reportId/revisions': {
-      id: '/_authenticated/reports/$reportId/revisions'
-      path: '/reports/$reportId/revisions'
-      fullPath: '/reports/$reportId/revisions'
-      preLoaderRoute: typeof AuthenticatedReportsReportIdRevisionsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/reports/$reportId/review': {
-      id: '/_authenticated/reports/$reportId/review'
-      path: '/reports/$reportId/review'
-      fullPath: '/reports/$reportId/review'
-      preLoaderRoute: typeof AuthenticatedReportsReportIdReviewRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/reports/$reportId/edit': {
@@ -577,10 +582,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsReportIdEditRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/reports/$reportId/review': {
+      id: '/_authenticated/reports/$reportId/review'
+      path: '/reports/$reportId/review'
+      fullPath: '/reports/$reportId/review'
+      preLoaderRoute: typeof AuthenticatedReportsReportIdReviewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports/$reportId/revisions': {
+      id: '/_authenticated/reports/$reportId/revisions'
+      path: '/reports/$reportId/revisions'
+      fullPath: '/reports/$reportId/revisions'
+      preLoaderRoute: typeof AuthenticatedReportsReportIdRevisionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
   AuthenticatedConsolidationRoute: typeof AuthenticatedConsolidationRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDeskRoute: typeof AuthenticatedDeskRoute
@@ -601,6 +621,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedActivityRoute: AuthenticatedActivityRoute,
   AuthenticatedConsolidationRoute: AuthenticatedConsolidationRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDeskRoute: AuthenticatedDeskRoute,

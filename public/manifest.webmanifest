@@ -4,6 +4,7 @@
   "description": "Plateforme de reporting mensuel EPIC RDC, FHI 360",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#FF4719",
   "lang": "fr",

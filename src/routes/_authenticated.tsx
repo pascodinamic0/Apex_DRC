@@ -26,6 +26,8 @@ import { BrandLogo, BrandMark } from "@/components/brand-logo";
 import { WifiOff, Wifi } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getPendingCount, replayDraftQueue, type QueuedDraft } from "@/lib/offline/draft-queue";
+import { recordActivity } from "@/lib/activity-log";
+import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated")({ component: Layout });
@@ -98,6 +100,15 @@ function Layout() {
   }, [loading, profile?.access_blocked, nav, t.accessBlockedMessage]);
 
   useEffect(() => {
+    if (loading || !user || accountNeedsOnboarding(user, profile)) return;
+    void recordActivity({
+      action: "app.page_viewed",
+      summary: `Opened ${loc.pathname}`,
+      metadata: { path: loc.pathname },
+    });
+  }, [loading, user, profile, loc.pathname]);
+
+  useEffect(() => {
     const refreshPending = () => getPendingCount().then(setPendingSync);
     refreshPending();
     const onOnline = () => {
@@ -126,6 +137,7 @@ function Layout() {
 
   const isAt = role === "technical_assistant";
   const navGroups = navGroupsForRole(role, can, t, { bulkImport: canBulkImport });
+  const mobileNav = navGroups.flatMap((group) => group.items);
 
   const roleLabel =
     role === "technical_director"
@@ -194,7 +206,7 @@ function Layout() {
         <SidebarRail />
       </Sidebar>
 
-      <SidebarInset className="bg-muted/40">
+      <SidebarInset className="bg-muted/40 pt-[env(safe-area-inset-top)]">
         {(!online || pendingSync > 0) && (
           <div
             className={`flex items-center justify-center gap-2 px-3 py-1.5 text-xs ${online ? "bg-amber-500/10 text-amber-900 dark:text-amber-100" : "bg-destructive/10 text-destructive"}`}
@@ -209,7 +221,7 @@ function Layout() {
             isAt ? "border-t-blue-500" : "border-t-primary"
           }`}
         >
-          <SidebarTrigger />
+          <SidebarTrigger className="hidden md:inline-flex" />
           <BrandLogo className="h-7 md:hidden" />
           <div className="flex-1 truncate font-semibold md:hidden">{t.appName}</div>
           <div className="ml-auto flex items-center gap-1">
@@ -217,9 +229,10 @@ function Layout() {
           </div>
         </header>
 
-        <div className="flex-1 p-4 md:p-8 min-w-0 overflow-x-hidden">
+        <div className="pb-tabbar min-w-0 flex-1 overflow-x-hidden p-4 md:p-8">
           <Outlet />
         </div>
+        <MobileTabBar items={mobileNav} pathname={loc.pathname} />
       </SidebarInset>
     </SidebarProvider>
   );

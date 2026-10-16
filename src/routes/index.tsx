@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Bell,
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { accountNeedsOnboarding, useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LangSwitch } from "@/components/lang-switch";
 import { BrandArcs, BrandLogo, BrandMark } from "@/components/brand-logo";
@@ -118,18 +119,7 @@ function Index() {
       <section id="workflow" className="border-y bg-muted/40">
         <div className="mx-auto w-full max-w-6xl px-4 py-20">
           <SectionIntro align="left" {...copy.workflowIntro} />
-          <ol className="mt-12 grid gap-0 md:grid-cols-4">
-            {copy.workflow.map((step, index) => (
-              <li key={step.title} className="relative border-l border-primary/30 pl-6 md:border-l-0 md:border-t-2 md:border-primary md:pl-0 md:pt-8">
-                <span className="absolute -left-3 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground md:left-0 md:top-0 md:-translate-y-1/2">
-                  {index + 1}
-                </span>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{step.stage}</p>
-                <h3 className="mt-2 text-xl font-bold">{step.title}</h3>
-                <p className="mt-2 max-w-xs text-sm leading-6 text-muted-foreground">{step.text}</p>
-              </li>
-            ))}
-          </ol>
+          <WorkflowSteps steps={copy.workflow} />
         </div>
       </section>
 
@@ -348,6 +338,207 @@ function SnapshotStories({ stories }: { stories: SnapshotStory[] }) {
           </article>
         );
       })}
+    </div>
+  );
+}
+
+type WorkflowStep = {
+  stage: string;
+  title: string;
+  text: string;
+};
+
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+function WorkflowSteps({ steps }: { steps: WorkflowStep[] }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLOListElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const fillRef = useRef<HTMLDivElement>(null);
+  const badgeRef = useRef<HTMLDivElement>(null);
+  const digitsRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef(0);
+  const [active, setActive] = useState(0);
+  const stepKey = steps.map((step) => step.title).join("|");
+
+  useIsomorphicLayoutEffect(() => {
+    const root = rootRef.current;
+    const list = listRef.current;
+    const track = trackRef.current;
+    const fill = fillRef.current;
+    const badge = badgeRef.current;
+    const digits = digitsRef.current;
+    if (!root || !list || !track || !fill || !badge || !digits) return;
+
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const desktop = window.matchMedia("(min-width: 768px)");
+    let frame = 0;
+
+    const apply = () => {
+      frame = 0;
+      const stations = [...list.querySelectorAll<HTMLElement>("[data-station]")];
+      if (stations.length === 0) return;
+
+      const rootRect = root.getBoundingClientRect();
+      const points = stations.map((station) => {
+        const rect = station.getBoundingClientRect();
+        return {
+          x: rect.left - rootRect.left + rect.width / 2,
+          y: rect.top - rootRect.top + rect.height / 2,
+        };
+      });
+
+      const view = window.innerHeight || 1;
+      const start = view * 0.82;
+      const end = view * 0.22;
+      const raw = (start - rootRect.top) / Math.max(start - end, 1);
+      const progress = media.matches ? 0 : Math.min(1, Math.max(0, raw));
+      const span = Math.max(points.length - 1, 1);
+      const scaled = points.length < 2 ? 0 : progress * span;
+      const index = Math.min(span - 1, Math.floor(scaled));
+      const from = points[index] ?? points[0];
+      const to = points[Math.min(points.length - 1, index + 1)] ?? from;
+      const t = scaled - index;
+      const x = from.x + (to.x - from.x) * t;
+      const y = from.y + (to.y - from.y) * t;
+      const origin = points[0];
+      const destination = points[points.length - 1];
+      const horizontal = desktop.matches;
+
+      if (horizontal) {
+        const line = `${Math.max(0, destination.x - origin.x)}px`;
+        track.style.left = `${origin.x}px`;
+        track.style.top = `${origin.y}px`;
+        track.style.width = line;
+        track.style.height = "2px";
+        track.style.transform = "translateY(-50%)";
+        fill.style.left = `${origin.x}px`;
+        fill.style.top = `${origin.y}px`;
+        fill.style.width = `${Math.max(0, x - origin.x)}px`;
+        fill.style.height = "2px";
+        fill.style.transform = "translateY(-50%)";
+      } else {
+        const line = `${Math.max(0, destination.y - origin.y)}px`;
+        track.style.left = `${origin.x}px`;
+        track.style.top = `${origin.y}px`;
+        track.style.width = "2px";
+        track.style.height = line;
+        track.style.transform = "translateX(-50%)";
+        fill.style.left = `${origin.x}px`;
+        fill.style.top = `${origin.y}px`;
+        fill.style.width = "2px";
+        fill.style.height = `${Math.max(0, y - origin.y)}px`;
+        fill.style.transform = "translateX(-50%)";
+      }
+
+      badge.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
+      const row = badge.offsetHeight || 1;
+      const base = Math.floor(scaled);
+      const frac = scaled - base;
+      const rollStart = 0.38;
+      const rollEnd = 0.62;
+      const roll =
+        frac <= rollStart ? 0 : frac >= rollEnd ? 1 : (frac - rollStart) / (rollEnd - rollStart);
+      const eased = roll * roll * (3 - 2 * roll);
+      digits.style.transform = `translate3d(0, ${-(base + eased) * row}px, 0)`;
+
+      const nearest = Math.round(scaled);
+      if (nearest !== activeRef.current) {
+        activeRef.current = nearest;
+        setActive(nearest);
+      }
+    };
+
+    const requestApply = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(apply);
+    };
+
+    apply();
+    window.addEventListener("scroll", requestApply, { passive: true });
+    window.addEventListener("resize", requestApply);
+    media.addEventListener("change", requestApply);
+    desktop.addEventListener("change", requestApply);
+    const observer = new ResizeObserver(requestApply);
+    observer.observe(root);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", requestApply);
+      window.removeEventListener("resize", requestApply);
+      media.removeEventListener("change", requestApply);
+      desktop.removeEventListener("change", requestApply);
+      observer.disconnect();
+    };
+  }, [stepKey]);
+
+  return (
+    <div ref={rootRef} className="relative mt-12">
+      <div
+        ref={trackRef}
+        aria-hidden
+        className="pointer-events-none absolute z-0 rounded-full bg-primary/20 motion-reduce:hidden"
+      />
+      <div
+        ref={fillRef}
+        aria-hidden
+        className="pointer-events-none absolute z-0 rounded-full bg-primary motion-reduce:hidden"
+      />
+      <div
+        ref={badgeRef}
+        aria-hidden
+        className="pointer-events-none absolute top-0 left-0 z-10 h-8 w-8 motion-reduce:hidden"
+      >
+        <div className="h-full w-full overflow-hidden rounded-full bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_oklch(0.655_0.215_35.4)] ring-4 ring-background">
+          <div ref={digitsRef}>
+            {steps.map((step, index) => (
+              <span key={step.title} className="flex h-8 w-8 items-center justify-center text-xs font-bold">
+                {index + 1}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <ol ref={listRef} className="relative z-[1] grid gap-8 md:grid-cols-4 md:gap-6">
+        {steps.map((step, index) => {
+          const current = index === active;
+          return (
+            <li key={step.title} className="relative pl-12 md:pt-14 md:pl-0" aria-current={current ? "step" : undefined}>
+              <span
+                data-station
+                className="absolute top-0 left-0 flex h-8 w-8 items-center justify-center md:-translate-y-1/2"
+              >
+                <span
+                  className={cn(
+                    "h-2.5 w-2.5 rounded-full motion-reduce:hidden",
+                    index <= active ? "bg-primary" : "bg-primary/30",
+                  )}
+                />
+                <span className="hidden h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground motion-reduce:flex">
+                  {index + 1}
+                </span>
+              </span>
+              <div
+                className={cn(
+                  "transition-transform duration-500 ease-out motion-reduce:transform-none",
+                  current && "motion-safe:-translate-y-1",
+                )}
+              >
+                <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">{step.stage}</p>
+                <h3
+                  className={cn(
+                    "mt-2 text-xl font-bold transition-colors duration-300",
+                    current && "motion-safe:text-primary",
+                  )}
+                >
+                  {step.title}
+                </h3>
+                <p className="mt-2 max-w-xs text-sm leading-6 text-muted-foreground">{step.text}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }

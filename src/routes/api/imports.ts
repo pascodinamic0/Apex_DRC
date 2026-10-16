@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { requireBulkImport } from "@/lib/auth/director-server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { aiConfigured } from "@/lib/ai/env";
+import { logAppActivity } from "@/lib/activity-log.server";
 
 export const Route = createFileRoute("/api/imports")({
   server: {
@@ -27,6 +28,13 @@ export const Route = createFileRoute("/api/imports")({
           .select("id, created_at")
           .single();
         if (error || !data) return new Response(error?.message || "Failed", { status: 500 });
+        await logAppActivity({
+          actorId: uid,
+          action: "import.started",
+          summary: "Started a PDF import",
+          entityType: "import_batch",
+          entityId: data.id,
+        });
         return Response.json({ batch: data });
       },
     },

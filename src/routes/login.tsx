@@ -58,12 +58,12 @@ function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
+    <div className="relative min-h-dvh overflow-hidden bg-background pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       <BrandArcs />
       <div className="absolute right-4 top-4 z-10">
         <LangSwitch tone="utility" />
       </div>
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-12">
+      <div className="relative z-10 flex min-h-dvh flex-col items-center justify-center px-4 py-12">
         <div className="mb-8 text-center">
           <BrandLogo className="mx-auto mb-4 h-12" />
           <h1 className="text-3xl font-extrabold tracking-tight">{t.appName}</h1>

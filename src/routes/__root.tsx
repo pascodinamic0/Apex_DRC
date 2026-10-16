@@ -53,7 +53,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "EPIC RDC" },
       { name: "google", content: "notranslate" },
       { title: "FHI 360 · EPIC RDC — Reporting" },
       { name: "description", content: "Plateforme de reporting mensuel EPIC RDC, FHI 360." },
@@ -103,7 +107,7 @@ function RootComponent() {
         <AuthProvider>
           <Outlet />
           <AppUpdateBanner />
-          <Toaster richColors position="top-right" />
+          <Toaster richColors position="top-center" offset={{ top: "calc(env(safe-area-inset-top) + 12px)" }} />
         </AuthProvider>
       </I18nProvider>
     </QueryClientProvider>

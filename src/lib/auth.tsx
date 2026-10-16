@@ -1,9 +1,10 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Lang } from "@/lib/i18n";
 import { canWithDuties, type AccessLevel, type AppDuty } from "@/lib/auth/duties";
 import { canBulkImport } from "@/lib/auth/bulk-import";
+import { recordActivity } from "@/lib/activity-log";
 
 export type AppRole = "province_user" | "technical_director" | "technical_assistant" | "read_only";
 
@@ -74,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [duties, setDuties] = useState<AppDuty[]>([]);
   const [accessLevel, setAccessLevel] = useState<AccessLevel>("edit");
   const [loading, setLoading] = useState(true);
+  const skipNextSignInLog = useRef(false);
 
   async function loadProfile(uid: string) {
     const [{ data: p }, { data: r }, { data: dutyRows }] = await Promise.all([
@@ -105,9 +107,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
+      if (event === "SIGNED_IN" && s?.user) {
+        const key = `epic-oauth-signin:${s.user.id}`;
+        if (skipNextSignInLog.current) {
+          skipNextSignInLog.current = false;
+          sessionStorage.setItem(key, "1");
+        } else if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, "1");
+          void recordActivity({
+            action: "auth.signed_in",
+            summary: "Signed in",
+            metadata: { method: "google" },
+          });
+        }
+      }
       if (s?.user) {
         setTimeout(() => loadProfile(s.user.id), 0);
       } else {
@@ -127,8 +143,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    skipNextSignInLog.current = true;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
+    if (error) {
+      skipNextSignInLog.current = false;
+      return { error: error.message };
+    }
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user.id) sessionStorage.setItem(`epic-oauth-signin:${data.session.user.id}`, "1");
+    void recordActivity({ action: "auth.signed_in", summary: "Signed in", metadata: { method: "password" } });
     return {};
   };
 
@@ -144,6 +167,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    if (user?.id) sessionStorage.removeItem(`epic-oauth-signin:${user.id}`);
+    void recordActivity({ action: "auth.signed_out", summary: "Signed out" });
     await supabase.auth.signOut();
   };
 

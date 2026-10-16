@@ -10,6 +10,7 @@ import {
 } from "@/lib/auth/duties";
 import type { AppRole } from "@/lib/auth";
 import type { Database } from "@/integrations/supabase/types";
+import { logAppActivity } from "@/lib/activity-log.server";
 
 const roleSchema = z.enum(["province_user", "technical_director", "technical_assistant", "read_only"]);
 const accessLevelSchema = z.enum(["edit", "view"]);
@@ -130,7 +131,7 @@ export const Route = createFileRoute("/api/admin/users")({
       GET: async ({ request }) => {
         const admin = await requireUserAdmin(request);
         if (!admin) return new Response("Forbidden", { status: 403 });
-        const [{ data: profiles }, { data: roles }, { data: dutyRows }, { data: provinces }] = await Promise.all([
+        const [{ data: profiles, error: profileError }, { data: roles }, { data: dutyRows }, { data: provinces }] = await Promise.all([
           supabaseAdmin
             .from("profiles")
             .select(
@@ -140,6 +141,7 @@ export const Route = createFileRoute("/api/admin/users")({
           supabaseAdmin.from("user_duties").select("user_id, duty"),
           supabaseAdmin.from("provinces").select("id, name, code").order("name"),
         ]);
+        if (profileError) return new Response(profileError.message, { status: 500 });
         const dutiesByUser = new Map<string, AppDuty[]>();
         for (const row of dutyRows || []) {
           const list = dutiesByUser.get(row.user_id) || [];
@@ -195,6 +197,14 @@ export const Route = createFileRoute("/api/admin/users")({
         await supabaseAdmin.from("user_roles").delete().eq("user_id", newId);
         await supabaseAdmin.from("user_roles").insert({ user_id: newId, role: input.role });
         await upsertMemberDuties(newId, duties);
+        await logAppActivity({
+          actorId: admin.userId,
+          action: "user.invited",
+          summary: `Invited ${input.fullName}`,
+          entityType: "user",
+          entityId: newId,
+          metadata: { name: input.fullName, email: input.email, role: input.role },
+        });
         return Response.json({ ok: true });
       },
       PATCH: async ({ request }) => {
@@ -221,6 +231,19 @@ export const Route = createFileRoute("/api/admin/users")({
             input.jobTitle === undefined &&
             input.accessBlocked === undefined
           ) {
+            const { data: target } = await supabaseAdmin
+              .from("profiles")
+              .select("full_name, email")
+              .eq("id", input.userId)
+              .maybeSingle();
+            await logAppActivity({
+              actorId,
+              action: "user.updated",
+              summary: `Updated ${target?.full_name || "a user"}`,
+              entityType: "user",
+              entityId: input.userId,
+              metadata: { name: target?.full_name || target?.email || "", bulk_import: input.bulkImportGranted },
+            });
             return Response.json({ ok: true });
           }
         }
@@ -243,6 +266,19 @@ export const Route = createFileRoute("/api/admin/users")({
             input.accessLevel === undefined &&
             input.jobTitle === undefined
           ) {
+            const { data: target } = await supabaseAdmin
+              .from("profiles")
+              .select("full_name, email")
+              .eq("id", input.userId)
+              .maybeSingle();
+            await logAppActivity({
+              actorId,
+              action: input.accessBlocked ? "user.blocked" : "user.restored",
+              summary: input.accessBlocked ? "Blocked a user" : "Restored a user",
+              entityType: "user",
+              entityId: input.userId,
+              metadata: { name: target?.full_name || target?.email || "" },
+            });
             return Response.json({ ok: true });
           }
         }
@@ -325,6 +361,20 @@ export const Route = createFileRoute("/api/admin/users")({
           await upsertMemberDuties(input.userId, nextDuties);
         }
 
+        const { data: target } = await supabaseAdmin
+          .from("profiles")
+          .select("full_name, email")
+          .eq("id", input.userId)
+          .maybeSingle();
+        await logAppActivity({
+          actorId,
+          action: "user.updated",
+          summary: `Updated ${target?.full_name || "a user"}`,
+          entityType: "user",
+          entityId: input.userId,
+          metadata: { name: target?.full_name || target?.email || "", role: nextRole },
+        });
+
         return Response.json({ ok: true });
       },
       DELETE: async ({ request }) => {
@@ -345,8 +395,21 @@ export const Route = createFileRoute("/api/admin/users")({
           if (others === 0) return new Response("Cannot remove the last user manager", { status: 400 });
         }
 
+        const { data: removed } = await supabaseAdmin
+          .from("profiles")
+          .select("full_name, email")
+          .eq("id", userId)
+          .maybeSingle();
         const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
         if (error) return new Response(error.message, { status: 400 });
+        await logAppActivity({
+          actorId: uid,
+          action: "user.removed",
+          summary: `Removed ${removed?.full_name || "a user"}`,
+          entityType: "user",
+          entityId: userId,
+          metadata: { name: removed?.full_name || removed?.email || "" },
+        });
         return Response.json({ ok: true });
       },
     },

@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Activity,
   Archive,
   Bell,
   CircleHelp,
@@ -42,7 +43,10 @@ export function navGroupsForRole(
           { to: "/notifications", icon: Bell, label: t.notifications },
           { to: "/history", icon: Archive, label: t.atValidatedArchive },
           ...(can("manage_provincial_users")
-            ? [{ to: "/users", icon: Users, label: t.users }]
+            ? [
+                { to: "/users", icon: Users, label: t.users },
+                { to: "/activity", icon: Activity, label: t.activityLog },
+              ]
             : []),
           ...(bulkImport ? [{ to: "/imports", icon: FileStack, label: t.bulkImportNav }] : []),
         ],
@@ -67,7 +71,12 @@ export function navGroupsForRole(
       {
         label: t.dtNavAdmin,
         items: [
-          ...(can("manage_users") ? [{ to: "/users", icon: Users, label: t.users }] : []),
+          ...(can("manage_users")
+            ? [
+                { to: "/users", icon: Users, label: t.users },
+                { to: "/activity", icon: Activity, label: t.activityLog },
+              ]
+            : []),
           ...(bulkImport ? [{ to: "/imports", icon: FileStack, label: t.bulkImportNav }] : []),
           { to: "/history", icon: Archive, label: t.history },
         ],
